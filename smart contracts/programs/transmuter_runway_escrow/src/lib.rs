@@ -159,6 +159,7 @@ fn released_to_date(cfg: &EscrowConfig, now: i64) -> u64 {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
+    pub payer: Signer<'info>,
     pub factory: Signer<'info>,
     /// CHECK: paired EOL Token.
     pub eol_token: UncheckedAccount<'info>,
@@ -171,7 +172,7 @@ pub struct Initialize<'info> {
     pub registry: UncheckedAccount<'info>,
     #[account(
         init,
-        payer = factory,
+        payer = payer,
         space = 8 + EscrowConfig::INIT_SPACE,
         seeds = [b"config", eol_token.key().as_ref(), usdc_mint.key().as_ref()],
         bump
@@ -179,7 +180,7 @@ pub struct Initialize<'info> {
     pub config: Account<'info, EscrowConfig>,
     #[account(
         init,
-        payer = factory,
+        payer = payer,
         token::mint = usdc_mint,
         token::authority = config
     )]

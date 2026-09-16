@@ -92,6 +92,7 @@ describe("vesting", () => {
       vesting.methods
         .initialize(SCHEDULE_LINEAR_12M, new anchor.BN(0))
         .accounts({
+          payer: factory.publicKey,
           factory: factory.publicKey,
           eolToken: eol.publicKey,
           founder: founder.publicKey,
@@ -114,6 +115,7 @@ describe("vesting", () => {
     await vesting.methods
       .initialize(SCHEDULE_LINEAR_12M, new anchor.BN(TEAM_ALLOC))
       .accounts({
+        payer: factory.publicKey,
         factory: factory.publicKey,
         eolToken: eol.publicKey,
         founder: founder.publicKey,

@@ -269,6 +269,7 @@ describe("eol token", () => {
       await ctoken.methods
         .registerEol(mint)
         .accounts({
+          payer: payer.publicKey,
           factory: payer.publicKey,
           config: cs.config,
           authority: config,

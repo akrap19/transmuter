@@ -2,9 +2,9 @@
 
 Anchor workspace for the Transmuter MVP. Implemented: Token-2022 layout
 proofs, mock Pyth, mock DEX, keeper stub, cToken (cSOL), Vesting, Runway
-Escrow, Staking, and EOL Token (USDC sale, finalize gates, convertTreasury,
-reserve mint, liquidation). Factory, Registry, and DAO are still `ping`
-stubs.
+Escrow, Staking, EOL Token (USDC sale, finalize gates, convertTreasury,
+reserve mint, liquidation), and Factory (CREATED → WIRED → SALE). Registry
+and DAO are still `ping` stubs.
 
 There is **no gold mint**. Spec pack section 0.2b.
 
@@ -34,7 +34,8 @@ solana config set --url localhost
 | `programs/transmuter_runway_escrow` | USDC runway: fund/draw, halt/resume/advance, liquidation return |
 | `programs/transmuter_staking` | Free stake/unstake, snapshotWeight, voter lock |
 | `programs/transmuter_eol_token` | USDC sale, finalize gates (8/10/18), convertTreasury, fees, reserve mint A+B, liquidation |
-| `programs/transmuter_*` | Factory, Registry, and DAO are still `ping` stubs |
+| `programs/transmuter_factory` | Launchpad Factory: snapshotted validations, CREATED → WIRED → SALE, registry with creator |
+| `programs/transmuter_*` | Registry and DAO are still `ping` stubs |
 | `crates/transmuter-constants` | Shared numbers (premium 1.25%, 8/10/18 floors) |
 | `scripts/keeper.ts` | S9 crank runner (stubs + mock Pyth) |
 | `scripts/build.sh` | `cargo-build-sbf --tools-version v1.52` |
@@ -87,7 +88,8 @@ comfortably. Re-measure against the real DEX before treating the
 `convertTreasury` split as closed.
 
 `./scripts/build.sh` uses platform-tools v1.52 and writes IDLs for cToken,
-the Token-2022 probe, Vesting, Runway Escrow, Staking, mock DEX, and EOL Token.
+the Token-2022 probe, Vesting, Runway Escrow, Staking, mock DEX, EOL Token,
+and Factory.
 `anchor test --skip-lint --skip-build` then runs against that artefact (a plain
 `anchor test` may rebuild with v1.48 and fail).
 
@@ -108,8 +110,8 @@ buckets, no transfer fee, no cToken EOL.
 Worked genesis: deposit `1_012_500_000` lamports → mint `1_000_000_000` cSOL;
 reserve backing `1_010_000_000`; protocol revenue `2_500_000`.
 
-Factory is not built yet. Tests snapshot the payer as factory and register a
-wallet-owned treasury ATA. Production Factory will register a PDA-owned treasury.
+Factory registers a PDA-owned treasury: tests snapshot the Factory config PDA
+as cToken `factory` and `register_eol` is signed by that PDA.
 
 ## Vesting, Runway Escrow, Staking
 
@@ -142,3 +144,15 @@ SOL residue. Escrow remainder at liquidation is a second USDC redemption
 leg. Reserve-mint Path B uses the creator-set `governed_mint_pct_bps`.
 Liquidation fee is 2% split 1.75% cToken primary / 0.25% protocol;
 redemption fees go to zero at execute.
+
+## Factory
+
+Guarded launch sequence (S10): **CREATED → WIRED → SALE**. Validations 1–19
+run at `create_launch` against **snapshotted** `g`/`L` (mint premium and SH2
+slippage), never live governance values. MVP sale type is **FIXED** only.
+Every launch nominates cSOL as backing and a mock cBTC as fallback (validation
+1b). Wiring steps are individual bits, permissionless to resume; SALE is
+unreachable until the mask is complete (vaults last, so a half-wired launch
+cannot take a deposit). The registry stores `creator` and copies ACTIVE/VOIDED
+from the EOL token via `sync_outcome`.
+

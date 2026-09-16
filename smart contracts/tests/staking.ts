@@ -81,6 +81,7 @@ describe("staking", () => {
     await staking.methods
       .initialize()
       .accounts({
+        payer: factory.publicKey,
         factory: factory.publicKey,
         eolToken: eol.publicKey,
         mint,

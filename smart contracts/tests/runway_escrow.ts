@@ -76,6 +76,7 @@ describe("runway escrow", () => {
     await escrow.methods
       .initialize(SCHEDULE_NONE)
       .accounts({
+        payer: factory.publicKey,
         factory: factory.publicKey,
         eolToken: eol.publicKey,
         usdcMint: usdc,
@@ -159,6 +160,7 @@ describe("runway escrow", () => {
     await escrow.methods
       .initialize(SCHEDULE_NONE)
       .accounts({
+        payer: factory.publicKey,
         factory: factory.publicKey,
         eolToken: eol2.publicKey,
         usdcMint: usdc2,
@@ -261,6 +263,7 @@ describe("runway escrow", () => {
     await escrow.methods
       .initialize(SCHEDULE_NONE)
       .accounts({
+        payer: factory.publicKey,
         factory: factory.publicKey,
         eolToken: eol3.publicKey,
         usdcMint: usdc3,

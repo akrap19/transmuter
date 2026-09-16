@@ -206,6 +206,7 @@ pub mod transmuter_vesting {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
+    pub payer: Signer<'info>,
     pub factory: Signer<'info>,
     /// CHECK: paired EOL Token; signs stamp + notify.
     pub eol_token: UncheckedAccount<'info>,
@@ -216,7 +217,7 @@ pub struct Initialize<'info> {
     pub team_recipient: UncheckedAccount<'info>,
     #[account(
         init,
-        payer = factory,
+        payer = payer,
         space = 8 + VestingConfig::INIT_SPACE,
         seeds = [b"config", mint.key().as_ref()],
         bump
@@ -224,7 +225,7 @@ pub struct Initialize<'info> {
     pub config: Account<'info, VestingConfig>,
     #[account(
         init,
-        payer = factory,
+        payer = payer,
         token::mint = mint,
         token::authority = config,
         token::token_program = token_program
@@ -232,7 +233,7 @@ pub struct Initialize<'info> {
     pub team_pot: InterfaceAccount<'info, TokenAccount>,
     #[account(
         init,
-        payer = factory,
+        payer = payer,
         token::mint = mint,
         token::authority = config,
         token::token_program = token_program
@@ -240,7 +241,7 @@ pub struct Initialize<'info> {
     pub investor_pot: InterfaceAccount<'info, TokenAccount>,
     #[account(
         init,
-        payer = factory,
+        payer = payer,
         space = 8 + VestingEntry::INIT_SPACE,
         seeds = [b"entry", config.key().as_ref(), team_recipient.key().as_ref()],
         bump

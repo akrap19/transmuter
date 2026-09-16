@@ -129,13 +129,14 @@ fn gross_up(amount: u64, fee_bps: u16) -> Result<u64> {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(mut)]
+    pub payer: Signer<'info>,
     pub factory: Signer<'info>,
     /// CHECK: paired EOL Token.
     pub eol_token: UncheckedAccount<'info>,
     pub mint: InterfaceAccount<'info, Mint>,
     #[account(
         init,
-        payer = factory,
+        payer = payer,
         space = 8 + StakeConfig::INIT_SPACE,
         seeds = [b"config", mint.key().as_ref()],
         bump
@@ -143,7 +144,7 @@ pub struct Initialize<'info> {
     pub config: Account<'info, StakeConfig>,
     #[account(
         init,
-        payer = factory,
+        payer = payer,
         token::mint = mint,
         token::authority = config,
         token::token_program = token_program

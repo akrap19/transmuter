@@ -296,6 +296,7 @@ pub struct Initialize<'info> {
 #[instruction(eol_id: Pubkey)]
 pub struct RegisterEol<'info> {
     #[account(mut)]
+    pub payer: Signer<'info>,
     pub factory: Signer<'info>,
     #[account(
         seeds = [b"config", config.mint.as_ref()],
@@ -309,7 +310,7 @@ pub struct RegisterEol<'info> {
     pub ctoken_treasury: InterfaceAccount<'info, TokenAccount>,
     #[account(
         init,
-        payer = factory,
+        payer = payer,
         space = 8 + RegisteredEol::INIT_SPACE,
         seeds = [b"eol", config.key().as_ref(), eol_id.as_ref()],
         bump

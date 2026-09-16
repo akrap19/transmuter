@@ -20,6 +20,7 @@ pub const SH2_MAX_SLIPPAGE_BPS: u64 = 50;
 pub const SALE_PCT_MIN: u64 = 25;
 pub const LP_PCT_MIN: u64 = 10;
 pub const TEAM_PCT_MAX: u64 = 20;
+pub const INVESTOR_PCT_MAX: u64 = 20;
 pub const DAO_AIRDROP_PCT_MAX: u64 = 10;
 pub const LP_SPLIT_MIN_BPS: u64 = 2_500;
 pub const LP_SPLIT_MAX_BPS: u64 = 7_500;
@@ -35,6 +36,20 @@ pub const FEE_PROTOCOL_MIN_BPS: u16 = 15;
 pub const FEE_PROTOCOL_MAX_BPS: u16 = 25;
 pub const FEE_LP_MIN_BPS: u16 = 10;
 pub const FEE_TREASURY_MIN_BPS: u16 = 10;
+pub const FEE_CREATOR_MAX_BPS: u16 = 50;
+pub const FEE_BURN_MIN_BPS: u16 = 5;
+pub const FEE_BURN_MAX_BPS: u16 = 100;
+
+/// Sale window [1 day, 60 days].
+pub const SALE_WINDOW_MIN_SECS: i64 = 24 * 3600;
+pub const SALE_WINDOW_MAX_SECS: i64 = 60 * 24 * 3600;
+/// Reserve-mint Path B vote window [24h, 48h].
+pub const RESERVE_MINT_VOTE_WINDOW_MIN_SECS: i64 = 24 * 3600;
+pub const RESERVE_MINT_VOTE_WINDOW_MAX_SECS: i64 = 48 * 3600;
+
+pub const SALE_TYPE_FIXED: u8 = 0;
+/// Forfeit surplus destination. Treasury only; to-LP is illegal.
+pub const FORFEIT_DEST_TREASURY: u8 = 0;
 
 pub const REDEMPTION_TREASURY_FEE_BPS: u16 = 35;
 pub const REDEMPTION_REVENUE_FEE_BPS: u16 = 15;

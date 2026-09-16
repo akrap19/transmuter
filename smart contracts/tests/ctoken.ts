@@ -149,6 +149,7 @@ describe("cToken", () => {
     await ctoken.methods
       .registerEol(eolId)
       .accounts({
+        payer: factory.publicKey,
         factory: factory.publicKey,
         config,
         authority: factory.publicKey,
@@ -169,6 +170,7 @@ describe("cToken", () => {
       await ctoken.methods
         .registerEol(stranger.publicKey)
         .accounts({
+          payer: stranger.publicKey,
           factory: stranger.publicKey,
           config,
           authority: stranger.publicKey,

@@ -2979,6 +2979,14 @@ name = "transmuter-factory"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "anchor-spl",
+ "mock-dex",
+ "transmuter-constants",
+ "transmuter-ctoken",
+ "transmuter-eol-token",
+ "transmuter-runway-escrow",
+ "transmuter-staking",
+ "transmuter-vesting",
 ]
 
 [[package]]

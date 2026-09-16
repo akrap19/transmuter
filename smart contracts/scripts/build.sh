@@ -35,4 +35,7 @@ anchor idl build -p mock_dex --skip-lint \
 anchor idl build -p transmuter_eol_token --skip-lint \
   -o target/idl/transmuter_eol_token.json \
   -t target/types/transmuter_eol_token.ts
+anchor idl build -p transmuter_factory --skip-lint \
+  -o target/idl/transmuter_factory.json \
+  -t target/types/transmuter_factory.ts
 
