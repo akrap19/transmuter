@@ -1,0 +1,46 @@
+---
+description: Project-wide conventions for studio19-template-2026
+alwaysApply: true
+---
+
+# Project Overview
+
+Next.js 16 template using React 19, Tailwind CSS v4, and shadcn/ui (new-york style).
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router, React Server Components by default)
+- **UI Library**: shadcn/ui v3 (new-york style), Radix UI primitives
+- **Styling**: Tailwind CSS v4 with CSS variables for theming, tw-animate-css for animations
+- **Animation**: motion/react (Framer Motion)
+- **Icons**: lucide-react
+- **Package Manager**: pnpm
+
+## Project Structure
+
+- `app/` — Next.js App Router (pages, layouts, global CSS)
+- `components/ui/` — shadcn/ui components (Button, Badge, etc.)
+- `components/layout/` — Layout primitives (Stack, Grid, Cluster, Center, Split, Switcher)
+- `components/animations/` — Animation wrappers (FadeIn, SlideInFromTop)
+- `components/system/` — System/utility components (ProjectVersion)
+- `lib/` — Utility functions (`cn()` helper), centralized routes (`routes.ts`)
+- `types` — Shared type definitions (`BaseComponentProps`, `PropsWithClassName`)
+
+## Key Conventions
+
+- **Component Size**: Max 100 rows per file. Break into smaller components if exceeded.
+- **Hooks**: Minimize `useEffect` use; prefer derived state, event handlers, or custom hooks.
+- **Imports**: Use `@/` path alias for all imports
+- **Routes**: All page paths live in `lib/routes.ts` — never hardcode internal URLs (see `routes.mdc`)
+- **Class merging**: Use `cn()` from `@/lib/utils` for merging Tailwind class names
+- **Content typography**: Page intros use `ContentPageIntro` / `contentPageIntroTextClass`; body copy uses `contentBodyTextClass` (see `styling.mdc`)
+- **Layout components**: Accept `BaseComponentProps` from `@/types`
+- **Components**: Reuse existing UI first; add new primitives via `pnpm dlx shadcn@latest add <component>` only when needed (see `component-workflow.mdc`)
+- **Fonts**: Geist Sans and Geist Mono via `next/font/google`
+
+## Commands
+
+- `pnpm dev` — Start development server
+- `pnpm build` — Production build
+- `pnpm lint` — Run ESLint
+- `pnpm dlx shadcn@latest add <name>` — Add a shadcn/ui component

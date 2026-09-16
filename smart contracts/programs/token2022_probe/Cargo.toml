@@ -1,0 +1,25 @@
+[package]
+name = "token2022-probe"
+version = "0.1.0"
+description = "Token-2022 NonTransferable treasury layout + finalize CU probe"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "token2022_probe"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[dependencies]
+anchor-lang = "0.32.1"
+anchor-spl = { version = "0.32.1", features = ["token_2022", "token_2022_extensions"] }
+mock-dex = { path = "../mock_dex", features = ["cpi"] }
+transmuter-constants = { path = "../../crates/transmuter-constants" }
+
+[package.metadata.solana]
+tools-version = "v1.52"

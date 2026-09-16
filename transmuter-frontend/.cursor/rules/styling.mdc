@@ -1,0 +1,44 @@
+---
+description: Tailwind CSS v4 and styling conventions
+globs: "**/*.{tsx,css}"
+alwaysApply: false
+---
+
+# Styling Conventions
+
+## Tailwind CSS v4
+
+- No `tailwind.config.ts` — configuration lives in `app/globals.css` using `@theme`
+- Use CSS variables for colors and theming (light/dark mode via `.dark` class)
+- Use `tw-animate-css` for animation utilities
+
+## Class Management
+
+- Always use `cn()` from `@/lib/utils` to merge conditional/dynamic classes
+- Use `cva` from `class-variance-authority` for multi-variant component styles
+- Use `clsx` patterns inside `cn()` for conditional classes:
+
+```tsx
+cn("base-class", condition && "conditional-class", props.className)
+```
+
+## Color System
+
+Uses shadcn/ui CSS variable naming:
+- `--background`, `--foreground` for base colors
+- `--primary`, `--secondary`, `--accent`, `--destructive` for semantic colors
+- Each has a `-foreground` counterpart for text on that color
+- Reference as Tailwind classes: `bg-primary`, `text-primary-foreground`, etc.
+
+## Content Page Typography
+
+Shared tokens live in `lib/content-page-styles.ts`. Use them instead of duplicating inline classes.
+
+| Use case | Token / component |
+|---|---|
+| Page intro (below title, above stats/filters) | `ContentPageIntro` from `@/components/custom/content-page-intro` or `contentPageIntroTextClass` |
+| Body paragraphs in content pages | `contentBodyTextClass` |
+| Section headings | `contentSectionHeadingClass` |
+| Filter labels on primary backgrounds | `filterFieldLabelClass` from `@/lib/filter-styles` |
+
+**Page intro** — `text-[20px]` → `sm:text-[22px]` → `lg:text-[24px]`, `font-black`, `text-white/90`. Prefer `<ContentPageIntro id="…">` for accessible section intros (`aria-labelledby`).

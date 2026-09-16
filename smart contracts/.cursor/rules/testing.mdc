@@ -1,0 +1,21 @@
+---
+description: Every balance-holding program ships tests that fail if an invariant stops holding.
+globs: "**/{tests,programs}/**/*.{rs,ts}"
+alwaysApply: false
+---
+
+# Testing
+
+- If a program holds a balance, it has a test for invariant 1 (no arbitrary treasury send) and rounding direction.
+- Token-2022 NonTransferable: MintTo/Burn from the PDA treasury must pass; a PDA-signed transfer must fail at Token-2022; TransferFeeConfig on that mint must fail. See `tests/token2022.ts`.
+- A test must fail if the invariant it names stops holding. Do not assert logs or "did not panic" as a substitute.
+- Cross-program numbers that appear in more than one crate belong in a seam test against `transmuter-constants`.
+- CU / finalize: `tests/finalize_cu.ts` is a mock-DEX stand-in. Re-measure on the real DEX before treating `convertTreasury` as closed.
+
+```ts
+// ❌ BAD
+expect(tx).to.not.equal(null);
+
+// ✅ GOOD
+expect(acc.amount).to.equal(BigInt(MINT_AMOUNT / 2));
+```

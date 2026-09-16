@@ -1,0 +1,11 @@
+---
+description: Wallet address is identity. No auth or user table.
+alwaysApply: true
+---
+
+# Identity
+
+Wallet address is identity. Do not add a login, password, or users table.
+
+Any authenticated write must verify a wallet signature. Optional `profiles`
+rows are prefs keyed by pubkey only.

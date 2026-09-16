@@ -1,0 +1,24 @@
+[package]
+name = "transmuter-ctoken"
+version = "0.1.0"
+description = "cToken (cSOL): NonTransferable mint, mintForTreasury, redeem, protocol flush"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "transmuter_ctoken"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[dependencies]
+anchor-lang = "0.32.1"
+anchor-spl = { version = "0.32.1", features = ["token_2022", "token_2022_extensions"] }
+transmuter-constants = { path = "../../crates/transmuter-constants" }
+
+[package.metadata.solana]
+tools-version = "v1.52"

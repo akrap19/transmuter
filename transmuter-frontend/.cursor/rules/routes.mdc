@@ -1,0 +1,38 @@
+---
+description: Centralized route paths — never hardcode URLs in app code
+globs: "**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+# Centralized Routes
+
+All internal page paths live in `lib/routes.ts`. **Never** hardcode route strings like `'/zagreb-film-office/about-zagreb'` in components, navigation, redirects, or server actions.
+
+## Source of truth
+
+```ts
+import { routes } from '@/lib/routes'
+
+<Link href={routes.zagrebFilmOffice.aboutZagreb}>About Zagreb</Link>
+```
+
+## When adding a page
+
+1. Add the path to `routes` in `lib/routes.ts` (grouped by section, camelCase keys).
+2. Create the matching folder under `app/`.
+3. Reference `routes.*` everywhere the path is used (nav, footer, links, `revalidatePath`, etc.).
+
+## Legacy / redirect paths
+
+Old URLs that must keep working go in `legacyRoutes` in `lib/routes.ts`. Use them only in `next.config.ts` redirects — **not** in `<Link>` or navigation.
+
+## Type safety
+
+- Use `RoutePath` from `@/lib/routes` for typed hrefs (e.g. `NavItem.href`).
+- Static assets (`/images/...`, `/zfu-logo.png`) are **not** routes — keep those as local constants in the feature file.
+
+## Checklist before finishing route-related work
+
+- [ ] New path added to `lib/routes.ts`
+- [ ] No new hardcoded internal paths in TS/TSX (grep for `href: '/` or `href='/'`)
+- [ ] Redirects in `next.config.ts` use `routes` / `legacyRoutes`

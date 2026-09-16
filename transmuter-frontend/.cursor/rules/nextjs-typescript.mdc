@@ -1,0 +1,90 @@
+---
+description: Next.js 16 (App Router) and TypeScript conventions
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Next.js & TypeScript Standards
+
+Next.js 16 (App Router) using React Server Components (RSC) and strict TypeScript.
+
+## Next.js (App Router) Patterns
+
+- **Server Components (RSC) by default**: Use Server Components whenever possible. Only use `"use client"` for interactivity or client-side hooks.
+- **Data Fetching**: Use the native `fetch` API for data fetching. Leverage Next.js caching and revalidation features (`next: { revalidate: ... }`).
+- **Server Actions**: Define server actions in separate files with `"use server"` or at the top level of a component file for data mutation.
+- **Metadata API**: Use the `generateMetadata` function or `Metadata` object for SEO in pages and layouts.
+- **File Conventions**: Use standard Next.js file names: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`.
+
+## TypeScript Standards
+
+- **Strict Mode**: `strict: true` is enabled in `tsconfig.json`. Avoid using `any` at all costs.
+- **Interfaces vs Types**: Prefer `interface` for public APIs and `type` for internal unions, intersections, or complex logic.
+- **Explicit Return Types**: While TypeScript can infer return types, prefer explicit return types for functions and components for clarity and stability.
+- **Named Exports**: Always use named exports for components and utility functions.
+
+## Next.js Specific Types
+
+### Page & Layout Props
+
+```tsx
+// PageProps for Next.js 16
+interface PageProps {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function Page({ params, searchParams }: PageProps) {
+  const { slug } = await params;
+  const { query } = await searchParams;
+  // ...
+}
+
+// LayoutProps
+interface LayoutProps {
+  children: React.ReactNode;
+  params: Promise<{ [key: string]: string }>;
+}
+
+export default async function RootLayout({ children, params }: LayoutProps) {
+  const { lang } = await params;
+  return (
+    <html lang={lang}>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+## Data Fetching Example
+
+```tsx
+// Using the Fetch API with RSC
+async function getData() {
+  const res = await fetch('https://api.example.com/data', {
+    next: { revalidate: 3600 }, // Revalidate every hour
+  });
+  if (!res.ok) throw new Error('Failed to fetch data');
+  return res.json();
+}
+
+export default async function ServerComponent() {
+  const data = await getData();
+  return <div>{/* Render data */}</div>;
+}
+```
+
+## Server Actions Example
+
+```tsx
+// app/actions.ts
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+export async function createItem(formData: FormData) {
+  const name = formData.get("name") as string;
+  // ... db logic ...
+  revalidatePath("/");
+}
+```

@@ -1,0 +1,25 @@
+---
+description: When a number or rule changes, update every place it is implied.
+alwaysApply: true
+---
+
+# Propagate changes
+
+The recurring failure in this project is a correct change that reaches where it was made and not the places that echo it.
+
+If you change a rate, bound, floor, or deleted mechanic:
+
+1. Update `crates/transmuter-constants` (source of shared numbers)
+2. Update every program that copies or snapshots that number
+3. Update invariant / seam tests so they fail if the old value returns
+4. Update comments that still quote the spec pack's old figure and mark founder rulings
+
+Founder overrides already in constants: mint premium **1.25%** (not 1.85%); UI ask **10%** vs chain accept **8%**; combined **18%**.
+
+```rust
+// ❌ BAD — only the cToken init changed
+mint_premium_bps = 125;
+
+// ✅ GOOD — constants + sum test + any snapshot at Factory create
+assert_eq!(UNDERLYING_PREMIUM_RATE_BPS + PROTOCOL_PREMIUM_RATE_BPS, MINT_PREMIUM_RATE_BPS);
+```

@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+build/
+
+# Lock files (large, not useful for AI context)
+pnpm-lock.yaml
+
+# Environment files
+.env*
+!.env.local
+
+# OS files
+.DS_Store

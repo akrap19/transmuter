@@ -1,0 +1,40 @@
+---
+description: React component patterns and conventions
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# React Component Patterns
+
+See `component-workflow.mdc` for the reuse → compose → shadcn create decision flow.
+
+- Components should be concise; aim for a maximum of **100 rows** per file. If a component exceeds this, consider breaking it down into smaller sub-components.
+- Minimize the use of `useEffect`. Prefer derived state, event handlers, or custom hooks for state management. Avoid using `useEffect` for data synchronization between states.
+- Use functional components with TypeScript types for props
+- Prefer React Server Components by default; only add `"use client"` when interactivity or browser APIs are needed
+- Use named exports (not default exports) for components
+- Use `cn()` from `@/lib/utils` to compose Tailwind classes
+
+## Layout Components
+
+Layout primitives live in `components/layout/` and accept `BaseComponentProps` from `@/types`:
+
+- `Stack` — vertical flex with gap
+- `Cluster` — horizontal flex-wrap with gap
+- `Grid` — CSS grid
+- `Center` — centered content
+- `Split` — two-column split
+- `Switcher` — responsive layout switch
+
+## shadcn/ui Components
+
+- Located in `components/ui/`
+- Use `cva` (class-variance-authority) for variant definitions
+- Use `data-slot` attributes for styling hooks
+- Follow existing patterns in `components/ui/button.tsx` for new components
+
+## Animation Components
+
+- Located in `components/animations/`
+- Require `"use client"` since they use `motion/react`
+- Export through `components/animations/index.tsx` barrel file

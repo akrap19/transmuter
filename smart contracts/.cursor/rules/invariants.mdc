@@ -1,0 +1,24 @@
+---
+description: Load-bearing Transmuter invariants. Never ship a path that violates these.
+alwaysApply: true
+---
+
+# Protocol invariants
+
+- No instruction may send user or treasury assets to a team, creator, founder, or admin address. Destinations are fixed in code or by supermajority governance.
+- Rounding always favors the protocol, never the user.
+- A cToken's backing-per-token never falls after any operation.
+- Exactly one mint path: a registered EOL Token, into its own treasury. No admin mint.
+- cToken transfers fail at Token-2022 (NonTransferable), not in our logic.
+- Redemption never closes, on either token type.
+- Every backing / ratio / reserve-mint trigger **counts unconverted USDC**. Missing it reports a healthy launch as unbacked.
+- Launches validate against **snapshotted** params, never live governance numbers.
+- A missing governance result is an error, never silent consent.
+
+```rust
+// ❌ BAD — day-one false alarm
+let backing = csol_balance;
+
+// ✅ GOOD
+let backing = csol_balance.saturating_add(unconverted_usdc_in_sol_terms);
+```

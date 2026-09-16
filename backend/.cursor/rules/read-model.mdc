@@ -1,0 +1,13 @@
+---
+description: MySQL is a rebuildable cache over the chain, never the source of truth for money.
+alwaysApply: true
+---
+
+# Read model
+
+The database is a rebuildable cache over Solana. Balances, backing, and launch
+state live on-chain.
+
+- Indexer must be idempotent and resumable.
+- Track the last processed slot.
+- Do not invent a launch, mint, or payout that is not on-chain.

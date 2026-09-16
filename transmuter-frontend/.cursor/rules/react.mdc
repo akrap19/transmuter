@@ -1,0 +1,13 @@
+---
+description: Point TSX work at the Vercel React skill and existing frontend rules.
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# React
+
+Follow `react-components.mdc`, `component-workflow.mdc`, and the
+`vercel-react-best-practices` skill under `.cursor/skills/` (or
+`transmuter-frontend/.cursor/skills/vercel-react-best-practices`).
+
+Chain math in the Launchpad is still a preview: see `chain-authority.mdc`.

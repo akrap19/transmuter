@@ -1,0 +1,31 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/transmuter-constants",
+    "programs/mock_pyth",
+    "programs/mock_dex",
+    "programs/token2022_probe",
+    "programs/transmuter_ctoken",
+    "programs/transmuter_eol_token",
+    "programs/transmuter_factory",
+    "programs/transmuter_vesting",
+    "programs/transmuter_runway_escrow",
+    "programs/transmuter_staking",
+    "programs/transmuter_registry",
+    "programs/transmuter_dao",
+]
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
+
+# First BPF artefact must use platform-tools v1.52 (rustc 1.89).
+# v1.48 (Solana CLI 2.3 default) is cargo 1.84 and cannot parse edition2024.
+[workspace.metadata.solana]
+tools-version = "v1.52"

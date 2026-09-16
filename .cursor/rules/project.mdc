@@ -1,0 +1,13 @@
+---
+description: Transmuter repo map and which document wins.
+alwaysApply: true
+---
+
+# Transmuter
+
+See root `AGENTS.md`. Spec pack is normative; System Logic is intent; founder rulings in `AGENTS.md` and `smart contracts/crates/transmuter-constants` override the pack (1.25% premium, 10% UI ask vs 8% chain floor).
+
+- Contracts: `smart contracts/` — BPF via `scripts/build.sh` (platform-tools v1.52)
+- Frontend: `transmuter-frontend/`
+- No Solana skill on skills.sh; use `smart contracts/.cursor/rules/`
+- Do not name crates, files, or tests `phase_<n>_…`. Plan phases are documentation only.

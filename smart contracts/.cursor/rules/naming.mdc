@@ -1,0 +1,25 @@
+---
+description: Program, crate, test, and file names must describe the thing — never the plan step number.
+alwaysApply: true
+---
+
+# Naming
+
+Build-order labels (`Phase 0`, `Phase 3`, …) belong in the spec pack and the
+plan only. They are **not** crate, program, module, file, test, IDL, keypair,
+or report names.
+
+```text
+❌ programs/phase0_probe
+❌ tests/phase3_ctoken.ts
+❌ reports/phase0-cu.json
+❌ describe("phase0 token-2022 …")
+
+✅ programs/token2022_probe
+✅ tests/ctoken.ts
+✅ reports/finalize-cu.json
+✅ describe("token-2022 NonTransferable / PDA mint-burn")
+```
+
+`ping` stubs name the program (Factory, Vesting, DAO). They do not say which
+plan phase will fill them in.

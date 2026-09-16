@@ -1,0 +1,54 @@
+---
+description: Form patterns with react-hook-form, zod, and shadcn/ui
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Form Patterns
+
+All interactive forms use **react-hook-form** + **zod** + **shadcn/ui Form** primitives.
+
+## Stack
+
+```bash
+pnpm add react-hook-form zod@3 @hookform/resolvers
+pnpm dlx shadcn@latest add form checkbox   # add other inputs as needed
+```
+
+Use **zod v3** — `@hookform/resolvers` does not yet support zod v4.
+
+## File layout
+
+| Location | Purpose |
+|---|---|
+| `lib/*-schema.ts` | Zod schema, inferred type, default values |
+| `components/ui/form.tsx` | shadcn `Form`, `FormField`, `FormItem`, etc. |
+| `components/ui/form-text-field.tsx` | Reusable labeled text/email/tel input |
+| `components/ui/form-textarea-field.tsx` | Reusable labeled textarea |
+| `lib/form-field-styles.ts` | Shared `on-primary` label/input classes |
+| `app/<feature>/…` | Feature-specific field groups and form shell |
+
+Split field groups into separate components when a form exceeds ~100 lines.
+
+## Schema conventions
+
+- Define schema with `z.object({ … })` in `lib/`
+- Export `type FormValues = z.infer<typeof schema>`
+- Export matching `defaultValues` object
+- Wire with `useForm({ resolver: zodResolver(schema), defaultValues })`
+
+## UI conventions
+
+- Wrap with `<Form {...form}>` and native `<form onSubmit={form.handleSubmit(onSubmit)}>`
+- Use `FormField` + `FormItem` + `FormLabel` + `FormControl` + `FormMessage`
+- Prefer `FormTextField` / `FormTextareaField` for standard inputs
+- Style fields with `formFieldLabelClass`, `formFieldInputClass` from `lib/form-field-styles.ts`
+- Match existing `on-primary` filter/search styling on blue content pages
+- Submit buttons use `Button` with `variant='inverse'` and `size='xl'` on content pages
+- Add `"use client"` only on form components; keep `page.tsx` as a Server Component shell
+
+## Do not
+
+- Build custom validation or uncontrolled form state outside react-hook-form
+- Duplicate shadcn form primitives — extend `components/ui/form-*` instead
+- Hardcode field lists that already exist in `lib/` data sources

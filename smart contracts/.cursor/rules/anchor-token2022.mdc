@@ -1,0 +1,24 @@
+---
+description: Anchor + Token-2022 conventions for Transmuter programs.
+globs: "**/*.rs"
+alwaysApply: false
+---
+
+# Anchor / Token-2022
+
+- One shared program per type; per-launch state is PDAs + Token-2022 mints. No clones, no proxies.
+- cToken mint: NonTransferable, mint size **exactly 170** (`getMintLen([NonTransferable])`), freeze authority **none**, no PermanentDelegate.
+- Mint authority and treasury token account owner are program PDAs. Layout proven in `token2022_probe`: seeds `["mint_authority", mint]`, treasury = ATA of that PDA.
+- After every CPI (swap, mint, burn, LP), **re-read** token balances before using them (balance-delta).
+- Pin DEX / token / oracle program IDs in config. Never CPI into a caller-supplied program.
+- Do not depend on `spl-token-2022` inside an on-chain program (global allocator clash). Use `anchor-spl` token_2022 / token_2022_extensions.
+- Build with `scripts/build.sh` (platform-tools **v1.52**). Default v1.48 cannot parse edition2024 crates.
+- Prove Token-2022 behavior with `anchor test`, not by reading docs.
+
+```rust
+// ❌ BAD
+initialize_mint2(..., decimals, &authority, Some(&authority))?; // freeze set
+
+// ✅ GOOD — S13
+initialize_mint2(..., decimals, &authority, None)?;
+```

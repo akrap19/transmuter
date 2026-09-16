@@ -1,0 +1,25 @@
+---
+description: Launchpad UI math is a preview. Chain enforces. 10% UI ask vs 8% on-chain floor stay distinct.
+globs: "**/launchpad/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Chain is authority
+
+`lib/launchpad/launch-solver.ts` is a **preview**. The Factory / EOL Token decide whether a launch is valid.
+
+- UI **10%** treasury figure is the ASK (sizes the raise, blocks bad setups in the wizard).
+- On-chain **8%** is the accept floor after USDC→SOL slippage. A launch can land between 8% and 10%.
+- Combined backing **18%** is also on-chain. Do not fold 10% and 8% into one constant.
+
+```ts
+// ❌ BAD
+const TREAS_FLOOR = 0.08; // used in both UI and "keep aligned with chain"
+
+// ✅ GOOD
+const TREASURY_ASK = 0.10;      // UI / solver
+const TREASURY_ACCEPT = 0.08;   // document chain-only; do not drive the wizard with it
+const COMBINED_BACKING_MIN = 0.18;
+```
+
+Wallet address is identity. Do not add a login or user table for launch.

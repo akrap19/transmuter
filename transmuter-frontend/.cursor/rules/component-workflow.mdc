@@ -1,0 +1,60 @@
+---
+description: Reuse existing components first; add shadcn/Radix primitives only when needed
+alwaysApply: true
+---
+
+# Component Decision Workflow
+
+Before building any UI, follow this order. Do not skip steps.
+
+## 1. Search for existing components
+
+Check in this order:
+1. `components/ui/` — shadcn/ui primitives (Button, Input, Badge, SearchInput, etc.)
+2. `components/layout/` — Stack, Grid, Cluster, Center, Split, Switcher
+3. `components/animations/` — FadeIn, SlideInFromTop, etc.
+4. Feature components in `app/<feature>/` — reuse or extend before duplicating
+
+If a component exists, or can be extended with a new variant/prop, **use it**. Never recreate it.
+
+## 2. Compose before creating
+
+If no single component fits, compose existing ones:
+- Reusable composites → `components/ui/` (e.g. `search-input.tsx` = Input + Button + Label)
+- Page/feature-only UI → colocate in `app/<feature>/`
+
+## 3. Create a new base component (shadcn/Radix only)
+
+Only when nothing existing covers the need:
+
+1. **Prefer shadcn CLI** (wraps Radix UI for this project):
+   ```bash
+   pnpm dlx shadcn@latest add <component-name>
+   ```
+2. If shadcn has no match, use a **Radix UI primitive** and style it like `components/ui/button.tsx`.
+3. **Never** build interactive primitives (dialog, dropdown, tabs, popover, etc.) from scratch without Radix.
+
+## 4. Match project style
+
+New `components/ui/` files must follow `components/ui/button.tsx`:
+- Named exports, `cva` for variants, `cn()` for class merging
+- `data-slot` attributes on elements
+- Theme tokens (`bg-primary`, `border-input`, etc.) — no hardcoded hex colors
+- `"use client"` only when interactivity or browser APIs are required
+- Max ~100 lines per file; split if larger
+
+## 5. Pre-flight (before writing UI code)
+
+1. List or search `components/ui/` and `components/layout/`
+2. Grep for similar components in the codebase
+3. State the decision: reusing an existing component, composing existing ones, or adding via shadcn — and why
+
+## Reference implementations
+
+| Need | Look at |
+|------|---------|
+| Radix + variants | `components/ui/button.tsx` |
+| Composed UI | `components/ui/search-input.tsx` |
+| Feature usage | `app/zagreb-film-office/made-in-croatia/made-in-croatia-filters.tsx` |
+| Layout | `components/layout/` |
+| Theming | `app/globals.css` |

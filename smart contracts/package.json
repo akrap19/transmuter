@@ -1,0 +1,28 @@
+{
+  "name": "transmuter-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "test": "anchor test",
+    "build": "anchor build",
+    "keeper": "ts-node scripts/keeper.ts",
+    "measure-cu": "ts-node scripts/measure-cu.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "0.32.1",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.2"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.6",
+    "@types/chai": "^4.3.20",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^26.5.0",
+    "chai": "^4.5.0",
+    "mocha": "^10.8.2",
+    "ts-mocha": "^10.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}
