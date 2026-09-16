@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, Transfer};
 
 declare_id!("729ofbpZHYSodUi5ZKXibCFeYCHy9bQ7ojuWrYXLBcZZ");
 
@@ -25,7 +25,8 @@ pub mod transmuter_staking {
     pub fn stake(ctx: Context<Stake>, amount: u64) -> Result<()> {
         require!(amount > 0, StakeError::ZeroAmount);
         require!(!ctx.accounts.config.liquidated, StakeError::Liquidated);
-        token::transfer(
+        let before = ctx.accounts.vault.amount;
+        token_interface::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
@@ -37,15 +38,17 @@ pub mod transmuter_staking {
             amount,
         )?;
         ctx.accounts.vault.reload()?;
+        let received = ctx.accounts.vault.amount.saturating_sub(before);
+        require!(received > 0, StakeError::ZeroAmount);
         let rec = &mut ctx.accounts.stake_account;
         if rec.owner == Pubkey::default() {
             rec.owner = ctx.accounts.owner.key();
             rec.config = ctx.accounts.config.key();
             rec.bump = ctx.bumps.stake_account;
         }
-        rec.amount = rec.amount.saturating_add(amount);
-        rec.ever_staked = rec.ever_staked.saturating_add(amount);
-        ctx.accounts.config.total_staked = ctx.accounts.config.total_staked.saturating_add(amount);
+        rec.amount = rec.amount.saturating_add(received);
+        rec.ever_staked = rec.ever_staked.saturating_add(received);
+        ctx.accounts.config.total_staked = ctx.accounts.config.total_staked.saturating_add(received);
         Ok(())
     }
 
@@ -63,7 +66,7 @@ pub mod transmuter_staking {
         require!(ctx.accounts.vault.amount >= gross, StakeError::InsufficientVault);
         let cfg = &ctx.accounts.config;
         let seeds: &[&[u8]] = &[b"config", cfg.mint.as_ref(), &[cfg.bump]];
-        token::transfer(
+        token_interface::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
@@ -129,7 +132,7 @@ pub struct Initialize<'info> {
     pub factory: Signer<'info>,
     /// CHECK: paired EOL Token.
     pub eol_token: UncheckedAccount<'info>,
-    pub mint: Account<'info, Mint>,
+    pub mint: InterfaceAccount<'info, Mint>,
     #[account(
         init,
         payer = factory,
@@ -142,10 +145,11 @@ pub struct Initialize<'info> {
         init,
         payer = factory,
         token::mint = mint,
-        token::authority = config
+        token::authority = config,
+        token::token_program = token_program
     )]
-    pub vault: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
+    pub vault: InterfaceAccount<'info, TokenAccount>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -161,15 +165,16 @@ pub struct Stake<'info> {
         has_one = vault
     )]
     pub config: Account<'info, StakeConfig>,
-    pub mint: Account<'info, Mint>,
+    pub mint: InterfaceAccount<'info, Mint>,
     #[account(mut)]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: InterfaceAccount<'info, TokenAccount>,
     #[account(
         mut,
         token::mint = mint,
-        token::authority = owner
+        token::authority = owner,
+        token::token_program = token_program
     )]
-    pub source: Account<'info, TokenAccount>,
+    pub source: InterfaceAccount<'info, TokenAccount>,
     #[account(
         init_if_needed,
         payer = owner,
@@ -178,7 +183,7 @@ pub struct Stake<'info> {
         bump
     )]
     pub stake_account: Account<'info, StakeAccount>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -193,9 +198,9 @@ pub struct Unstake<'info> {
         has_one = vault
     )]
     pub config: Account<'info, StakeConfig>,
-    pub mint: Account<'info, Mint>,
+    pub mint: InterfaceAccount<'info, Mint>,
     #[account(mut)]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: InterfaceAccount<'info, TokenAccount>,
     #[account(
         mut,
         seeds = [b"stake", config.key().as_ref(), owner.key().as_ref()],
@@ -206,10 +211,11 @@ pub struct Unstake<'info> {
     #[account(
         mut,
         token::mint = mint,
-        token::authority = owner
+        token::authority = owner,
+        token::token_program = token_program
     )]
-    pub destination: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
+    pub destination: InterfaceAccount<'info, TokenAccount>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(Accounts)]

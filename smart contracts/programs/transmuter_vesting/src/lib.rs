@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token_interface::{self, Burn, Mint, TokenAccount, TokenInterface, Transfer};
 use transmuter_constants::{schedule_kind_ok, vested_amount, WALLET_CHANGE_DELAY_SECS};
 
 declare_id!("9p1LttUtL5Skg568m24NYj1DgsZAWaAcNn3w95CjJMJ4");
@@ -129,7 +129,7 @@ pub mod transmuter_vesting {
             .already_claimed
             .saturating_add(claimable);
         let seeds: &[&[u8]] = &[b"config", cfg.mint.as_ref(), &[cfg.bump]];
-        token::transfer(
+        token_interface::transfer(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
@@ -167,7 +167,7 @@ pub mod transmuter_vesting {
             );
             let bump_seed = [bump];
             let seeds: &[&[u8]] = &[b"config", mint.as_ref(), &bump_seed];
-            token::burn(
+            token_interface::burn(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
                     Burn {
@@ -211,7 +211,7 @@ pub struct Initialize<'info> {
     pub eol_token: UncheckedAccount<'info>,
     /// CHECK: founder who may push entries.
     pub founder: UncheckedAccount<'info>,
-    pub mint: Account<'info, Mint>,
+    pub mint: InterfaceAccount<'info, Mint>,
     /// CHECK: team recipient wallet.
     pub team_recipient: UncheckedAccount<'info>,
     #[account(
@@ -226,16 +226,18 @@ pub struct Initialize<'info> {
         init,
         payer = factory,
         token::mint = mint,
-        token::authority = config
+        token::authority = config,
+        token::token_program = token_program
     )]
-    pub team_pot: Account<'info, TokenAccount>,
+    pub team_pot: InterfaceAccount<'info, TokenAccount>,
     #[account(
         init,
         payer = factory,
         token::mint = mint,
-        token::authority = config
+        token::authority = config,
+        token::token_program = token_program
     )]
-    pub investor_pot: Account<'info, TokenAccount>,
+    pub investor_pot: InterfaceAccount<'info, TokenAccount>,
     #[account(
         init,
         payer = factory,
@@ -244,7 +246,7 @@ pub struct Initialize<'info> {
         bump
     )]
     pub team_entry: Account<'info, VestingEntry>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -272,7 +274,7 @@ pub struct PushEntry<'info> {
         has_one = founder
     )]
     pub config: Account<'info, VestingConfig>,
-    pub pot: Account<'info, TokenAccount>,
+    pub pot: InterfaceAccount<'info, TokenAccount>,
     #[account(
         init,
         payer = founder,
@@ -303,10 +305,10 @@ pub struct Claim<'info> {
         constraint = (entry.kind == KIND_INVESTOR && pot.key() == config.investor_pot)
             || (entry.kind != KIND_INVESTOR && pot.key() == config.team_pot)
     )]
-    pub pot: Account<'info, TokenAccount>,
-    #[account(mut, token::mint = config.mint)]
-    pub destination: Account<'info, TokenAccount>,
-    pub token_program: Program<'info, Token>,
+    pub pot: InterfaceAccount<'info, TokenAccount>,
+    #[account(mut, token::mint = config.mint, token::token_program = token_program)]
+    pub destination: InterfaceAccount<'info, TokenAccount>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(Accounts)]
@@ -323,12 +325,12 @@ pub struct NotifyLiquidation<'info> {
     )]
     pub config: Account<'info, VestingConfig>,
     #[account(mut)]
-    pub mint: Account<'info, Mint>,
+    pub mint: InterfaceAccount<'info, Mint>,
     #[account(mut)]
-    pub team_pot: Account<'info, TokenAccount>,
+    pub team_pot: InterfaceAccount<'info, TokenAccount>,
     #[account(mut)]
     pub team_entry: Account<'info, VestingEntry>,
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(Accounts)]

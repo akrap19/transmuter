@@ -16,5 +16,18 @@ describe("transmuter-constants seam (founder rulings)", () => {
     expect(c.COMBINED_BACKING_MIN_PCT).to.equal(FOUNDER.COMBINED_BACKING_MIN_PCT);
     expect(c.MAX_COMPUTE_UNITS).to.equal(FOUNDER.MAX_COMPUTE_UNITS);
     expect(c.NON_TRANSFERABLE_MINT_SPACE).to.equal(FOUNDER.NON_TRANSFERABLE_MINT_SPACE);
+    expect(c.TRANSFER_FEE_MINT_SPACE).to.equal(FOUNDER.TRANSFER_FEE_MINT_SPACE);
+    expect(c.SH2_MAX_SLIPPAGE_BPS).to.equal(FOUNDER.SH2_MAX_SLIPPAGE_BPS);
+    expect(
+      c.FEE_LP_DEFAULT_BPS +
+        c.FEE_TREASURY_DEFAULT_BPS +
+        c.FEE_CTOKEN_RESERVE_BPS +
+        c.FEE_PROTOCOL_MIN_BPS,
+    ).to.equal(c.TRANSFER_FEE_DEFAULT_BPS);
+    expect(c.LIQUIDATION_FEE_CTOKEN_BPS + c.LIQUIDATION_FEE_PROTOCOL_BPS).to.equal(
+      c.LIQUIDATION_FEE_BPS,
+    );
+    expect(c.LIQUIDATION_FEE_CTOKEN_BPS).to.not.equal(150);
   });
 });
+

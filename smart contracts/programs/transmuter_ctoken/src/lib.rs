@@ -91,7 +91,17 @@ pub mod transmuter_ctoken {
 
         let decimals = ctx.accounts.config.decimals;
         let supply = ctx.accounts.mint.supply;
-        let backing_before = vault_backing(&ctx.accounts.reserve.to_account_info())?;
+        let system_owned = ctx.accounts.authority.owner == &system_program::ID;
+        // Wallet callers pay via System transfer. A program-owned EOL config
+        // cannot be a System `from`; that caller credits `reserve` first and
+        // this instruction prices against backing minus the credited amount.
+        let backing_before = if system_owned {
+            vault_backing(&ctx.accounts.reserve.to_account_info())?
+        } else {
+            let now = vault_backing(&ctx.accounts.reserve.to_account_info())?;
+            require!(now >= underlying_amount, CTokenError::DepositMismatch);
+            now.saturating_sub(underlying_amount)
+        };
         let bpt = backing_per_token(backing_before, supply, decimals)?;
         let tokens = tokens_to_mint(
             underlying_amount,
@@ -104,22 +114,24 @@ pub mod transmuter_ctoken {
         let underlying_leg = bps_leg(base, ctx.accounts.config.underlying_premium_bps)?;
         let protocol_leg = bps_leg(base, ctx.accounts.config.protocol_premium_bps)?;
 
-        let reserve_before = ctx.accounts.reserve.to_account_info().lamports();
-        system_program::transfer(
-            CpiContext::new(
-                ctx.accounts.system_program.to_account_info(),
-                system_program::Transfer {
-                    from: ctx.accounts.authority.to_account_info(),
-                    to: ctx.accounts.reserve.to_account_info(),
-                },
-            ),
-            underlying_amount,
-        )?;
-        let reserve_after = ctx.accounts.reserve.to_account_info().lamports();
-        require!(
-            reserve_after.saturating_sub(reserve_before) == underlying_amount,
-            CTokenError::DepositMismatch
-        );
+        if system_owned {
+            let reserve_before = ctx.accounts.reserve.to_account_info().lamports();
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    system_program::Transfer {
+                        from: ctx.accounts.authority.to_account_info(),
+                        to: ctx.accounts.reserve.to_account_info(),
+                    },
+                ),
+                underlying_amount,
+            )?;
+            let reserve_after = ctx.accounts.reserve.to_account_info().lamports();
+            require!(
+                reserve_after.saturating_sub(reserve_before) == underlying_amount,
+                CTokenError::DepositMismatch
+            );
+        }
 
         send_lamports(
             &ctx.accounts.reserve.to_account_info(),

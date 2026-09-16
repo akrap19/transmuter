@@ -34,18 +34,23 @@ describe("finalize compute-budget probe", () => {
 
     const vaultAKp = Keypair.generate();
     const vaultBKp = Keypair.generate();
-    const [poolPda] = PublicKey.findProgramAddressSync([Buffer.from("pool")], dex.programId);
+    const [poolPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("pool"), mintA.toBuffer(), mintB.toBuffer()],
+      dex.programId,
+    );
 
     await dex.methods
       .initialize()
       .accounts({
         payer: payer.publicKey,
+        withdrawAuthority: payer.publicKey,
         mintA,
         mintB,
         pool: poolPda,
         vaultA: vaultAKp.publicKey,
         vaultB: vaultBKp.publicKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgramA: TOKEN_PROGRAM_ID,
+        tokenProgramB: TOKEN_PROGRAM_ID,
       })
       .signers([vaultAKp, vaultBKp])
       .rpc();
@@ -108,6 +113,8 @@ describe("finalize compute-budget probe", () => {
             vaultB: vaultBKp.publicKey,
             userTokenA: userA,
             userTokenB: userB,
+            poolMintA: mintA,
+            poolMintB: mintB,
             dexProgram: dex.programId,
             splTokenProgram: TOKEN_PROGRAM_ID,
             token2022Program: TOKEN_2022_PROGRAM_ID,

@@ -7,9 +7,11 @@ cd "$ROOT"
 mkdir -p target/deploy
 cp keys/*-keypair.json target/deploy/ 2>/dev/null || true
 cargo-build-sbf --tools-version v1.52 --workspace
-# token2022_probe enables mock-dex `cpi` (no-entrypoint). Workspace feature
-# unification would otherwise leave mock_dex.so as an empty stub. Rebuild it last.
-cargo-build-sbf --tools-version v1.52 -- -p mock-dex
+# CPI features on dependents compile these as no-entrypoint. Rebuild the
+# deployable artefacts last so .so files are not empty stubs.
+for crate in mock-dex transmuter-ctoken transmuter-vesting transmuter-runway-escrow transmuter-staking transmuter-eol-token; do
+  cargo-build-sbf --tools-version v1.52 -- -p "$crate"
+done
 # cargo-build-sbf does not emit IDLs. Write them so
 # `anchor test --skip-lint --skip-build` can run against this artefact.
 anchor idl build -p transmuter_ctoken --skip-lint \
@@ -27,4 +29,10 @@ anchor idl build -p transmuter_runway_escrow --skip-lint \
 anchor idl build -p transmuter_staking --skip-lint \
   -o target/idl/transmuter_staking.json \
   -t target/types/transmuter_staking.ts
+anchor idl build -p mock_dex --skip-lint \
+  -o target/idl/mock_dex.json \
+  -t target/types/mock_dex.ts
+anchor idl build -p transmuter_eol_token --skip-lint \
+  -o target/idl/transmuter_eol_token.json \
+  -t target/types/transmuter_eol_token.ts
 

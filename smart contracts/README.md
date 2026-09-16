@@ -2,8 +2,9 @@
 
 Anchor workspace for the Transmuter MVP. Implemented: Token-2022 layout
 proofs, mock Pyth, mock DEX, keeper stub, cToken (cSOL), Vesting, Runway
-Escrow, and Staking. Factory, EOL Token, Registry, and DAO are still
-`ping` stubs.
+Escrow, Staking, and EOL Token (USDC sale, finalize gates, convertTreasury,
+reserve mint, liquidation). Factory, Registry, and DAO are still `ping`
+stubs.
 
 There is **no gold mint**. Spec pack section 0.2b.
 
@@ -32,7 +33,8 @@ solana config set --url localhost
 | `programs/transmuter_vesting` | Two-pot vesting, one TEAM entry, liquidation write-down burn |
 | `programs/transmuter_runway_escrow` | USDC runway: fund/draw, halt/resume/advance, liquidation return |
 | `programs/transmuter_staking` | Free stake/unstake, snapshotWeight, voter lock |
-| `programs/transmuter_*` | Factory, EOL Token, Registry, DAO are still `ping` stubs |
+| `programs/transmuter_eol_token` | USDC sale, finalize gates (8/10/18), convertTreasury, fees, reserve mint A+B, liquidation |
+| `programs/transmuter_*` | Factory, Registry, and DAO are still `ping` stubs |
 | `crates/transmuter-constants` | Shared numbers (premium 1.25%, 8/10/18 floors) |
 | `scripts/keeper.ts` | S9 crank runner (stubs + mock Pyth) |
 | `scripts/build.sh` | `cargo-build-sbf --tools-version v1.52` |
@@ -85,7 +87,7 @@ comfortably. Re-measure against the real DEX before treating the
 `convertTreasury` split as closed.
 
 `./scripts/build.sh` uses platform-tools v1.52 and writes IDLs for cToken,
-the Token-2022 probe, Vesting, Runway Escrow, and Staking.
+the Token-2022 probe, Vesting, Runway Escrow, Staking, mock DEX, and EOL Token.
 `anchor test --skip-lint --skip-build` then runs against that artefact (a plain
 `anchor test` may rebuild with v1.48 and fail).
 
@@ -126,3 +128,17 @@ Staking is free both ways (`fee_bps = 0`). Unstake returns only to the
 staker's own token account. `snapshotWeight` records weight and
 `total_staked_at_open`. After `notifyLiquidation`, stake is off and unstake
 stays on.
+
+## EOL Token
+
+USDC sale, then finalize. All go/no-go gates (Raise, Escrow, LP, Treasury
+accept **8%**, Combined **18%**) run **before any funds move**. The **10%**
+figure is the launchpad ask, not an on-chain kill. Unsold sale tokens and
+unpaired LP burn; LP scales with subscription `f` at the sale price.
+
+`convertTreasury` is a separate permissionless crank (resumable, idempotent;
+a failed swap retries). Every backing read counts cSOL + unconverted USDC +
+SOL residue. Escrow remainder at liquidation is a second USDC redemption
+leg. Reserve-mint Path B uses the creator-set `governed_mint_pct_bps`.
+Liquidation fee is 2% split 1.75% cToken primary / 0.25% protocol;
+redemption fees go to zero at execute.
