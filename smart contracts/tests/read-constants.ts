@@ -25,16 +25,23 @@ export const FOUNDER = {
   LIQUIDATION_FEE_BPS: 200,
   LIQUIDATION_FEE_CTOKEN_BPS: 175,
   LIQUIDATION_FEE_PROTOCOL_BPS: 25,
+  // VoteType discriminants. Never shift; GATE1_FALLBACK stays last (SH5).
+  VOTE_SENSITIVE: 0,
+  VOTE_UPGRADE: 1,
+  VOTE_AMBASSADOR: 2,
+  VOTE_DAO_INTERNAL: 3,
+  VOTE_EOL_GATE3: 4,
+  VOTE_LIQ_DAO: 5,
+  VOTE_FREEZE: 6,
+  VOTE_GATE_OPEN: 7,
+  VOTE_EMERGENCY: 8,
+  VOTE_ESCROW_DAO: 9,
+  VOTE_GATE1_FALLBACK: 10,
 } as const;
 
-const CONSTANTS_RS = path.join(
-  __dirname,
-  "..",
-  "crates",
-  "transmuter-constants",
-  "src",
-  "lib.rs",
-);
+const CONSTANTS_DIR = path.join(__dirname, "..", "crates", "transmuter-constants", "src");
+const CONSTANTS_RS = path.join(CONSTANTS_DIR, "lib.rs");
+const GOVERNANCE_RS = path.join(CONSTANTS_DIR, "governance.rs");
 
 function rustU64(src: string, name: string): number {
   const m = src.match(new RegExp(`pub const ${name}: \\w+ = ([0-9_]+);`));
@@ -45,7 +52,7 @@ function rustU64(src: string, name: string): number {
 }
 
 export function readRustConstants() {
-  const src = fs.readFileSync(CONSTANTS_RS, "utf8");
+  const src = fs.readFileSync(CONSTANTS_RS, "utf8") + fs.readFileSync(GOVERNANCE_RS, "utf8");
   return {
     MINT_PREMIUM_RATE_BPS: rustU64(src, "MINT_PREMIUM_RATE_BPS"),
     UNDERLYING_PREMIUM_RATE_BPS: rustU64(src, "UNDERLYING_PREMIUM_RATE_BPS"),
@@ -69,5 +76,16 @@ export function readRustConstants() {
     LIQUIDATION_FEE_BPS: rustU64(src, "LIQUIDATION_FEE_BPS"),
     LIQUIDATION_FEE_CTOKEN_BPS: rustU64(src, "LIQUIDATION_FEE_CTOKEN_BPS"),
     LIQUIDATION_FEE_PROTOCOL_BPS: rustU64(src, "LIQUIDATION_FEE_PROTOCOL_BPS"),
+    VOTE_SENSITIVE: rustU64(src, "VOTE_SENSITIVE"),
+    VOTE_UPGRADE: rustU64(src, "VOTE_UPGRADE"),
+    VOTE_AMBASSADOR: rustU64(src, "VOTE_AMBASSADOR"),
+    VOTE_DAO_INTERNAL: rustU64(src, "VOTE_DAO_INTERNAL"),
+    VOTE_EOL_GATE3: rustU64(src, "VOTE_EOL_GATE3"),
+    VOTE_LIQ_DAO: rustU64(src, "VOTE_LIQ_DAO"),
+    VOTE_FREEZE: rustU64(src, "VOTE_FREEZE"),
+    VOTE_GATE_OPEN: rustU64(src, "VOTE_GATE_OPEN"),
+    VOTE_EMERGENCY: rustU64(src, "VOTE_EMERGENCY"),
+    VOTE_ESCROW_DAO: rustU64(src, "VOTE_ESCROW_DAO"),
+    VOTE_GATE1_FALLBACK: rustU64(src, "VOTE_GATE1_FALLBACK"),
   };
 }

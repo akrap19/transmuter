@@ -28,6 +28,10 @@ describe("transmuter-constants seam (founder rulings)", () => {
       c.LIQUIDATION_FEE_BPS,
     );
     expect(c.LIQUIDATION_FEE_CTOKEN_BPS).to.not.equal(150);
+    expect(c.VOTE_SENSITIVE).to.equal(FOUNDER.VOTE_SENSITIVE);
+    expect(c.VOTE_LIQ_DAO).to.equal(FOUNDER.VOTE_LIQ_DAO);
+    expect(c.VOTE_GATE1_FALLBACK).to.equal(FOUNDER.VOTE_GATE1_FALLBACK);
+    expect(c.VOTE_GATE1_FALLBACK).to.equal(10);
   });
 });
 

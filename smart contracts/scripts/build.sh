@@ -9,7 +9,7 @@ cp keys/*-keypair.json target/deploy/ 2>/dev/null || true
 cargo-build-sbf --tools-version v1.52 --workspace
 # CPI features on dependents compile these as no-entrypoint. Rebuild the
 # deployable artefacts last so .so files are not empty stubs.
-for crate in mock-dex transmuter-ctoken transmuter-vesting transmuter-runway-escrow transmuter-staking transmuter-eol-token; do
+for crate in mock-dex transmuter-ctoken transmuter-vesting transmuter-runway-escrow transmuter-staking transmuter-eol-token transmuter-registry transmuter-dao; do
   cargo-build-sbf --tools-version v1.52 -- -p "$crate"
 done
 # cargo-build-sbf does not emit IDLs. Write them so
@@ -38,4 +38,10 @@ anchor idl build -p transmuter_eol_token --skip-lint \
 anchor idl build -p transmuter_factory --skip-lint \
   -o target/idl/transmuter_factory.json \
   -t target/types/transmuter_factory.ts
+anchor idl build -p transmuter_registry --skip-lint \
+  -o target/idl/transmuter_registry.json \
+  -t target/types/transmuter_registry.ts
+anchor idl build -p transmuter_dao --skip-lint \
+  -o target/idl/transmuter_dao.json \
+  -t target/types/transmuter_dao.ts
 

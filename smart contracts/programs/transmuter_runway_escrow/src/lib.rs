@@ -166,9 +166,11 @@ pub struct Initialize<'info> {
     pub usdc_mint: Account<'info, Mint>,
     /// CHECK: team draw wallet.
     pub team_recipient: UncheckedAccount<'info>,
-    /// CHECK: DAO-direct door for halt/resume until Registry shims exist.
+    /// CHECK: DAO-direct door for halt/resume. Escrow still accepts this
+    /// pubkey; live DAO resolution from the Registry config prefix is a
+    /// later pointer-swap.
     pub dao_direct: UncheckedAccount<'info>,
-    /// CHECK: Registry; DAO pointer is resolved live later. Snapshotted so the creator cannot swap it.
+    /// CHECK: Registry program/account. Snapshotted so the creator cannot swap it.
     pub registry: UncheckedAccount<'info>,
     #[account(
         init,

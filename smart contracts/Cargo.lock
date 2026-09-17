@@ -2958,6 +2958,7 @@ name = "transmuter-dao"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "transmuter-constants",
 ]
 
 [[package]]
@@ -2994,6 +2995,7 @@ name = "transmuter-registry"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "transmuter-constants",
 ]
 
 [[package]]

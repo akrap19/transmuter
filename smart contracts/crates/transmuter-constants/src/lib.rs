@@ -103,7 +103,9 @@ pub fn premium_legs_sum_ok() -> bool {
 }
 
 pub mod schedule;
+pub mod governance;
 pub use schedule::*;
+pub use governance::*;
 
 #[cfg(test)]
 mod tests {
@@ -148,5 +150,28 @@ mod tests {
         assert_eq!(TREASURY_ACCEPT_PCT, 8);
         assert_eq!(TREASURY_MIN_PCT, 10);
         assert_eq!(COMBINED_BACKING_MIN_PCT, 18);
+        assert_eq!(VOTE_SENSITIVE, 0);
+        assert_eq!(VOTE_LIQ_DAO, 5);
+        assert_eq!(VOTE_GATE1_FALLBACK, 10);
+        assert!(community_vote_type(VOTE_LIQ_DAO));
+        assert!(!community_vote_type(VOTE_SENSITIVE));
+        assert!(!community_vote_type(VOTE_EMERGENCY));
+        let prefix = decode_registry_config_prefix(&padded_registry_prefix()).unwrap();
+        assert_eq!(prefix.ambassador_count, 0);
+        assert!(prefix.genesis_locked);
+        assert_eq!(prefix.founders.len(), 0);
+    }
+
+    fn padded_registry_prefix() -> Vec<u8> {
+        let mut buf = vec![0u8; 8];
+        buf.extend_from_slice(&[7u8; 32]);
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.push(0);
+        buf.extend_from_slice(&[9u8; 32]);
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        buf.extend_from_slice(&7u32.to_le_bytes());
+        buf.push(1);
+        buf.extend_from_slice(&[0xab; 40]);
+        buf
     }
 }

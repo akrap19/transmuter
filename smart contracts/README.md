@@ -3,8 +3,9 @@
 Anchor workspace for the Transmuter MVP. Implemented: Token-2022 layout
 proofs, mock Pyth, mock DEX, keeper stub, cToken (cSOL), Vesting, Runway
 Escrow, Staking, EOL Token (USDC sale, finalize gates, convertTreasury,
-reserve mint, liquidation), and Factory (CREATED → WIRED → SALE). Registry
-and DAO are still `ping` stubs.
+reserve mint, liquidation), and Factory (CREATED → WIRED → SALE). Registry and DAO are shims
+(`exists = true`, `quorumMet = false`; streaming-decodable Registry
+config prefix).
 
 There is **no gold mint**. Spec pack section 0.2b.
 
@@ -35,7 +36,8 @@ solana config set --url localhost
 | `programs/transmuter_staking` | Free stake/unstake, snapshotWeight, voter lock |
 | `programs/transmuter_eol_token` | USDC sale, finalize gates (8/10/18), convertTreasury, fees, reserve mint A+B, liquidation |
 | `programs/transmuter_factory` | Launchpad Factory: snapshotted validations, CREATED → WIRED → SALE, registry with creator |
-| `programs/transmuter_*` | Registry and DAO are still `ping` stubs |
+| `programs/transmuter_registry` | Ambassador Registry shim: empty council, streaming config prefix |
+| `programs/transmuter_dao` | DAO shim: community vote exists, quorum not met |
 | `crates/transmuter-constants` | Shared numbers (premium 1.25%, 8/10/18 floors) |
 | `scripts/keeper.ts` | S9 crank runner (stubs + mock Pyth) |
 | `scripts/build.sh` | `cargo-build-sbf --tools-version v1.52` |
@@ -89,7 +91,7 @@ comfortably. Re-measure against the real DEX before treating the
 
 `./scripts/build.sh` uses platform-tools v1.52 and writes IDLs for cToken,
 the Token-2022 probe, Vesting, Runway Escrow, Staking, mock DEX, EOL Token,
-and Factory.
+Factory, Registry, and DAO.
 `anchor test --skip-lint --skip-build` then runs against that artefact (a plain
 `anchor test` may rebuild with v1.48 and fail).
 
@@ -155,4 +157,21 @@ Every launch nominates cSOL as backing and a mock cBTC as fallback (validation
 unreachable until the mask is complete (vaults last, so a half-wired launch
 cannot take a deposit). The registry stores `creator` and copies ACTIVE/VOIDED
 from the EOL token via `sync_outcome`.
+
+## Registry + DAO shims
+
+Stand-ins so liquidation and governed reserve-mint can read a result instead
+of treating a missing body as consent. Swapping in the real programs later is
+a pointer change; consumers stream-decode the Registry config prefix and
+ignore trailing bytes.
+
+| Instruction | Role |
+|---|---|
+| Registry `initialize` | Writes `RegistryConfig` prefix (team, founders, founderThreshold, daoProgram, ambassadorCount=0, maxAmbassadors, genesisLocked) plus shim-only suffix |
+| Registry `isAmbassador` / `getAmbassadorCount` / `getAllAmbassadors` | Always false / 0 / empty. Zero count means quorum not met; never divide by it |
+| Registry `openCouncilLiquidationVote` / `getCouncilLiquidationResult` | `windowEnd` must be a future unix timestamp; result is `exists=true`, `quorumMet=false` |
+| DAO `initialize` | Config PDA `["config"]` |
+| DAO `openCommunityVote` | Frozen signature `(proposalId, voteType, windowEnd)`; binary types only (`VOTE_LIQ_DAO` and siblings). `windowEnd` is an absolute timestamp |
+| DAO `getCommunityVoteResult` | Same shape as the council read: `exists=true`, `quorumMet=false`, `passed=false` |
+
 
