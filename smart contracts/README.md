@@ -1,9 +1,11 @@
 # Transmuter programs
 
 Anchor workspace for the Transmuter MVP. Implemented: Token-2022 layout
-proofs, mock Pyth, mock DEX, keeper stub, cToken (cSOL), Vesting, Runway
-Escrow, Staking, EOL Token (USDC sale, finalize gates, convertTreasury,
-reserve mint, liquidation), and Factory (CREATED → WIRED → SALE). Registry and DAO are shims
+proofs, Pyth-shaped oracle (mock_pyth `set_price` plus PriceUpdateV2
+decode), pinned mock DEX venue, keeper + full lifecycle script, cToken
+(cSOL), Vesting, Runway Escrow, Staking, EOL Token (USDC sale, finalize
+gates, convertTreasury, reserve mint, liquidation), and Factory
+(CREATED → WIRED → SALE). Registry and DAO are shims
 (`exists = true`, `quorumMet = false`; streaming-decodable Registry
 config prefix).
 
@@ -28,8 +30,8 @@ solana config set --url localhost
 | Path | Role |
 |---|---|
 | `programs/token2022_probe` | NonTransferable treasury layout + finalize CU probe |
-| `programs/mock_pyth` | Settable price / conf / publish_time |
-| `programs/mock_dex` | Constant-product swap with min_out (SH2) |
+| `programs/mock_pyth` | Settable price / conf / publish_time (lifecycle still `set_price`s to force Path A) |
+| `programs/mock_dex` | Pinned protocol venue: constant-product swap with min_out (SH2) |
 | `programs/transmuter_ctoken` | cSOL: NonTransferable mint, `mintForTreasury`, `redeem`, flush |
 | `programs/transmuter_vesting` | Two-pot vesting, one TEAM entry, liquidation write-down burn |
 | `programs/transmuter_runway_escrow` | USDC runway: fund/draw, halt/resume/advance, liquidation return |
@@ -38,8 +40,10 @@ solana config set --url localhost
 | `programs/transmuter_factory` | Launchpad Factory: snapshotted validations, CREATED → WIRED → SALE, registry with creator |
 | `programs/transmuter_registry` | Ambassador Registry shim: empty council, streaming config prefix |
 | `programs/transmuter_dao` | DAO shim: community vote exists, quorum not met |
-| `crates/transmuter-constants` | Shared numbers (premium 1.25%, 8/10/18 floors) |
-| `scripts/keeper.ts` | S9 crank runner (stubs + mock Pyth) |
+| `crates/transmuter-constants` | Shared numbers (premium 1.25%, 8/10/18 floors, oracle bounds, pinned program ids) |
+| `crates/transmuter-oracle` | Decodes Pyth `PriceUpdateV2` and mock_pyth `PriceFeed`; stale / wide-conf are errors |
+| `scripts/keeper.ts` | S9 crank runner (mock Pyth `set_price`) |
+| `scripts/lifecycle.ts` | Full path: launch → sale → finalize → convert → fees → oracle snapshot → reserve mint → vote → liquidation → redeem |
 | `scripts/build.sh` | `cargo-build-sbf --tools-version v1.52` |
 | `tests/` | Layout proofs, mocks, cToken |
 | `reports/finalize-cu.json` | Written by the CU test |
@@ -60,16 +64,36 @@ yarn install
 anchor test --skip-lint --skip-build
 yarn measure-cu
 yarn keeper
+yarn lifecycle
 ```
 
 `yarn measure-cu` only reprints `reports/finalize-cu.json` from the last test run. It does not need a validator.
 
-`yarn keeper` is a stub. After `anchor test` there is no validator, so it **skips** (exit 0). To actually crank mock Pyth:
+`yarn keeper` is a crank. After `anchor test` there is no validator, so it **skips** (exit 0). To actually crank mock Pyth:
 
 ```bash
 anchor test --skip-lint --detach
 yarn keeper
 ```
+
+`yarn lifecycle` runs the whole launch → redemption path once (the Phase 7 keeper script). Same skip if nothing is listening. `tests/lifecycle.ts` is the same path under `anchor test`.
+
+Public-devnet (programs `mock_pyth`, `mock_dex`, `transmuter_ctoken`, `transmuter_eol_token` already deployed; wallet needs a few SOL):
+
+```bash
+ANCHOR_PROVIDER_URL=https://api.devnet.solana.com \
+ANCHOR_WALLET="$HOME/.config/solana/id.json" \
+yarn lifecycle
+```
+
+The script still `set_price`s mock_pyth to force reserve-mint Path A. On
+public-devnet it first snapshots a Pyth `PriceUpdateV2` (Hermes post when
+`HERMES_URL` / `HERMES_API_KEY` work; otherwise mock_pyth `write_v2` layout)
+and runs `convertTreasury` through Raydium CPMM (`CPMDWBw…`) USDC→WSOL.
+New-token EOL/USDC and EOL/WSOL LP is seeded on Raydium CPMM on public-devnet
+(`seed_raydium_lp` after finalize; an empty `lp_signer` PDA pays Raydium's
+create-pool SOL fee). Localnet still uses the pinned mock DEX.
+Optional `SOLANA_RPC_URL` overrides the HTTP endpoint.
 
 ## Token-2022 layout results (localnet)
 
@@ -84,13 +108,20 @@ These results are localnet Token-2022, not that venue.
 | `TransferFeeConfig` on that mint | fails at Token-2022 |
 | `probe_finalize_compute` (2 swaps + mint) | **64,500 CU** of 1,400,000 (headroom 1,335,500); 14 accounts of 64 |
 
-The CU figure is a **stand-in**: constant-product mock swaps, not Raydium/Orca CLMM.
-It proves a BPF artefact exists and that two swap CPIs plus a Token-2022 mint fit
-comfortably. Re-measure against the real DEX before treating the
-`convertTreasury` split as closed.
+The CU figure is a **stand-in**: constant-product swaps on the pinned mock
+DEX venue, not Raydium/Orca CLMM. New EOL token mints have no existing CLMM
+book; the protocol venue is `mock_dex` (program id pinned in
+`transmuter-constants` and typed as `Program<MockDex>` on finalize /
+convertTreasury). Re-measure if that venue is swapped for Raydium CPMM.
+
+Oracle reads accept Pyth pull `PriceUpdateV2` (owner =
+`rec5EKMGg6MxZWaMbitBFZouL8cRSrkNRK57yRpBEVV`) or mock_pyth. Stale (>120s)
+and wide-confidence (>500 bps) prints revert so reserve-mint clocks do not
+advance. The lifecycle script still `set_price`s the mock feed to force
+Path A, as the spec pack requires.
 
 `./scripts/build.sh` uses platform-tools v1.52 and writes IDLs for cToken,
-the Token-2022 probe, Vesting, Runway Escrow, Staking, mock DEX, EOL Token,
+the Token-2022 probe, Vesting, Runway Escrow, Staking, mock Pyth, mock DEX, EOL Token,
 Factory, Registry, and DAO.
 `anchor test --skip-lint --skip-build` then runs against that artefact (a plain
 `anchor test` may rebuild with v1.48 and fail).
@@ -145,7 +176,9 @@ a failed swap retries). Every backing read counts cSOL + unconverted USDC +
 SOL residue. Escrow remainder at liquidation is a second USDC redemption
 leg. Reserve-mint Path B uses the creator-set `governed_mint_pct_bps`.
 Liquidation fee is 2% split 1.75% cToken primary / 0.25% protocol;
-redemption fees go to zero at execute.
+redemption fees go to zero at execute. `snapshot_oracle` is the S9 price
+crank: it stores a Pyth / mock_pyth print and, when ACTIVE, arms Path A
+from that price.
 
 ## Factory
 

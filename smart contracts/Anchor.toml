@@ -20,6 +20,19 @@ transmuter_staking = "729ofbpZHYSodUi5ZKXibCFeYCHy9bQ7ojuWrYXLBcZZ"
 transmuter_registry = "gA8y6oPQebWC2cNFgwKbJX9ivtWYpb6bf4pSJxkejfV"
 transmuter_dao = "6obevHvyADNmvyysyj8QBfgUQUbbhZU4CvMtghbRHw3W"
 
+[programs.devnet]
+token2022_probe = "pdESF2dhiihRkaMNiysseuiRwhy3VKR8ce7MFiomPv5"
+mock_pyth = "DyMTvcaqzXa5PjCqEyTf3FgWzQ2criPopM9ASXm9RVS5"
+mock_dex = "B1Wxrd67VBAmBKKvwx41YZjgpJDfJWmJHyXfHCBfrqdV"
+transmuter_ctoken = "GqWdDqeD8EJARnqtv1DKTBUStkGFR5stKRHmHMuuGru4"
+transmuter_eol_token = "DUYcHygp6rTdf3XY49ewhEyzpUg2QEfWECPTu5ucpaXJ"
+transmuter_factory = "5D3y69mm4wrz7VcGsagfvnrMorvLar7ZnZaLfd3uVcfV"
+transmuter_vesting = "9p1LttUtL5Skg568m24NYj1DgsZAWaAcNn3w95CjJMJ4"
+transmuter_runway_escrow = "Dy1ddZeaR7GL2QPxWnogrFmdYio4eE5Hrm613SS2PbdK"
+transmuter_staking = "729ofbpZHYSodUi5ZKXibCFeYCHy9bQ7ojuWrYXLBcZZ"
+transmuter_registry = "gA8y6oPQebWC2cNFgwKbJX9ivtWYpb6bf4pSJxkejfV"
+transmuter_dao = "6obevHvyADNmvyysyj8QBfgUQUbbhZU4CvMtghbRHw3W"
+
 [registry]
 url = "https://api.apr.dev"
 
@@ -30,6 +43,7 @@ wallet = "~/.config/solana/id.json"
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 keeper = "yarn run ts-node scripts/keeper.ts"
+lifecycle = "yarn run ts-node scripts/lifecycle.ts"
 measure-cu = "yarn run ts-node scripts/measure-cu.ts"
 
 [test]

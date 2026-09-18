@@ -1,0 +1,11 @@
+[package]
+name = "transmuter-oracle"
+version = "0.1.0"
+description = "Pyth PriceUpdateV2 + mock_pyth decoder (S5 / S13)"
+edition = "2021"
+
+[lib]
+name = "transmuter_oracle"
+
+[dependencies]
+transmuter-constants = { path = "../transmuter-constants" }

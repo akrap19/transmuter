@@ -1,0 +1,13 @@
+[package]
+name = "transmuter-dex"
+version = "0.1.0"
+description = "Raydium CPMM swap_base_input + WSOL close (convertTreasury venue)"
+edition = "2021"
+
+[lib]
+name = "transmuter_dex"
+
+[dependencies]
+anchor-lang = "0.32.1"
+anchor-spl = { version = "0.32.1", features = ["token"] }
+transmuter-constants = { path = "../transmuter-constants" }

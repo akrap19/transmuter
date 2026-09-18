@@ -7,6 +7,7 @@
     "test": "anchor test",
     "build": "anchor build",
     "keeper": "ts-node scripts/keeper.ts",
+    "lifecycle": "ts-node scripts/lifecycle.ts",
     "measure-cu": "ts-node scripts/measure-cu.ts"
   },
   "dependencies": {

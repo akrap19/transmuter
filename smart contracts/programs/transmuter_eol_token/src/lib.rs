@@ -5,14 +5,18 @@ use anchor_spl::token_2022_extensions::{
     transfer_fee_initialize, transfer_fee_set, TransferFeeInitialize, TransferFeeSetTransferFee,
 };
 use anchor_spl::token_interface::{
-    burn, initialize_mint2, mint_to, Burn, InitializeMint2, Mint, MintTo, TokenAccount,
-    TokenInterface, Transfer, TransferChecked,
+    burn, initialize_mint2, mint_to, set_authority, Burn, InitializeMint2, Mint, MintTo,
+    SetAuthority, TokenAccount, TokenInterface, Transfer, TransferChecked,
 };
+use anchor_spl::token_2022::spl_token_2022::instruction::AuthorityType;
 use mock_dex::cpi::accounts::{AddLiquidity, SwapToSol};
+use mock_dex::program::MockDex;
 use transmuter_constants::*;
 use transmuter_ctoken::cpi::accounts::MintForTreasury as CTokenMint;
 use transmuter_ctoken::cpi::accounts::Redeem as CTokenRedeem;
 use transmuter_ctoken::program::TransmuterCtoken;
+use transmuter_dex::{self, is_mock_dex, is_raydium_cpmm, RAYDIUM_INIT_REMAINING};
+use transmuter_oracle::{self, OracleError};
 
 mod math;
 use math::{
@@ -223,6 +227,10 @@ pub mod transmuter_eol_token {
             rm_gov_closes_at: 0,
             rm_gov_open: false,
             liq_vote_window_secs: params.liq_vote_window_secs,
+            oracle_price: 0,
+            oracle_conf: 0,
+            oracle_expo: 0,
+            oracle_publish_time: 0,
             bump: ctx.bumps.config,
         });
         Ok(())
@@ -363,7 +371,7 @@ pub mod transmuter_eol_token {
         Ok(())
     }
 
-    pub fn finalize(ctx: Context<Finalize>) -> Result<()> {
+    pub fn finalize<'a>(ctx: Context<'_, '_, 'a, 'a, Finalize<'a>>) -> Result<()> {
         require!(ctx.accounts.config.status == STATUS_SALE, EolError::WrongStatus);
         let now = Clock::get()?.unix_timestamp;
         require!(
@@ -427,68 +435,114 @@ pub mod transmuter_eol_token {
                 let usdc_tokens =
                     ((p.lp_paired as u128) * (lp_usdc_share_bps as u128) / math::BPS) as u64;
                 let usdc_cash = usdc_for_tokens(usdc_tokens, sale_price, decimals);
-                if usdc_tokens > 0 && usdc_cash > 0 {
-                    mock_dex::cpi::add_liquidity(
-                        CpiContext::new_with_signer(
-                            ctx.accounts.dex_program.to_account_info(),
-                            AddLiquidity {
-                                user: ctx.accounts.config.to_account_info(),
-                                pool: ctx.accounts.pool_usdc.to_account_info(),
-                                vault_a: ctx.accounts.pool_usdc_vault_a.to_account_info(),
-                                vault_b: ctx.accounts.pool_usdc_vault_b.to_account_info(),
-                                user_a: ctx.accounts.lp_token_vault.to_account_info(),
-                                user_b: ctx.accounts.sale_usdc_vault.to_account_info(),
-                                mint_a: ctx.accounts.mint.to_account_info(),
-                                mint_b: ctx.accounts.usdc_mint.to_account_info(),
-                                token_program_a: ctx.accounts.token_program.to_account_info(),
-                                token_program_b: ctx.accounts.usdc_program.to_account_info(),
-                            },
-                            &[seeds],
-                        ),
-                        usdc_tokens,
-                        usdc_cash,
-                    )?;
-                }
                 let sol_tokens = p.lp_paired.saturating_sub(usdc_tokens);
                 let sol_cash = usdc_for_tokens(sol_tokens, sale_price, decimals);
                 let over = sol_cash.saturating_add(bps_of(sol_cash, sh2 as u16));
-                if over > 0 {
-                    let before = ctx.accounts.config.to_account_info().lamports();
-                    mock_dex::cpi::swap_to_sol(
-                        CpiContext::new_with_signer(
+                if is_mock_dex(&ctx.accounts.dex_program.key()) {
+                    if usdc_tokens > 0 && usdc_cash > 0 {
+                        mock_dex::cpi::add_liquidity(
+                            CpiContext::new_with_signer(
+                                ctx.accounts.dex_program.to_account_info(),
+                                AddLiquidity {
+                                    user: ctx.accounts.config.to_account_info(),
+                                    pool: ctx.accounts.pool_usdc.to_account_info(),
+                                    vault_a: ctx.accounts.pool_usdc_vault_a.to_account_info(),
+                                    vault_b: ctx.accounts.pool_usdc_vault_b.to_account_info(),
+                                    user_a: ctx.accounts.lp_token_vault.to_account_info(),
+                                    user_b: ctx.accounts.sale_usdc_vault.to_account_info(),
+                                    mint_a: ctx.accounts.mint.to_account_info(),
+                                    mint_b: ctx.accounts.usdc_mint.to_account_info(),
+                                    token_program_a: ctx.accounts.token_program.to_account_info(),
+                                    token_program_b: ctx.accounts.usdc_program.to_account_info(),
+                                },
+                                &[seeds],
+                            ),
+                            usdc_tokens,
+                            usdc_cash,
+                        )?;
+                    }
+                    if over > 0 {
+                        let before = ctx.accounts.config.to_account_info().lamports();
+                        mock_dex::cpi::swap_to_sol(
+                            CpiContext::new_with_signer(
+                                ctx.accounts.dex_program.to_account_info(),
+                                SwapToSol {
+                                    user: ctx.accounts.config.to_account_info(),
+                                    pool: ctx.accounts.native_pool.to_account_info(),
+                                    vault_usdc: ctx.accounts.native_vault.to_account_info(),
+                                    user_usdc: ctx.accounts.sale_usdc_vault.to_account_info(),
+                                    sol_dest: ctx.accounts.config.to_account_info(),
+                                    token_program: ctx.accounts.usdc_program.to_account_info(),
+                                },
+                                &[seeds],
+                            ),
+                            over,
+                            1,
+                        )?;
+                        ctx.accounts.config.sol_residue = ctx
+                            .accounts
+                            .config
+                            .to_account_info()
+                            .lamports()
+                            .saturating_sub(before);
+                    }
+                    ctx.accounts.sale_usdc_vault.reload()?;
+                    let rest = ctx.accounts.sale_usdc_vault.amount;
+                    if rest > 0 {
+                        signed_transfer(
+                            &ctx.accounts.usdc_program,
+                            &ctx.accounts.sale_usdc_vault.to_account_info(),
+                            &ctx.accounts.treasury_usdc.to_account_info(),
+                            &ctx.accounts.config.to_account_info(),
+                            rest,
+                            &mint,
+                            bump,
+                        )?;
+                    }
+                } else {
+                    require!(
+                        is_raydium_cpmm(&ctx.accounts.dex_program.key()),
+                        EolError::BadDex
+                    );
+                    if over > 0 {
+                        require!(ctx.remaining_accounts.len() >= 8, EolError::BadDex);
+                        let rem = ctx.remaining_accounts;
+                        transmuter_dex::swap_usdc_to_wsol(
                             ctx.accounts.dex_program.to_account_info(),
-                            SwapToSol {
-                                user: ctx.accounts.config.to_account_info(),
-                                pool: ctx.accounts.native_pool.to_account_info(),
-                                vault_usdc: ctx.accounts.native_vault.to_account_info(),
-                                user_usdc: ctx.accounts.sale_usdc_vault.to_account_info(),
-                                sol_dest: ctx.accounts.config.to_account_info(),
-                                token_program: ctx.accounts.usdc_program.to_account_info(),
-                            },
-                            &[seeds],
-                        ),
-                        over,
-                        1,
-                    )?;
-                    ctx.accounts.config.sol_residue = ctx
-                        .accounts
-                        .config
-                        .to_account_info()
-                        .lamports()
-                        .saturating_sub(before);
-                }
-                ctx.accounts.sale_usdc_vault.reload()?;
-                let rest = ctx.accounts.sale_usdc_vault.amount;
-                if rest > 0 {
-                    signed_transfer(
-                        &ctx.accounts.usdc_program,
-                        &ctx.accounts.sale_usdc_vault.to_account_info(),
-                        &ctx.accounts.treasury_usdc.to_account_info(),
-                        &ctx.accounts.config.to_account_info(),
-                        rest,
-                        &mint,
-                        bump,
-                    )?;
+                            ctx.accounts.config.to_account_info(),
+                            rem[0].clone(),
+                            rem[1].clone(),
+                            ctx.accounts.native_pool.to_account_info(),
+                            ctx.accounts.sale_usdc_vault.to_account_info(),
+                            rem[5].clone(),
+                            ctx.accounts.native_vault.to_account_info(),
+                            rem[6].clone(),
+                            ctx.accounts.usdc_program.to_account_info(),
+                            rem[7].clone(),
+                            rem[3].clone(),
+                            rem[4].clone(),
+                            rem[2].clone(),
+                            seeds,
+                            over,
+                            1,
+                        )
+                        .map_err(|_| error!(EolError::BadDex))?;
+                    }
+                    ctx.accounts.sale_usdc_vault.reload()?;
+                    let rest = ctx.accounts.sale_usdc_vault.amount;
+                    let keep = usdc_cash.min(rest);
+                    let to_treasury = rest.saturating_sub(keep);
+                    if to_treasury > 0 {
+                        signed_transfer(
+                            &ctx.accounts.usdc_program,
+                            &ctx.accounts.sale_usdc_vault.to_account_info(),
+                            &ctx.accounts.treasury_usdc.to_account_info(),
+                            &ctx.accounts.config.to_account_info(),
+                            to_treasury,
+                            &mint,
+                            bump,
+                        )?;
+                    }
                 }
                 if p.unsold_sale > 0 {
                     signed_burn(
@@ -560,7 +614,11 @@ pub mod transmuter_eol_token {
         }
     }
 
-    pub fn convert_treasury(ctx: Context<ConvertTreasury>, max_in: u64, min_out: u64) -> Result<()> {
+    pub fn convert_treasury<'a>(
+        ctx: Context<'_, '_, 'a, 'a, ConvertTreasury<'a>>,
+        max_in: u64,
+        min_out: u64,
+    ) -> Result<()> {
         require!(ctx.accounts.config.status == STATUS_ACTIVE, EolError::WrongStatus);
         ctx.accounts.treasury_usdc.reload()?;
         let avail = ctx.accounts.treasury_usdc.amount;
@@ -577,22 +635,59 @@ pub mod transmuter_eol_token {
         ctx.accounts.config.sol_residue = 0;
         if chunk > 0 {
             let before = ctx.accounts.config.to_account_info().lamports();
-            mock_dex::cpi::swap_to_sol(
-                CpiContext::new_with_signer(
+            if is_mock_dex(&ctx.accounts.dex_program.key()) {
+                mock_dex::cpi::swap_to_sol(
+                    CpiContext::new_with_signer(
+                        ctx.accounts.dex_program.to_account_info(),
+                        SwapToSol {
+                            user: ctx.accounts.config.to_account_info(),
+                            pool: ctx.accounts.native_pool.to_account_info(),
+                            vault_usdc: ctx.accounts.native_vault.to_account_info(),
+                            user_usdc: ctx.accounts.treasury_usdc.to_account_info(),
+                            sol_dest: ctx.accounts.config.to_account_info(),
+                            token_program: ctx.accounts.usdc_program.to_account_info(),
+                        },
+                        &[seeds],
+                    ),
+                    chunk,
+                    min_out,
+                )?;
+            } else {
+                require!(
+                    is_raydium_cpmm(&ctx.accounts.dex_program.key()),
+                    EolError::BadDex
+                );
+                require!(ctx.remaining_accounts.len() >= 8, EolError::BadDex);
+                let rem = ctx.remaining_accounts;
+                transmuter_dex::swap_usdc_to_wsol(
                     ctx.accounts.dex_program.to_account_info(),
-                    SwapToSol {
-                        user: ctx.accounts.config.to_account_info(),
-                        pool: ctx.accounts.native_pool.to_account_info(),
-                        vault_usdc: ctx.accounts.native_vault.to_account_info(),
-                        user_usdc: ctx.accounts.treasury_usdc.to_account_info(),
-                        sol_dest: ctx.accounts.config.to_account_info(),
-                        token_program: ctx.accounts.usdc_program.to_account_info(),
-                    },
-                    &[seeds],
-                ),
-                chunk,
-                min_out,
-            )?;
+                    ctx.accounts.config.to_account_info(),
+                    rem[0].clone(),
+                    rem[1].clone(),
+                    ctx.accounts.native_pool.to_account_info(),
+                    ctx.accounts.treasury_usdc.to_account_info(),
+                    rem[5].clone(),
+                    ctx.accounts.native_vault.to_account_info(),
+                    rem[6].clone(),
+                    ctx.accounts.usdc_program.to_account_info(),
+                    rem[7].clone(),
+                    rem[3].clone(),
+                    rem[4].clone(),
+                    rem[2].clone(),
+                    seeds,
+                    chunk,
+                    min_out,
+                )
+                .map_err(|_| error!(EolError::BadDex))?;
+                transmuter_dex::close_wsol(
+                    rem[7].clone(),
+                    rem[5].clone(),
+                    ctx.accounts.config.to_account_info(),
+                    ctx.accounts.config.to_account_info(),
+                    seeds,
+                )
+                .map_err(|_| error!(EolError::BadDex))?;
+            }
             sol_in = sol_in.saturating_add(
                 ctx.accounts
                     .config
@@ -641,6 +736,125 @@ pub mod transmuter_eol_token {
             }
         }
         Ok(())
+    }
+
+    /// Seed a Raydium CPMM pool with the new EOL mint plus USDC or WSOL.
+    /// `amount_token` is EOL; `amount_quote` is the other side. remaining_accounts
+    /// are the 19 Raydium `initialize` accounts after creator.
+    ///
+    /// Raydium pays the create-pool fee with `SystemProgram::transfer`, which
+    /// cannot debit a data account, so the creator is the empty `lp_signer`
+    /// PDA. Token vaults are temporarily reassigned to that PDA for the CPI.
+    pub fn seed_raydium_lp<'a>(
+        ctx: Context<'_, '_, 'a, 'a, SeedRaydiumLp<'a>>,
+        amount_token: u64,
+        amount_quote: u64,
+    ) -> Result<()> {
+        require!(ctx.accounts.config.status == STATUS_ACTIVE, EolError::WrongStatus);
+        require!(
+            is_raydium_cpmm(&ctx.accounts.dex_program.key()),
+            EolError::BadDex
+        );
+        require!(amount_token > 0 && amount_quote > 0, EolError::ZeroAmount);
+        require!(
+            ctx.remaining_accounts.len() >= RAYDIUM_INIT_REMAINING,
+            EolError::BadDex
+        );
+        let rem = ctx.remaining_accounts;
+        let token_vault = ctx.accounts.token_vault.key();
+        let quote_vault = ctx.accounts.quote_vault.key();
+        let c0 = rem[6].key();
+        let c1 = rem[7].key();
+        require!(
+            (c0 == token_vault && c1 == quote_vault) || (c0 == quote_vault && c1 == token_vault),
+            EolError::BadDex
+        );
+        let token0 = rem[3].key();
+        let (amount0, amount1) = if token0 == ctx.accounts.mint.key() {
+            (amount_token, amount_quote)
+        } else {
+            (amount_quote, amount_token)
+        };
+        let mint = ctx.accounts.config.mint;
+        let config_key = ctx.accounts.config.key();
+        let bump = ctx.accounts.config.bump;
+        let bump_seed = [bump];
+        let config_seeds: &[&[u8]] = &[b"config", mint.as_ref(), &bump_seed];
+        let lp_bump = ctx.bumps.lp_signer;
+        let lp_bump_seed = [lp_bump];
+        let lp_seeds: &[&[u8]] = &[b"lp_signer", mint.as_ref(), &lp_bump_seed];
+        let lp_signer_key = ctx.accounts.lp_signer.key();
+
+        let rent = Rent::get()?.minimum_balance(ctx.accounts.config.to_account_info().data_len());
+        let spare = ctx
+            .accounts
+            .config
+            .to_account_info()
+            .lamports()
+            .saturating_sub(rent);
+        if spare > 0 {
+            credit_lamports(
+                &ctx.accounts.config.to_account_info(),
+                &ctx.accounts.lp_signer.to_account_info(),
+                spare,
+            )?;
+        }
+
+        signed_set_owner(
+            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.token_vault.to_account_info(),
+            ctx.accounts.config.to_account_info(),
+            lp_signer_key,
+            config_seeds,
+        )?;
+        signed_set_owner(
+            ctx.accounts.quote_program.to_account_info(),
+            ctx.accounts.quote_vault.to_account_info(),
+            ctx.accounts.config.to_account_info(),
+            lp_signer_key,
+            config_seeds,
+        )?;
+        transmuter_dex::initialize_cpmm_pool(
+            ctx.accounts.dex_program.to_account_info(),
+            ctx.accounts.lp_signer.to_account_info(),
+            rem,
+            lp_seeds,
+            amount0,
+            amount1,
+        )
+        .map_err(|_| error!(EolError::BadDex))?;
+        signed_set_owner(
+            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.token_vault.to_account_info(),
+            ctx.accounts.lp_signer.to_account_info(),
+            config_key,
+            lp_seeds,
+        )?;
+        signed_set_owner(
+            ctx.accounts.quote_program.to_account_info(),
+            ctx.accounts.quote_vault.to_account_info(),
+            ctx.accounts.lp_signer.to_account_info(),
+            config_key,
+            lp_seeds,
+        )?;
+        Ok(())
+    }
+
+    /// Return operator SOL left on config above rent to the factory wallet.
+    pub fn return_config_float(ctx: Context<ReturnConfigFloat>) -> Result<()> {
+        let rent = Rent::get()?.minimum_balance(ctx.accounts.config.to_account_info().data_len());
+        let spare = ctx
+            .accounts
+            .config
+            .to_account_info()
+            .lamports()
+            .saturating_sub(rent);
+        require!(spare > 0, EolError::Insufficient);
+        credit_lamports(
+            &ctx.accounts.config.to_account_info(),
+            &ctx.accounts.recipient.to_account_info(),
+            spare,
+        )
     }
 
     pub fn claim_tokens(ctx: Context<ClaimTokens>) -> Result<()> {
@@ -789,6 +1003,55 @@ pub mod transmuter_eol_token {
 
     pub fn crank_volume(ctx: Context<AdminCfg>, volume: u64) -> Result<()> {
         ctx.accounts.config.volume = volume;
+        Ok(())
+    }
+
+    /// Permissionless Pyth (or mock_pyth) snapshot. Stale / wide-confidence
+    /// prints revert so reserve-mint continuity clocks do not advance (S13).
+    pub fn snapshot_oracle(ctx: Context<SnapshotOracle>) -> Result<()> {
+        let owner = ctx.accounts.price_feed.owner.to_bytes();
+        require!(
+            transmuter_oracle::owner_is_allowed(&owner),
+            EolError::OracleOwner
+        );
+        let price = {
+            let data = ctx.accounts.price_feed.try_borrow_data()?;
+            transmuter_oracle::read_oracle_price(&data).map_err(|_| error!(EolError::OracleLayout))?
+        };
+        let now = Clock::get()?.unix_timestamp;
+        match transmuter_oracle::validate_default(&price, now) {
+            Ok(()) => {}
+            Err(OracleError::Stale) => return err!(EolError::OracleStale),
+            Err(OracleError::WideConfidence) => return err!(EolError::OracleConf),
+            Err(_) => return err!(EolError::OracleLayout),
+        }
+        ctx.accounts.config.oracle_price = price.price;
+        ctx.accounts.config.oracle_conf = price.conf;
+        ctx.accounts.config.oracle_expo = price.expo;
+        ctx.accounts.config.oracle_publish_time = price.publish_time;
+
+        if ctx.accounts.config.status == STATUS_ACTIVE {
+            if let Some(sol_usd) = transmuter_oracle::oracle_to_usdc_6(price.price, price.expo) {
+                let csol = token_amount(&ctx.accounts.ctoken_treasury.to_account_info())?;
+                ctx.accounts.treasury_usdc.reload()?;
+                let usdc = ctx
+                    .accounts
+                    .treasury_usdc
+                    .amount
+                    .saturating_add(ctx.accounts.config.escrow_usdc);
+                let csol_usd =
+                    ((csol as u128).saturating_mul(sol_usd as u128) / 1_000_000_000u128) as u64;
+                let backing = csol_usd.saturating_add(usdc);
+                let mcap = usdc_for_tokens(
+                    ctx.accounts.config.total_supply.max(1),
+                    ctx.accounts.config.sale_price,
+                    ctx.accounts.config.decimals,
+                )
+                .max(1);
+                let backing_pct = ((backing as u128) * 100 / (mcap as u128)) as u64;
+                apply_reserve_clock(&mut ctx.accounts.config, backing_pct, now);
+            }
+        }
         Ok(())
     }
 
@@ -969,18 +1232,7 @@ pub mod transmuter_eol_token {
 
     pub fn crank_reserve(ctx: Context<AdminCfg>, backing_pct: u64) -> Result<()> {
         let now = Clock::get()?.unix_timestamp;
-        if backing_pct < ctx.accounts.config.rm_activate_pct {
-            if ctx.accounts.config.rm_below_since == 0 {
-                ctx.accounts.config.rm_below_since = now;
-            }
-        } else {
-            ctx.accounts.config.rm_below_since = 0;
-        }
-        if ctx.accounts.config.rm_allowance_open
-            && backing_pct >= ctx.accounts.config.rm_deactivate_pct
-        {
-            ctx.accounts.config.rm_allowance_open = false;
-        }
+        apply_reserve_clock(&mut ctx.accounts.config, backing_pct, now);
         Ok(())
     }
 
@@ -1210,6 +1462,19 @@ fn credit_lamports(from: &AccountInfo, to: &AccountInfo, amount: u64) -> Result<
     Ok(())
 }
 
+fn apply_reserve_clock(cfg: &mut Config, backing_pct: u64, now: i64) {
+    if backing_pct < cfg.rm_activate_pct {
+        if cfg.rm_below_since == 0 {
+            cfg.rm_below_since = now;
+        }
+    } else {
+        cfg.rm_below_since = 0;
+    }
+    if cfg.rm_allowance_open && backing_pct >= cfg.rm_deactivate_pct {
+        cfg.rm_allowance_open = false;
+    }
+}
+
 fn gate_from_config(cfg: &Config) -> GateInput {
     GateInput {
         total_supply: cfg.total_supply,
@@ -1270,6 +1535,27 @@ fn token_interface_transfer<'info>(
             },
         ),
         amount,
+    )
+}
+
+fn signed_set_owner<'info>(
+    token_program: AccountInfo<'info>,
+    account: AccountInfo<'info>,
+    current: AccountInfo<'info>,
+    new_owner: Pubkey,
+    seeds: &[&[u8]],
+) -> Result<()> {
+    set_authority(
+        CpiContext::new_with_signer(
+            token_program,
+            SetAuthority {
+                current_authority: current,
+                account_or_mint: account,
+            },
+            &[seeds],
+        ),
+        AuthorityType::AccountOwner,
+        Some(new_owner),
     )
 }
 
@@ -1515,7 +1801,10 @@ pub struct Finalize<'info> {
     #[account(mut, address = config.treasury_usdc)]
     pub treasury_usdc: Box<InterfaceAccount<'info, TokenAccount>>,
     pub usdc_mint: Box<InterfaceAccount<'info, Mint>>,
-    /// CHECK: mock dex program.
+    /// CHECK: mock_dex (localnet) or Raydium CPMM (public-devnet new-token LP).
+    #[account(
+        constraint = is_mock_dex(&dex_program.key()) || is_raydium_cpmm(&dex_program.key()) @ EolError::BadDex
+    )]
     pub dex_program: UncheckedAccount<'info>,
     /// CHECK:
     pub pool_usdc: UncheckedAccount<'info>,
@@ -1546,13 +1835,49 @@ pub struct Finalize<'info> {
 }
 
 #[derive(Accounts)]
+pub struct SeedRaydiumLp<'info> {
+    pub cranker: Signer<'info>,
+    #[account(mut, seeds = [b"config", mint.key().as_ref()], bump = config.bump)]
+    pub config: Box<Account<'info, Config>>,
+    pub mint: Box<InterfaceAccount<'info, Mint>>,
+    #[account(mut, address = config.lp_token_vault)]
+    pub token_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+    /// CHECK: config-owned USDC or WSOL source for the quote side.
+    #[account(mut)]
+    pub quote_vault: UncheckedAccount<'info>,
+    /// CHECK: system-owned lamport bag. Raydium `initialize` cannot debit a data account.
+    #[account(mut, seeds = [b"lp_signer", mint.key().as_ref()], bump)]
+    pub lp_signer: UncheckedAccount<'info>,
+    /// CHECK:
+    #[account(constraint = is_raydium_cpmm(&dex_program.key()) @ EolError::BadDex)]
+    pub dex_program: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token2022>,
+    pub quote_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ReturnConfigFloat<'info> {
+    pub cranker: Signer<'info>,
+    #[account(mut, seeds = [b"config", mint.key().as_ref()], bump = config.bump)]
+    pub config: Box<Account<'info, Config>>,
+    pub mint: Box<InterfaceAccount<'info, Mint>>,
+    /// CHECK: factory recorded at initialize (the launch payer).
+    #[account(mut, address = config.factory)]
+    pub recipient: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
 pub struct ConvertTreasury<'info> {
     pub cranker: Signer<'info>,
     #[account(mut, seeds = [b"config", config.mint.as_ref()], bump = config.bump)]
     pub config: Box<Account<'info, Config>>,
     #[account(mut, address = config.treasury_usdc)]
     pub treasury_usdc: Box<InterfaceAccount<'info, TokenAccount>>,
-    /// CHECK:
+    /// CHECK: mock_dex (localnet / new-token LP) or Raydium CPMM (public-devnet convert).
+    #[account(
+        constraint = is_mock_dex(&dex_program.key()) || is_raydium_cpmm(&dex_program.key()) @ EolError::BadDex
+    )]
     pub dex_program: UncheckedAccount<'info>,
     /// CHECK:
     #[account(mut)]
@@ -1648,6 +1973,21 @@ pub struct RedeemIx<'info> {
     pub token_program: Program<'info, Token2022>,
     pub usdc_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct SnapshotOracle<'info> {
+    pub cranker: Signer<'info>,
+    #[account(mut, seeds = [b"config", mint.key().as_ref()], bump = config.bump)]
+    pub config: Box<Account<'info, Config>>,
+    pub mint: Box<InterfaceAccount<'info, Mint>>,
+    /// CHECK: Pyth PriceUpdateV2 or mock_pyth PriceFeed. Owner pinned.
+    pub price_feed: UncheckedAccount<'info>,
+    /// CHECK: cToken treasury ATA; amount is read by offset.
+    #[account(address = config.ctoken_treasury)]
+    pub ctoken_treasury: UncheckedAccount<'info>,
+    #[account(address = config.treasury_usdc)]
+    pub treasury_usdc: Box<InterfaceAccount<'info, TokenAccount>>,
 }
 
 #[derive(Accounts)]
@@ -1876,6 +2216,10 @@ pub struct Config {
     pub rm_gov_closes_at: i64,
     pub rm_gov_open: bool,
     pub liq_vote_window_secs: i64,
+    pub oracle_price: i64,
+    pub oracle_conf: u64,
+    pub oracle_expo: i32,
+    pub oracle_publish_time: i64,
     pub bump: u8,
 }
 
@@ -2016,4 +2360,14 @@ pub enum EolError {
     NoAllowance,
     #[msg("vaults already initialised")]
     VaultsReady,
+    #[msg("price account owner is not a pinned oracle program")]
+    OracleOwner,
+    #[msg("price account layout is not Pyth PriceUpdateV2 or mock_pyth")]
+    OracleLayout,
+    #[msg("oracle print is stale")]
+    OracleStale,
+    #[msg("oracle confidence interval is too wide")]
+    OracleConf,
+    #[msg("dex_program is not mock_dex or Raydium CPMM")]
+    BadDex,
 }

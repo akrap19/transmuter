@@ -2,6 +2,8 @@
 resolver = "2"
 members = [
     "crates/transmuter-constants",
+    "crates/transmuter-oracle",
+    "crates/transmuter-dex",
     "programs/mock_pyth",
     "programs/mock_dex",
     "programs/token2022_probe",

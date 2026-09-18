@@ -18,6 +18,8 @@ describe("transmuter-constants seam (founder rulings)", () => {
     expect(c.NON_TRANSFERABLE_MINT_SPACE).to.equal(FOUNDER.NON_TRANSFERABLE_MINT_SPACE);
     expect(c.TRANSFER_FEE_MINT_SPACE).to.equal(FOUNDER.TRANSFER_FEE_MINT_SPACE);
     expect(c.SH2_MAX_SLIPPAGE_BPS).to.equal(FOUNDER.SH2_MAX_SLIPPAGE_BPS);
+    expect(c.ORACLE_MAX_STALENESS_SECS).to.equal(FOUNDER.ORACLE_MAX_STALENESS_SECS);
+    expect(c.ORACLE_MAX_CONF_BPS).to.equal(FOUNDER.ORACLE_MAX_CONF_BPS);
     expect(
       c.FEE_LP_DEFAULT_BPS +
         c.FEE_TREASURY_DEFAULT_BPS +

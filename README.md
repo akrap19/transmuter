@@ -8,13 +8,13 @@ A project raises USDC in a fixed-price sale. At finalize, proceeds seed two liqu
 
 ## Status
 
-Hackathon build in progress. On-chain work is localnet; the Launchpad UI is not wired to programs yet.
+Hackathon build in progress. The Launchpad UI is not wired to programs yet.
 
 | Piece | State |
 |---|---|
-| Token-2022 layout proofs, mock Pyth, mock DEX, keeper stub | Done (localnet) |
-| cSOL, Vesting, Runway Escrow, Staking | Done |
-| Factory, EOL Token, Registry, DAO | `ping` stubs |
+| Token-2022 proofs, Pyth-shaped oracle, pinned DEX, lifecycle keeper | Done (localnet + public-devnet `yarn lifecycle`) |
+| cSOL, Vesting, Runway Escrow, Staking, EOL Token, Factory | Done |
+| Registry, DAO | Shims (`exists=true`, quorum not met) |
 | Launchpad UI (wizard, docs, wallet connect) | Built, not on-chain |
 | Indexer / API | Not started |
 
@@ -68,7 +68,9 @@ cSOL cannot be transferred. Treasuries mint and burn it through a PDA; wallets n
 
 Rust, Anchor 0.32, Token-2022, SPL Token, Pyth, Raydium/Orca CLMM, Jupiter, Metaplex Token Metadata, TypeScript, Next.js 16, React 19, Tailwind CSS, shadcn/ui, Solana Wallet Adapter, Node.js, Fastify, MySQL, Redis, Helius, Cursor, Grok, Solana CLI, cargo-build-sbf, Mocha/Chai.
 
-Localnet swaps and oracles are mocks. Production paths are Pyth plus a pinned CLMM venue, with Jupiter for protocol swaps.
+Localnet swaps use the pinned mock DEX venue for new EOL mints.
+Public-devnet `convertTreasury` and new-token LP seed Raydium CPMM. Oracle reads are Pyth `PriceUpdateV2` or mock_pyth; the
+lifecycle script still `set_price`s to force reserve-mint Path A.
 
 ## Docs
 

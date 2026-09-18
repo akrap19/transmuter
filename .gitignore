@@ -1,3 +1,13 @@
 transmuter_full_mvp_242e83cf.plan.md
 Transmuter_MVP_Spec_Pack_r42-MVP1.md
 Transmuter_System_Logic.md
+
+# Local Solana test validator (default ledger when run from repo root)
+test-ledger/
+
+# Anchor local ledger (see smart contracts/Anchor.toml)
+.anchor/test-ledger/
+
+# Validator snapshots / genesis archives (large; never commit)
+**/snapshot-*.tar.zst
+**/genesis.tar.bz2

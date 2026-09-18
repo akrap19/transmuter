@@ -16,10 +16,12 @@ describe("mock pyth", () => {
       pyth.programId,
     );
 
-    await pyth.methods
-      .initialize(-8)
-      .accounts({ payer, priceFeed: feed })
-      .rpc();
+    if (!(await provider.connection.getAccountInfo(feed))) {
+      await pyth.methods
+        .initialize(-8)
+        .accounts({ payer, priceFeed: feed })
+        .rpc();
+    }
 
     await pyth.methods
       .setPrice(new anchor.BN(148_000_000), new anchor.BN(25_000), new anchor.BN(1_700_000_000))

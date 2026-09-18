@@ -1025,6 +1025,7 @@ name = "mock-pyth"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "transmuter-constants",
 ]
 
 [[package]]
@@ -2962,6 +2963,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "transmuter-dex"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "transmuter-constants",
+]
+
+[[package]]
 name = "transmuter-eol-token"
 version = "0.1.0"
 dependencies = [
@@ -2970,6 +2980,8 @@ dependencies = [
  "mock-dex",
  "transmuter-constants",
  "transmuter-ctoken",
+ "transmuter-dex",
+ "transmuter-oracle",
  "transmuter-runway-escrow",
  "transmuter-staking",
  "transmuter-vesting",
@@ -2988,6 +3000,13 @@ dependencies = [
  "transmuter-runway-escrow",
  "transmuter-staking",
  "transmuter-vesting",
+]
+
+[[package]]
+name = "transmuter-oracle"
+version = "0.1.0"
+dependencies = [
+ "transmuter-constants",
 ]
 
 [[package]]

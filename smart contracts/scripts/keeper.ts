@@ -1,12 +1,10 @@
 /**
  * Permissionless crank runner (spec S9).
  *
- * Talks to the mock Pyth feed and prints the jobs later programs
- * will actually crank (settle, oracle snapshots, reserve-mint trigger,
- * convertTreasury, executeLiquidation).
- *
  * Defaults to localnet. `anchor test` tears the validator down unless you
  * pass `--detach`. No feed account is a skip, not a crash.
+ *
+ * Full launch → liquidation path: `yarn lifecycle`.
  *
  *   yarn keeper
  *   ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 ANCHOR_WALLET=~/.config/solana/id.json yarn keeper
@@ -74,7 +72,8 @@ async function main() {
   console.log("transmuter keeper");
   console.log("rpc:", provider.connection.rpcEndpoint);
   console.log("wallet:", provider.wallet.publicKey.toBase58());
-  console.log("jobs (stubs until implemented):", JOBS.join(", "));
+  console.log("jobs:", JOBS.join(", "));
+  console.log("full lifecycle: yarn lifecycle");
 
   if (!pyth) {
     console.log("mock_pyth IDL not in workspace; skip set_price crank");

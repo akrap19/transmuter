@@ -17,6 +17,47 @@ pub const BPS_DENOM: u64 = 10_000;
 /// SH2 hard cap on every protocol swap (0.50%).
 pub const SH2_MAX_SLIPPAGE_BPS: u64 = 50;
 
+/// Pyth / mock_pyth: a print older than this is oracle disagreement (S13).
+pub const ORACLE_MAX_STALENESS_SECS: i64 = 120;
+/// Confidence / |price| above this (bps) is oracle disagreement (S13).
+pub const ORACLE_MAX_CONF_BPS: u64 = 500;
+
+/// Pyth pull receiver (`rec5EKMGg6MxZWaMbitBFZouL8cRSrkNRK57yRpBEVV`).
+pub const PYTH_RECEIVER_PROGRAM: [u8; 32] = [
+    12, 183, 250, 187, 82, 247, 166, 72, 187, 91, 42, 31, 39, 34, 137, 113, 8, 122, 230, 89, 143,
+    231, 124, 152, 134, 157, 30, 186, 174, 44, 240, 200,
+];
+/// Workspace mock_pyth (`DyMTvcaqzXa5PjCqEyTf3FgWzQ2criPopM9ASXm9RVS5`).
+pub const MOCK_PYTH_PROGRAM: [u8; 32] = [
+    192, 187, 232, 74, 84, 40, 55, 50, 244, 210, 218, 27, 160, 25, 58, 141, 8, 24, 35, 139, 142, 15,
+    245, 135, 41, 208, 57, 209, 246, 241, 172, 94,
+];
+/// Pinned protocol DEX venue (`B1Wxrd67VBAmBKKvwx41YZjgpJDfJWmJHyXfHCBfrqdV`).
+pub const MOCK_DEX_PROGRAM: [u8; 32] = [
+    148, 182, 191, 162, 4, 177, 223, 125, 92, 212, 145, 44, 184, 183, 83, 191, 189, 187, 245, 212,
+    220, 193, 95, 89, 28, 145, 213, 67, 165, 18, 88, 12,
+];
+/// Raydium CPMM on Solana public-devnet (`CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW`).
+pub const RAYDIUM_CPMM_PROGRAM: [u8; 32] = [
+    169, 42, 49, 26, 136, 152, 134, 77, 32, 99, 200, 252, 203, 83, 110, 30, 138, 48, 77, 141, 83,
+    152, 76, 10, 78, 179, 193, 68, 7, 214, 116, 231,
+];
+/// Raydium CPMM AmmConfig on public-devnet (`9zSzfkYy6awexsHvmggeH36pfVUdDGyCcwmjT3AQPBj6`).
+pub const RAYDIUM_CPMM_AMM_CONFIG: [u8; 32] = [
+    133, 148, 254, 76, 78, 52, 206, 247, 143, 191, 153, 193, 196, 159, 191, 131, 75, 191, 127, 200,
+    157, 54, 17, 92, 40, 71, 106, 78, 131, 72, 250, 241,
+];
+/// Wrapped SOL mint (all clusters).
+pub const WSOL_MINT: [u8; 32] = [
+    6, 155, 136, 87, 254, 171, 129, 132, 251, 104, 127, 99, 70, 24, 192, 53, 218, 196, 57, 220, 26,
+    235, 59, 85, 152, 160, 240, 0, 0, 0, 0, 1,
+];
+/// Pyth SOL/USD feed id.
+pub const PYTH_SOL_USD_FEED_ID: [u8; 32] = [
+    0xef, 0x0d, 0x8b, 0x6f, 0xda, 0x2c, 0xeb, 0xa4, 0x1d, 0xa1, 0x5d, 0x40, 0x95, 0xd1, 0xda, 0x39,
+    0x2a, 0x0d, 0x2f, 0x8e, 0xd0, 0xc6, 0xc7, 0xbc, 0x0f, 0x4c, 0xfa, 0xc8, 0xc2, 0x80, 0xb5, 0x6d,
+];
+
 pub const SALE_PCT_MIN: u64 = 25;
 pub const LP_PCT_MIN: u64 = 10;
 pub const TEAM_PCT_MAX: u64 = 20;
@@ -153,6 +194,14 @@ mod tests {
         assert_eq!(VOTE_SENSITIVE, 0);
         assert_eq!(VOTE_LIQ_DAO, 5);
         assert_eq!(VOTE_GATE1_FALLBACK, 10);
+        assert_eq!(ORACLE_MAX_STALENESS_SECS, 120);
+        assert_eq!(ORACLE_MAX_CONF_BPS, 500);
+        assert_ne!(ORACLE_MAX_STALENESS_SECS, 0);
+        assert_eq!(PYTH_RECEIVER_PROGRAM[0], 12);
+        assert_eq!(MOCK_PYTH_PROGRAM[0], 192);
+        assert_eq!(MOCK_DEX_PROGRAM[0], 148);
+        assert_eq!(RAYDIUM_CPMM_PROGRAM[0], 169);
+        assert_eq!(WSOL_MINT[0], 6);
         assert!(community_vote_type(VOTE_LIQ_DAO));
         assert!(!community_vote_type(VOTE_SENSITIVE));
         assert!(!community_vote_type(VOTE_EMERGENCY));
