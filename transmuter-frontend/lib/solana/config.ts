@@ -9,21 +9,35 @@ const networkByName = {
 
 type NetworkName = keyof typeof networkByName
 
+export const DEVNET_RPC = 'https://api.devnet.solana.com'
+
+type SolanaEnv = Record<string, string | undefined>
+
 function parseNetwork(value: string | undefined): NetworkName {
 	if (value === 'mainnet-beta' || value === 'devnet' || value === 'testnet') return value
-	return 'testnet'
+	return 'devnet'
 }
 
-export const solanaNetworkName = parseNetwork(process.env.NEXT_PUBLIC_SOLANA_NETWORK)
-export const solanaNetwork = networkByName[solanaNetworkName]
-export const solanaEndpoint = process.env.NEXT_PUBLIC_SOLANA_RPC ?? clusterApiUrl(solanaNetwork)
+export function resolveSolanaConfig(env: SolanaEnv = process.env) {
+	const networkName = parseNetwork(env.NEXT_PUBLIC_SOLANA_NETWORK)
+	const network = networkByName[networkName]
+	const endpoint = env.NEXT_PUBLIC_SOLANA_RPC ?? (networkName === 'devnet' ? DEVNET_RPC : clusterApiUrl(network))
+
+	return { networkName, network, endpoint }
+}
+
+const resolved = resolveSolanaConfig()
+
+export const solanaNetworkName = resolved.networkName
+export const solanaNetwork = resolved.network
+export const solanaEndpoint = resolved.endpoint
 export const EMPTY_WALLETS: Adapter[] = []
 
 export function shortenAddress(address: string, chars = 4) {
 	return `${address.slice(0, chars)}…${address.slice(-chars)}`
 }
 
-export function explorerAddressUrl(address: string) {
-	const cluster = solanaNetworkName === 'mainnet-beta' ? '' : `?cluster=${solanaNetworkName}`
+export function explorerAddressUrl(address: string, networkName: NetworkName = solanaNetworkName) {
+	const cluster = networkName === 'mainnet-beta' ? '' : `?cluster=${networkName}`
 	return `https://explorer.solana.com/address/${address}${cluster}`
 }

@@ -1,0 +1,669 @@
+{
+  "address": "Dy1ddZeaR7GL2QPxWnogrFmdYio4eE5Hrm613SS2PbdK",
+  "metadata": {
+    "name": "transmuter_runway_escrow",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "USDC runway escrow: fund/draw, halt/resume/advance, liquidation return to treasury"
+  },
+  "docs": [
+    "USDC runway. Governance may halt/resume/advance; it never moves the money.",
+    "`notify_liquidation` is the only non-draw transfer (to the EOL treasury)."
+  ],
+  "instructions": [
+    {
+      "name": "advance",
+      "docs": [
+        "Holder-path only (paired EOL). Unlocks extra USDC now, still capped at principal."
+      ],
+      "discriminator": [
+        7,
+        56,
+        108,
+        201,
+        36,
+        20,
+        57,
+        89
+      ],
+      "accounts": [
+        {
+          "name": "eol_token",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.eol_token",
+                "account": "EscrowConfig"
+              },
+              {
+                "kind": "account",
+                "path": "config.usdc_mint",
+                "account": "EscrowConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "draw",
+      "discriminator": [
+        61,
+        40,
+        62,
+        184,
+        31,
+        176,
+        24,
+        130
+      ],
+      "accounts": [
+        {
+          "name": "team_recipient",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.eol_token",
+                "account": "EscrowConfig"
+              },
+              {
+                "kind": "account",
+                "path": "config.usdc_mint",
+                "account": "EscrowConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "destination",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "fund",
+      "discriminator": [
+        218,
+        188,
+        111,
+        221,
+        152,
+        113,
+        174,
+        7
+      ],
+      "accounts": [
+        {
+          "name": "eol_token",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.eol_token",
+                "account": "EscrowConfig"
+              },
+              {
+                "kind": "account",
+                "path": "config.usdc_mint",
+                "account": "EscrowConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "source",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "halt",
+      "discriminator": [
+        24,
+        156,
+        8,
+        121,
+        65,
+        3,
+        5,
+        82
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.eol_token",
+                "account": "EscrowConfig"
+              },
+              {
+                "kind": "account",
+                "path": "config.usdc_mint",
+                "account": "EscrowConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "factory",
+          "signer": true
+        },
+        {
+          "name": "eol_token"
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "team_recipient"
+        },
+        {
+          "name": "dao_direct",
+          "docs": [
+            "pubkey; live DAO resolution from the Registry config prefix is a",
+            "later pointer-swap."
+          ]
+        },
+        {
+          "name": "registry"
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "eol_token"
+              },
+              {
+                "kind": "account",
+                "path": "usdc_mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "schedule",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "notify_liquidation",
+      "discriminator": [
+        221,
+        75,
+        134,
+        107,
+        146,
+        58,
+        172,
+        40
+      ],
+      "accounts": [
+        {
+          "name": "eol_token",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.eol_token",
+                "account": "EscrowConfig"
+              },
+              {
+                "kind": "account",
+                "path": "config.usdc_mint",
+                "account": "EscrowConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "eol_treasury",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "resume",
+      "discriminator": [
+        1,
+        166,
+        51,
+        170,
+        127,
+        32,
+        141,
+        206
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.eol_token",
+                "account": "EscrowConfig"
+              },
+              {
+                "kind": "account",
+                "path": "config.usdc_mint",
+                "account": "EscrowConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "stamp_start_time",
+      "discriminator": [
+        167,
+        179,
+        114,
+        153,
+        33,
+        84,
+        101,
+        114
+      ],
+      "accounts": [
+        {
+          "name": "eol_token",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.eol_token",
+                "account": "EscrowConfig"
+              },
+              {
+                "kind": "account",
+                "path": "config.usdc_mint",
+                "account": "EscrowConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "unix_ts",
+          "type": "i64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "EscrowConfig",
+      "discriminator": [
+        138,
+        174,
+        227,
+        187,
+        239,
+        148,
+        1,
+        44
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "BadSchedule",
+      "msg": "schedule kind is not a known preset"
+    },
+    {
+      "code": 6001,
+      "name": "ZeroAmount",
+      "msg": "amount must be greater than zero"
+    },
+    {
+      "code": 6002,
+      "name": "AlreadyStamped",
+      "msg": "startTime already stamped"
+    },
+    {
+      "code": 6003,
+      "name": "BadTimestamp",
+      "msg": "timestamp must be > 0 and not in the future"
+    },
+    {
+      "code": 6004,
+      "name": "NotStarted",
+      "msg": "startTime has not been stamped"
+    },
+    {
+      "code": 6005,
+      "name": "AlreadyFunded",
+      "msg": "escrow already funded"
+    },
+    {
+      "code": 6006,
+      "name": "DepositMismatch",
+      "msg": "lamports/tokens received did not match amount"
+    },
+    {
+      "code": 6007,
+      "name": "NotActive",
+      "msg": "escrow is not ACTIVE"
+    },
+    {
+      "code": 6008,
+      "name": "NotHalted",
+      "msg": "escrow is not HALTED"
+    },
+    {
+      "code": 6009,
+      "name": "Liquidated",
+      "msg": "escrow is LIQUIDATED"
+    },
+    {
+      "code": 6010,
+      "name": "ZeroDraw",
+      "msg": "nothing to draw"
+    },
+    {
+      "code": 6011,
+      "name": "InsufficientVault",
+      "msg": "vault holds less than drawable"
+    },
+    {
+      "code": 6012,
+      "name": "Unauthorized",
+      "msg": "caller is not the paired EOL Token or the DAO-direct door"
+    }
+  ],
+  "types": [
+    {
+      "name": "EscrowConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "eol_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "team_recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "dao_direct",
+            "type": "pubkey"
+          },
+          {
+            "name": "registry",
+            "type": "pubkey"
+          },
+          {
+            "name": "schedule",
+            "type": "u8"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "funded_principal",
+            "type": "u64"
+          },
+          {
+            "name": "already_drawn",
+            "type": "u64"
+          },
+          {
+            "name": "advance_unlocked",
+            "type": "u64"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,2890 @@
+{
+  "address": "DUYcHygp6rTdf3XY49ewhEyzpUg2QEfWECPTu5ucpaXJ",
+  "metadata": {
+    "name": "transmuter_eol_token",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "EOL Token: USDC sale, finalize gates, convertTreasury, fees, reserve mint, liquidation"
+  },
+  "instructions": [
+    {
+      "name": "accrue_protocol_fees",
+      "discriminator": [
+        101,
+        140,
+        246,
+        228,
+        151,
+        95,
+        90,
+        216
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "source",
+          "writable": true
+        },
+        {
+          "name": "fee_vault",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cast_liquidation_vote",
+      "discriminator": [
+        171,
+        162,
+        55,
+        240,
+        98,
+        168,
+        132,
+        53
+      ],
+      "accounts": [
+        {
+          "name": "voter",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "staking_program"
+        },
+        {
+          "name": "staking_config"
+        },
+        {
+          "name": "stake_account"
+        }
+      ],
+      "args": [
+        {
+          "name": "yes",
+          "type": "bool"
+        },
+        {
+          "name": "weight",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cast_reserve_gov",
+      "discriminator": [
+        122,
+        206,
+        12,
+        108,
+        229,
+        79,
+        81,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        }
+      ],
+      "args": [
+        {
+          "name": "yes",
+          "type": "bool"
+        },
+        {
+          "name": "weight",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "claim_tokens",
+      "discriminator": [
+        108,
+        216,
+        210,
+        231,
+        0,
+        212,
+        42,
+        64
+      ],
+      "accounts": [
+        {
+          "name": "depositor",
+          "signer": true,
+          "relations": [
+            "deposit"
+          ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sale_token_vault",
+          "writable": true
+        },
+        {
+          "name": "destination",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "deposit",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config"
+              },
+              {
+                "kind": "account",
+                "path": "depositor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "convert_treasury",
+      "discriminator": [
+        198,
+        109,
+        5,
+        248,
+        181,
+        138,
+        132,
+        91
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury_usdc",
+          "writable": true
+        },
+        {
+          "name": "dex_program"
+        },
+        {
+          "name": "native_pool",
+          "writable": true
+        },
+        {
+          "name": "native_vault",
+          "writable": true
+        },
+        {
+          "name": "ctoken_program",
+          "address": "GqWdDqeD8EJARnqtv1DKTBUStkGFR5stKRHmHMuuGru4"
+        },
+        {
+          "name": "ctoken_config"
+        },
+        {
+          "name": "ctoken_reserve",
+          "writable": true
+        },
+        {
+          "name": "ctoken_revenue",
+          "writable": true
+        },
+        {
+          "name": "ctoken_mint",
+          "writable": true
+        },
+        {
+          "name": "ctoken_mint_authority"
+        },
+        {
+          "name": "ctoken_treasury",
+          "writable": true
+        },
+        {
+          "name": "eol_record"
+        },
+        {
+          "name": "token_2022_ctoken"
+        },
+        {
+          "name": "usdc_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "max_in",
+          "type": "u64"
+        },
+        {
+          "name": "min_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "crank_reserve",
+      "discriminator": [
+        99,
+        176,
+        159,
+        41,
+        63,
+        42,
+        6,
+        148
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        }
+      ],
+      "args": [
+        {
+          "name": "backing_pct",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "crank_volume",
+      "discriminator": [
+        85,
+        210,
+        82,
+        58,
+        179,
+        95,
+        225,
+        77
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        }
+      ],
+      "args": [
+        {
+          "name": "volume",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "deposit",
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "depositor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sale_usdc_vault",
+          "writable": true
+        },
+        {
+          "name": "source",
+          "writable": true
+        },
+        {
+          "name": "deposit",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config"
+              },
+              {
+                "kind": "account",
+                "path": "depositor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "usdc_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "execute_liquidation",
+      "discriminator": [
+        189,
+        55,
+        38,
+        121,
+        165,
+        84,
+        96,
+        124
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "treasury_usdc",
+          "writable": true
+        },
+        {
+          "name": "protocol_revenue_wallet",
+          "writable": true
+        },
+        {
+          "name": "staking_program"
+        },
+        {
+          "name": "staking_config",
+          "writable": true
+        },
+        {
+          "name": "vesting_program"
+        },
+        {
+          "name": "vesting_config",
+          "writable": true
+        },
+        {
+          "name": "team_pot",
+          "writable": true
+        },
+        {
+          "name": "team_entry",
+          "writable": true
+        },
+        {
+          "name": "escrow_program"
+        },
+        {
+          "name": "escrow_config",
+          "writable": true
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true
+        },
+        {
+          "name": "ctoken_program",
+          "address": "GqWdDqeD8EJARnqtv1DKTBUStkGFR5stKRHmHMuuGru4"
+        },
+        {
+          "name": "ctoken_config"
+        },
+        {
+          "name": "ctoken_reserve",
+          "writable": true
+        },
+        {
+          "name": "ctoken_mint",
+          "writable": true
+        },
+        {
+          "name": "ctoken_mint_authority"
+        },
+        {
+          "name": "ctoken_treasury",
+          "writable": true
+        },
+        {
+          "name": "eol_record"
+        },
+        {
+          "name": "token_2022_ctoken"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "usdc_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "execute_reserve_gov",
+      "discriminator": [
+        232,
+        112,
+        26,
+        52,
+        239,
+        120,
+        221,
+        60
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "finalize",
+      "discriminator": [
+        171,
+        61,
+        218,
+        56,
+        127,
+        115,
+        12,
+        217
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sale_usdc_vault",
+          "writable": true
+        },
+        {
+          "name": "sale_token_vault",
+          "writable": true
+        },
+        {
+          "name": "lp_token_vault",
+          "writable": true
+        },
+        {
+          "name": "treasury_usdc",
+          "writable": true
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "dex_program"
+        },
+        {
+          "name": "pool_usdc"
+        },
+        {
+          "name": "pool_usdc_vault_a",
+          "writable": true
+        },
+        {
+          "name": "pool_usdc_vault_b",
+          "writable": true
+        },
+        {
+          "name": "native_pool",
+          "writable": true
+        },
+        {
+          "name": "native_vault",
+          "writable": true
+        },
+        {
+          "name": "escrow_program"
+        },
+        {
+          "name": "escrow_config"
+        },
+        {
+          "name": "escrow_vault"
+        },
+        {
+          "name": "vesting_program"
+        },
+        {
+          "name": "vesting_config"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "usdc_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "init_vaults",
+      "discriminator": [
+        250,
+        62,
+        242,
+        50,
+        163,
+        133,
+        108,
+        93
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "sale_usdc_vault",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sale_token_vault",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "lp_token_vault",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "team_token_vault",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury_usdc",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fee_vault",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ctoken_treasury"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "usdc_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_mint"
+        },
+        {
+          "name": "ctoken_mint"
+        },
+        {
+          "name": "factory"
+        },
+        {
+          "name": "protocol_revenue_wallet"
+        },
+        {
+          "name": "vesting"
+        },
+        {
+          "name": "staking"
+        },
+        {
+          "name": "escrow"
+        },
+        {
+          "name": "ctoken_treasury"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "LaunchParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "open_liquidation_vote",
+      "discriminator": [
+        61,
+        152,
+        152,
+        160,
+        92,
+        131,
+        236,
+        189
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "open_reserve_auto",
+      "discriminator": [
+        129,
+        194,
+        134,
+        44,
+        151,
+        149,
+        108,
+        44
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "open_reserve_gov",
+      "discriminator": [
+        53,
+        155,
+        159,
+        192,
+        15,
+        76,
+        174,
+        82
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "open_trouble_gate",
+      "discriminator": [
+        148,
+        63,
+        174,
+        194,
+        213,
+        149,
+        45,
+        43
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "redeem",
+      "discriminator": [
+        184,
+        12,
+        86,
+        149,
+        70,
+        196,
+        97,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "user_eol",
+          "writable": true
+        },
+        {
+          "name": "treasury_usdc",
+          "writable": true
+        },
+        {
+          "name": "user_usdc",
+          "writable": true
+        },
+        {
+          "name": "redeem_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  100,
+                  101,
+                  101,
+                  109
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "ctoken_program",
+          "address": "GqWdDqeD8EJARnqtv1DKTBUStkGFR5stKRHmHMuuGru4"
+        },
+        {
+          "name": "ctoken_config"
+        },
+        {
+          "name": "ctoken_reserve",
+          "writable": true
+        },
+        {
+          "name": "ctoken_mint",
+          "writable": true
+        },
+        {
+          "name": "ctoken_mint_authority"
+        },
+        {
+          "name": "ctoken_treasury",
+          "writable": true
+        },
+        {
+          "name": "eol_record"
+        },
+        {
+          "name": "token_2022_ctoken"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "usdc_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "reserve_mint",
+      "discriminator": [
+        38,
+        65,
+        211,
+        163,
+        172,
+        12,
+        58,
+        68
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_eol",
+          "writable": true
+        },
+        {
+          "name": "protocol_revenue_wallet",
+          "writable": true
+        },
+        {
+          "name": "ctoken_program",
+          "address": "GqWdDqeD8EJARnqtv1DKTBUStkGFR5stKRHmHMuuGru4"
+        },
+        {
+          "name": "ctoken_config"
+        },
+        {
+          "name": "ctoken_reserve",
+          "writable": true
+        },
+        {
+          "name": "ctoken_revenue",
+          "writable": true
+        },
+        {
+          "name": "ctoken_mint",
+          "writable": true
+        },
+        {
+          "name": "ctoken_mint_authority"
+        },
+        {
+          "name": "ctoken_treasury",
+          "writable": true
+        },
+        {
+          "name": "eol_record"
+        },
+        {
+          "name": "token_2022_ctoken"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "return_config_float",
+      "docs": [
+        "Return operator SOL left on config above rent to the factory wallet."
+      ],
+      "discriminator": [
+        41,
+        115,
+        86,
+        107,
+        38,
+        108,
+        50,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "seed_raydium_lp",
+      "docs": [
+        "Seed a Raydium CPMM pool with the new EOL mint plus USDC or WSOL.",
+        "`amount_token` is EOL; `amount_quote` is the other side. remaining_accounts",
+        "are the 19 Raydium `initialize` accounts after creator.",
+        "",
+        "Raydium pays the create-pool fee with `SystemProgram::transfer`, which",
+        "cannot debit a data account, so the creator is the empty `lp_signer`",
+        "PDA. Token vaults are temporarily reassigned to that PDA for the CPI."
+      ],
+      "discriminator": [
+        106,
+        127,
+        173,
+        16,
+        77,
+        197,
+        34,
+        120
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "token_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "lp_signer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  112,
+                  95,
+                  115,
+                  105,
+                  103,
+                  110,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dex_program"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "quote_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_token",
+          "type": "u64"
+        },
+        {
+          "name": "amount_quote",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settle_protocol",
+      "discriminator": [
+        107,
+        206,
+        164,
+        24,
+        79,
+        135,
+        120,
+        190
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_vault",
+          "writable": true
+        },
+        {
+          "name": "protocol_eol",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "snapshot_oracle",
+      "docs": [
+        "Permissionless Pyth (or mock_pyth) snapshot. Stale / wide-confidence",
+        "prints revert so reserve-mint continuity clocks do not advance (S13)."
+      ],
+      "discriminator": [
+        248,
+        147,
+        213,
+        241,
+        159,
+        119,
+        248,
+        125
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "price_feed"
+        },
+        {
+          "name": "ctoken_treasury"
+        },
+        {
+          "name": "treasury_usdc"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdraw",
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "depositor",
+          "signer": true,
+          "relations": [
+            "deposit"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sale_usdc_vault",
+          "writable": true
+        },
+        {
+          "name": "destination",
+          "writable": true
+        },
+        {
+          "name": "deposit",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config"
+              },
+              {
+                "kind": "account",
+                "path": "depositor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdc_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "usdc_amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    },
+    {
+      "name": "Deposit",
+      "discriminator": [
+        148,
+        146,
+        121,
+        66,
+        207,
+        173,
+        21,
+        227
+      ]
+    },
+    {
+      "name": "RedeemState",
+      "discriminator": [
+        69,
+        112,
+        71,
+        246,
+        9,
+        201,
+        117,
+        14
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "RedemptionCompleted",
+      "discriminator": [
+        46,
+        189,
+        147,
+        218,
+        232,
+        71,
+        143,
+        119
+      ]
+    },
+    {
+      "name": "SaleDeposit",
+      "discriminator": [
+        216,
+        68,
+        83,
+        138,
+        221,
+        153,
+        98,
+        85
+      ]
+    },
+    {
+      "name": "SaleFinalized",
+      "discriminator": [
+        40,
+        86,
+        126,
+        227,
+        165,
+        195,
+        95,
+        182
+      ]
+    },
+    {
+      "name": "SaleVoided",
+      "discriminator": [
+        75,
+        198,
+        50,
+        2,
+        58,
+        36,
+        135,
+        35
+      ]
+    },
+    {
+      "name": "SaleWithdrawal",
+      "discriminator": [
+        226,
+        205,
+        64,
+        227,
+        136,
+        102,
+        89,
+        130
+      ]
+    },
+    {
+      "name": "TokensClaimed",
+      "discriminator": [
+        25,
+        128,
+        244,
+        55,
+        241,
+        136,
+        200,
+        91
+      ]
+    },
+    {
+      "name": "TreasuryShortfall",
+      "discriminator": [
+        129,
+        30,
+        11,
+        159,
+        213,
+        95,
+        97,
+        223
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "BadParams",
+      "msg": "launch params invalid"
+    },
+    {
+      "code": 6001,
+      "name": "SalePct",
+      "msg": "public sale below 25%"
+    },
+    {
+      "code": 6002,
+      "name": "LpPct",
+      "msg": "LP below 10%"
+    },
+    {
+      "code": 6003,
+      "name": "TeamPct",
+      "msg": "team above 20%"
+    },
+    {
+      "code": 6004,
+      "name": "DaoPct",
+      "msg": "dao airdrop above 10%"
+    },
+    {
+      "code": 6005,
+      "name": "LpSplit",
+      "msg": "LP split must sum to 100% and stay in [25%, 75%]"
+    },
+    {
+      "code": 6006,
+      "name": "AllocSum",
+      "msg": "allocations must sum to 100%"
+    },
+    {
+      "code": 6007,
+      "name": "ReservePct",
+      "msg": "governed mint pct out of [5%, 15%]"
+    },
+    {
+      "code": 6008,
+      "name": "ReserveGap",
+      "msg": "reserve mint deactivate must sit >= 10 points above activate"
+    },
+    {
+      "code": 6009,
+      "name": "Infeasible",
+      "msg": "lpPct*L + treasuryMinPct*g makes this launch infeasible"
+    },
+    {
+      "code": 6010,
+      "name": "WrongStatus",
+      "msg": "wrong lifecycle status"
+    },
+    {
+      "code": 6011,
+      "name": "ZeroAmount",
+      "msg": "amount must be positive"
+    },
+    {
+      "code": 6012,
+      "name": "SaleClosed",
+      "msg": "sale window has closed"
+    },
+    {
+      "code": 6013,
+      "name": "SaleOpen",
+      "msg": "sale is still open"
+    },
+    {
+      "code": 6014,
+      "name": "Cap",
+      "msg": "deposit exceeds remaining sale cap"
+    },
+    {
+      "code": 6015,
+      "name": "Dust",
+      "msg": "credited tokens would be zero"
+    },
+    {
+      "code": 6016,
+      "name": "DepositMismatch",
+      "msg": "USDC received did not match amount"
+    },
+    {
+      "code": 6017,
+      "name": "InsufficientCredit",
+      "msg": "insufficient deposit credit"
+    },
+    {
+      "code": 6018,
+      "name": "NoEscrow",
+      "msg": "escrow config required when escrowFundingNeed > 0"
+    },
+    {
+      "code": 6019,
+      "name": "AlreadyClaimed",
+      "msg": "already claimed"
+    },
+    {
+      "code": 6020,
+      "name": "Insufficient",
+      "msg": "insufficient treasury"
+    },
+    {
+      "code": 6021,
+      "name": "Healthy",
+      "msg": "volume is not in the trouble band"
+    },
+    {
+      "code": 6022,
+      "name": "NoGate",
+      "msg": "trouble gate is closed"
+    },
+    {
+      "code": 6023,
+      "name": "VoteOpen",
+      "msg": "vote already open"
+    },
+    {
+      "code": 6024,
+      "name": "NoVote",
+      "msg": "no open vote"
+    },
+    {
+      "code": 6025,
+      "name": "VoteClosed",
+      "msg": "vote window closed"
+    },
+    {
+      "code": 6026,
+      "name": "NoQuorum",
+      "msg": "quorum not met"
+    },
+    {
+      "code": 6027,
+      "name": "VoteFailed",
+      "msg": "holder vote failed"
+    },
+    {
+      "code": 6028,
+      "name": "AllowanceOpen",
+      "msg": "allowance already open"
+    },
+    {
+      "code": 6029,
+      "name": "NoTrigger",
+      "msg": "automatic trigger has not armed"
+    },
+    {
+      "code": 6030,
+      "name": "Duration",
+      "msg": "duration has not elapsed"
+    },
+    {
+      "code": 6031,
+      "name": "NoAllowance",
+      "msg": "no reserve-mint allowance"
+    },
+    {
+      "code": 6032,
+      "name": "VaultsReady",
+      "msg": "vaults already initialised"
+    },
+    {
+      "code": 6033,
+      "name": "OracleOwner",
+      "msg": "price account owner is not a pinned oracle program"
+    },
+    {
+      "code": 6034,
+      "name": "OracleLayout",
+      "msg": "price account layout is not Pyth PriceUpdateV2 or mock_pyth"
+    },
+    {
+      "code": 6035,
+      "name": "OracleStale",
+      "msg": "oracle print is stale"
+    },
+    {
+      "code": 6036,
+      "name": "OracleConf",
+      "msg": "oracle confidence interval is too wide"
+    },
+    {
+      "code": 6037,
+      "name": "BadDex",
+      "msg": "dex_program is not mock_dex or Raydium CPMM"
+    }
+  ],
+  "types": [
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "factory",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "ctoken_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "protocol_revenue_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "sale_usdc_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "sale_token_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "lp_token_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "team_token_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_usdc",
+            "type": "pubkey"
+          },
+          {
+            "name": "ctoken_treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "vesting",
+            "type": "pubkey"
+          },
+          {
+            "name": "staking",
+            "type": "pubkey"
+          },
+          {
+            "name": "escrow",
+            "type": "pubkey"
+          },
+          {
+            "name": "decimals",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "sale_price",
+            "type": "u64"
+          },
+          {
+            "name": "total_supply",
+            "type": "u64"
+          },
+          {
+            "name": "sale_tokens",
+            "type": "u64"
+          },
+          {
+            "name": "lp_tokens_full",
+            "type": "u64"
+          },
+          {
+            "name": "team_tokens",
+            "type": "u64"
+          },
+          {
+            "name": "sold_tokens",
+            "type": "u64"
+          },
+          {
+            "name": "raised_usdc",
+            "type": "u64"
+          },
+          {
+            "name": "sale_end",
+            "type": "i64"
+          },
+          {
+            "name": "escrow_need",
+            "type": "u64"
+          },
+          {
+            "name": "min_raise",
+            "type": "u64"
+          },
+          {
+            "name": "sale_bps",
+            "type": "u16"
+          },
+          {
+            "name": "lp_bps",
+            "type": "u16"
+          },
+          {
+            "name": "lp_sol_share_bps",
+            "type": "u16"
+          },
+          {
+            "name": "lp_usdc_share_bps",
+            "type": "u16"
+          },
+          {
+            "name": "sh2_max_slippage_bps",
+            "type": "u64"
+          },
+          {
+            "name": "mint_premium_bps",
+            "type": "u64"
+          },
+          {
+            "name": "convert_chunk",
+            "type": "u64"
+          },
+          {
+            "name": "convert_done",
+            "type": "bool"
+          },
+          {
+            "name": "shortfall_emitted",
+            "type": "bool"
+          },
+          {
+            "name": "transfer_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "redemption_treasury_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "redemption_revenue_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "pending_protocol",
+            "type": "u64"
+          },
+          {
+            "name": "pending_protocol_underlying",
+            "type": "u64"
+          },
+          {
+            "name": "sol_residue",
+            "type": "u64"
+          },
+          {
+            "name": "escrow_usdc",
+            "type": "u64"
+          },
+          {
+            "name": "liquidated",
+            "type": "bool"
+          },
+          {
+            "name": "trouble_gate",
+            "type": "bool"
+          },
+          {
+            "name": "volume",
+            "type": "u64"
+          },
+          {
+            "name": "vote_yes",
+            "type": "u64"
+          },
+          {
+            "name": "vote_no",
+            "type": "u64"
+          },
+          {
+            "name": "vote_closes_at",
+            "type": "i64"
+          },
+          {
+            "name": "vote_denom",
+            "type": "u64"
+          },
+          {
+            "name": "vote_open",
+            "type": "bool"
+          },
+          {
+            "name": "vote_executed",
+            "type": "bool"
+          },
+          {
+            "name": "governed_mint_pct_bps",
+            "type": "u16"
+          },
+          {
+            "name": "rm_activate_pct",
+            "type": "u64"
+          },
+          {
+            "name": "rm_deactivate_pct",
+            "type": "u64"
+          },
+          {
+            "name": "rm_duration_secs",
+            "type": "i64"
+          },
+          {
+            "name": "rm_below_since",
+            "type": "i64"
+          },
+          {
+            "name": "rm_allowance",
+            "type": "u64"
+          },
+          {
+            "name": "rm_allowance_open",
+            "type": "bool"
+          },
+          {
+            "name": "rm_opened_at",
+            "type": "i64"
+          },
+          {
+            "name": "rm_price_snapshot",
+            "type": "u64"
+          },
+          {
+            "name": "rm_minted",
+            "type": "u64"
+          },
+          {
+            "name": "rm_gov_yes",
+            "type": "u64"
+          },
+          {
+            "name": "rm_gov_no",
+            "type": "u64"
+          },
+          {
+            "name": "rm_gov_closes_at",
+            "type": "i64"
+          },
+          {
+            "name": "rm_gov_open",
+            "type": "bool"
+          },
+          {
+            "name": "liq_vote_window_secs",
+            "type": "i64"
+          },
+          {
+            "name": "oracle_price",
+            "type": "i64"
+          },
+          {
+            "name": "oracle_conf",
+            "type": "u64"
+          },
+          {
+            "name": "oracle_expo",
+            "type": "i32"
+          },
+          {
+            "name": "oracle_publish_time",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Deposit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "name": "depositor",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LaunchParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "decimals",
+            "type": "u8"
+          },
+          {
+            "name": "sale_price",
+            "type": "u64"
+          },
+          {
+            "name": "total_supply",
+            "type": "u64"
+          },
+          {
+            "name": "sale_bps",
+            "type": "u16"
+          },
+          {
+            "name": "lp_bps",
+            "type": "u16"
+          },
+          {
+            "name": "lp_sol_share_bps",
+            "type": "u16"
+          },
+          {
+            "name": "lp_usdc_share_bps",
+            "type": "u16"
+          },
+          {
+            "name": "team_bps",
+            "type": "u16"
+          },
+          {
+            "name": "investor_bps",
+            "type": "u16"
+          },
+          {
+            "name": "dao_bps",
+            "type": "u16"
+          },
+          {
+            "name": "escrow_funding_need",
+            "type": "u64"
+          },
+          {
+            "name": "sale_end",
+            "type": "i64"
+          },
+          {
+            "name": "sh2_max_slippage_bps",
+            "type": "u64"
+          },
+          {
+            "name": "governed_mint_pct_bps",
+            "type": "u16"
+          },
+          {
+            "name": "reserve_mint_activate_pct",
+            "type": "u64"
+          },
+          {
+            "name": "reserve_mint_deactivate_pct",
+            "type": "u64"
+          },
+          {
+            "name": "reserve_mint_duration_secs",
+            "type": "i64"
+          },
+          {
+            "name": "liq_vote_window_secs",
+            "type": "i64"
+          },
+          {
+            "name": "convert_chunk",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedeemState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "eol_burned",
+            "type": "u64"
+          },
+          {
+            "name": "csol_owed",
+            "type": "u64"
+          },
+          {
+            "name": "csol_paid",
+            "type": "u64"
+          },
+          {
+            "name": "usdc_owed",
+            "type": "u64"
+          },
+          {
+            "name": "usdc_paid",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedemptionCompleted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "caller",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "gross",
+            "type": "u64"
+          },
+          {
+            "name": "treasury_fee",
+            "type": "u64"
+          },
+          {
+            "name": "revenue_skim",
+            "type": "u64"
+          },
+          {
+            "name": "burned",
+            "type": "u64"
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SaleDeposit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "type": "pubkey"
+          },
+          {
+            "name": "usdc_amount",
+            "type": "u64"
+          },
+          {
+            "name": "total_raised",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SaleFinalized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raised",
+            "type": "u64"
+          },
+          {
+            "name": "treasury_portion",
+            "type": "u64"
+          },
+          {
+            "name": "lp_portion",
+            "type": "u64"
+          },
+          {
+            "name": "runway_portion",
+            "type": "u64"
+          },
+          {
+            "name": "unsold_burned",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SaleVoided",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "raised",
+            "type": "u64"
+          },
+          {
+            "name": "minimum_required",
+            "type": "u64"
+          },
+          {
+            "name": "reason",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SaleWithdrawal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokensClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreasuryShortfall",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "realised_remainder",
+            "type": "u64"
+          },
+          {
+            "name": "ask_need",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

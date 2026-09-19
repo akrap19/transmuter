@@ -12,6 +12,8 @@ const legacyRoutes = {
 
 const nextConfig: NextConfig = {
   transpilePackages: [
+    "@coral-xyz/anchor",
+    "@solana/spl-token",
     "@solana/wallet-adapter-base",
     "@solana/wallet-adapter-react",
     "@solana/wallet-adapter-react-ui",

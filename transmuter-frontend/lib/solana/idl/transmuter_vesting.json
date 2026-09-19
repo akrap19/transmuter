@@ -1,0 +1,706 @@
+{
+  "address": "9p1LttUtL5Skg568m24NYj1DgsZAWaAcNn3w95CjJMJ4",
+  "metadata": {
+    "name": "transmuter_vesting",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Team/investor EOL vesting: two pots, one TEAM entry, liquidation write-down burn"
+  },
+  "docs": [
+    "Two-pot vesting. Liquidation burns unvested TEAM only (`if kind == TEAM`)."
+  ],
+  "instructions": [
+    {
+      "name": "cancel_wallet_change",
+      "discriminator": [
+        133,
+        93,
+        25,
+        179,
+        11,
+        39,
+        124,
+        230
+      ],
+      "accounts": [
+        {
+          "name": "recipient",
+          "signer": true
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "entry.config",
+                "account": "VestingEntry"
+              },
+              {
+                "kind": "account",
+                "path": "recipient"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim",
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "recipient",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "VestingConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "entry",
+          "writable": true
+        },
+        {
+          "name": "pot",
+          "writable": true
+        },
+        {
+          "name": "destination",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "factory",
+          "signer": true
+        },
+        {
+          "name": "eol_token"
+        },
+        {
+          "name": "founder"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "team_recipient"
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "team_pot",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "investor_pot",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "team_entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config"
+              },
+              {
+                "kind": "account",
+                "path": "team_recipient"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "schedule",
+          "type": "u8"
+        },
+        {
+          "name": "team_allocation",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initiate_wallet_change",
+      "discriminator": [
+        36,
+        83,
+        130,
+        34,
+        198,
+        186,
+        179,
+        149
+      ],
+      "accounts": [
+        {
+          "name": "recipient",
+          "signer": true
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "entry.config",
+                "account": "VestingEntry"
+              },
+              {
+                "kind": "account",
+                "path": "recipient"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_wallet",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "notify_liquidation",
+      "discriminator": [
+        221,
+        75,
+        134,
+        107,
+        146,
+        58,
+        172,
+        40
+      ],
+      "accounts": [
+        {
+          "name": "eol_token",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "team_pot",
+          "writable": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "team_entry",
+          "writable": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "push_entry",
+      "discriminator": [
+        50,
+        117,
+        13,
+        228,
+        175,
+        183,
+        152,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "founder",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "VestingConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pot"
+        },
+        {
+          "name": "entry",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  110,
+                  116,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config"
+              },
+              {
+                "kind": "arg",
+                "path": "recipient"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "recipient",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "kind",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "stamp_start_time",
+      "discriminator": [
+        167,
+        179,
+        114,
+        153,
+        33,
+        84,
+        101,
+        114
+      ],
+      "accounts": [
+        {
+          "name": "eol_token",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "VestingConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "unix_ts",
+          "type": "i64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "VestingConfig",
+      "discriminator": [
+        0,
+        138,
+        71,
+        135,
+        26,
+        29,
+        43,
+        125
+      ]
+    },
+    {
+      "name": "VestingEntry",
+      "discriminator": [
+        18,
+        55,
+        48,
+        24,
+        157,
+        78,
+        194,
+        80
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "BadSchedule",
+      "msg": "schedule kind is not a known preset"
+    },
+    {
+      "code": 6001,
+      "name": "TeamCount",
+      "msg": "exactly one TEAM entry is required; a second TEAM push is forbidden"
+    },
+    {
+      "code": 6002,
+      "name": "ZeroAmount",
+      "msg": "amount must be greater than zero"
+    },
+    {
+      "code": 6003,
+      "name": "BadKind",
+      "msg": "entry kind is not investor or other"
+    },
+    {
+      "code": 6004,
+      "name": "AllocExceedsPot",
+      "msg": "pot allocations would exceed tokens sitting in that pot"
+    },
+    {
+      "code": 6005,
+      "name": "NotStarted",
+      "msg": "startTime has not been stamped"
+    },
+    {
+      "code": 6006,
+      "name": "AlreadyStamped",
+      "msg": "startTime already stamped"
+    },
+    {
+      "code": 6007,
+      "name": "BadTimestamp",
+      "msg": "timestamp must be > 0 and not in the future"
+    },
+    {
+      "code": 6008,
+      "name": "ZeroClaimable",
+      "msg": "nothing claimable"
+    },
+    {
+      "code": 6009,
+      "name": "InsufficientPot",
+      "msg": "pot holds less than the claimable amount"
+    },
+    {
+      "code": 6010,
+      "name": "AfterLiquidation",
+      "msg": "no push after liquidation stamp"
+    },
+    {
+      "code": 6011,
+      "name": "BadWallet",
+      "msg": "wallet is invalid or already the recipient"
+    },
+    {
+      "code": 6012,
+      "name": "NoPending",
+      "msg": "no pending wallet change"
+    },
+    {
+      "code": 6013,
+      "name": "Timelock",
+      "msg": "48-hour timelock has not elapsed"
+    },
+    {
+      "code": 6014,
+      "name": "Overflow",
+      "msg": "arithmetic overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "VestingConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "eol_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "founder",
+            "type": "pubkey"
+          },
+          {
+            "name": "team_pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "investor_pot",
+            "type": "pubkey"
+          },
+          {
+            "name": "team_entry",
+            "type": "pubkey"
+          },
+          {
+            "name": "schedule",
+            "type": "u8"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "liquidation_timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "team_count",
+            "type": "u8"
+          },
+          {
+            "name": "team_allocated",
+            "type": "u64"
+          },
+          {
+            "name": "investor_allocated",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VestingEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_allocation",
+            "type": "u64"
+          },
+          {
+            "name": "already_claimed",
+            "type": "u64"
+          },
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "name": "pending_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_after",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

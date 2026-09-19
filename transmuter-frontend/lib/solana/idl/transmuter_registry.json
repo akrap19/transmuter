@@ -1,0 +1,415 @@
+{
+  "address": "gA8y6oPQebWC2cNFgwKbJX9ivtWYpb6bf4pSJxkejfV",
+  "metadata": {
+    "name": "transmuter_registry",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Registry shim: empty council, streaming-decodable config prefix"
+  },
+  "docs": [
+    "Registry stand-in. Config prefix is the cross-program interface (r22):",
+    "team, founders, founderThreshold, daoProgram, ambassadorCount,",
+    "maxAmbassadors, genesisLocked. Consumers stream-decode and ignore",
+    "trailing bytes. `ambassadorCount = 0` means quorum not met."
+  ],
+  "instructions": [
+    {
+      "name": "get_all_ambassadors",
+      "discriminator": [
+        223,
+        79,
+        104,
+        122,
+        172,
+        140,
+        200,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [],
+      "returns": {
+        "vec": "pubkey"
+      }
+    },
+    {
+      "name": "get_ambassador_count",
+      "discriminator": [
+        13,
+        84,
+        246,
+        92,
+        183,
+        91,
+        193,
+        193
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [],
+      "returns": "u32"
+    },
+    {
+      "name": "get_council_liquidation_result",
+      "discriminator": [
+        232,
+        26,
+        224,
+        112,
+        225,
+        0,
+        58,
+        22
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "_proposal_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "VoteResult"
+        }
+      }
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "team",
+          "type": "pubkey"
+        },
+        {
+          "name": "founders",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "founder_threshold",
+          "type": "u8"
+        },
+        {
+          "name": "dao_program",
+          "type": "pubkey"
+        },
+        {
+          "name": "max_ambassadors",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "is_ambassador",
+      "discriminator": [
+        32,
+        174,
+        38,
+        116,
+        170,
+        191,
+        201,
+        220
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "_who",
+          "type": "pubkey"
+        }
+      ],
+      "returns": "bool"
+    },
+    {
+      "name": "open_council_liquidation_vote",
+      "discriminator": [
+        60,
+        57,
+        24,
+        241,
+        67,
+        92,
+        233,
+        113
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "_proposal_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "window_end",
+          "type": "i64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "RegistryConfig",
+      "discriminator": [
+        23,
+        118,
+        10,
+        246,
+        173,
+        231,
+        243,
+        156
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "TooManyFounders",
+      "msg": "too many founders"
+    },
+    {
+      "code": 6001,
+      "name": "BadThreshold",
+      "msg": "founder threshold does not match the founder set"
+    },
+    {
+      "code": 6002,
+      "name": "WindowEnd",
+      "msg": "windowEnd must be an absolute unix timestamp in the future"
+    }
+  ],
+  "types": [
+    {
+      "name": "RegistryConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "team",
+            "type": "pubkey"
+          },
+          {
+            "name": "founders",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "founder_threshold",
+            "type": "u8"
+          },
+          {
+            "name": "dao_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "ambassador_count",
+            "type": "u32"
+          },
+          {
+            "name": "max_ambassadors",
+            "type": "u32"
+          },
+          {
+            "name": "genesis_locked",
+            "type": "bool"
+          },
+          {
+            "name": "is_shim",
+            "docs": [
+              "Shim-only. After the r22 prefix so consumers ignore it."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "VoteResult",
+      "docs": [
+        "Same field order as DAO `VoteResult` / spec row 27."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "exists",
+            "type": "bool"
+          },
+          {
+            "name": "resolved",
+            "type": "bool"
+          },
+          {
+            "name": "passed",
+            "type": "bool"
+          },
+          {
+            "name": "yes_weight",
+            "type": "u64"
+          },
+          {
+            "name": "no_weight",
+            "type": "u64"
+          },
+          {
+            "name": "quorum_met",
+            "type": "bool"
+          },
+          {
+            "name": "closes_at",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}
