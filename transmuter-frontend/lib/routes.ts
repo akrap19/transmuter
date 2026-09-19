@@ -4,7 +4,12 @@ export const routes = {
   docs: "/docs",
   access: "/access",
   contact: "/contact",
+  coins: "/coins",
 } as const;
+
+export function coinPath(mint: string) {
+  return `${routes.coins}/${mint}` as const;
+}
 
 export const teamEmail = "info@transmuter.net";
 

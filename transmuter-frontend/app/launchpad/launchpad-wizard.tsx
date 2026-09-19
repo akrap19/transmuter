@@ -40,8 +40,9 @@ function WizardContent() {
     <>
       <div className="page-header">
         <div className="proto-banner">
-          ⚠️ Prototype only - this interface is a visual demonstration. Click through the
-          steps to explore the flow; no tokens are minted and no transactions occur.
+          ⚠️ Devnet launchpad — Deploy signs a Factory createLaunch transaction. Logo and
+          Metaplex metadata upload first; the chain still enforces sale math, floors, and the
+          whitelist.
         </div>
         <div className="page-eyebrow">TRANSMUTER · BY THE MIDAS INITIATIVE</div>
         <h1 className="page-title">
