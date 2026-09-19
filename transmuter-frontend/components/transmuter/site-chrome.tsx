@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { externalLinks, routes, teamEmail, type RoutePath } from '@/lib/routes'
+import { externalLinks, isActivePath, routes, teamEmail, type RoutePath } from '@/lib/routes'
 import { WalletButton } from '@/components/solana/wallet-button'
 import { LogoMark } from '@/components/transmuter/logo-mark'
 import { Wrap } from '@/components/transmuter/wrap'
@@ -18,25 +18,25 @@ type NavLink = {
 }
 
 const navLinks: NavLink[] = [
+	{ label: 'Explore', href: routes.coins },
 	{ label: 'Launchpad', href: routes.launchpad },
-	{ label: 'Docs', href: routes.docs },
-	{ label: 'Contact', href: routes.contact }
+	{ label: 'My Coins', href: routes.myCoins },
+	{ label: 'Portfolio', href: routes.portfolio },
+	{ label: 'Docs', href: routes.docs }
 ]
 
 const footerLinks = [
 	{ label: 'Home', href: routes.home },
+	{ label: 'Explore', href: routes.coins },
 	{ label: 'Launchpad', href: routes.launchpad },
+	{ label: 'My Coins', href: routes.myCoins },
+	{ label: 'Portfolio', href: routes.portfolio },
 	{ label: 'Docs', href: routes.docs },
 	{ label: 'Contact', href: routes.contact }
 ] as const
 
 function useNavDrawer() {
-	const pathname = usePathname()
 	const [open, setOpen] = useState(false)
-
-	useEffect(() => {
-		setOpen(false)
-	}, [pathname])
 
 	useEffect(() => {
 		if (!open) return
@@ -87,7 +87,7 @@ function NavDrawer({ open, onClose, pathname, variant = 'marketing' }: NavDrawer
 						<Link
 							key={link.label}
 							href={link.href}
-							className={cn(pathname === link.href && 'active', variant === 'launchpad' && 'launchpad-link')}
+							className={cn(isActivePath(pathname, link.href) && 'active', variant === 'launchpad' && 'launchpad-link')}
 							onClick={onClose}
 						>
 							{link.label}
@@ -133,7 +133,7 @@ export function SiteNav({ className }: SiteNavProps) {
 					</Link>
 					<div className='nav-links nav-links--desktop'>
 						{navLinks.map(link => (
-							<Link key={link.label} href={link.href} className={cn(pathname === link.href && 'active')}>
+							<Link key={link.label} href={link.href} className={cn(isActivePath(pathname, link.href) && 'active')}>
 								{link.label}
 							</Link>
 						))}
@@ -160,9 +160,9 @@ export function LaunchpadNav() {
 					<LogoMark className='wordmark-logo' size={24} />
 					<span className='wordmark-text'>TRANSMUTER</span>
 				</Link>
-				<div className='nav-links nav-links--desktop'>
+					<div className='nav-links nav-links--desktop'>
 					{navLinks.map(link => (
-						<Link key={link.label} href={link.href} className={cn(pathname === link.href && 'active')}>
+						<Link key={link.label} href={link.href} className={cn(isActivePath(pathname, link.href) && 'active')}>
 							{link.label}
 						</Link>
 					))}
