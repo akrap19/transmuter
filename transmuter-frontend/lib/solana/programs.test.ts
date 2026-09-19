@@ -9,7 +9,7 @@ import {
 } from '@/lib/solana/programs/ctoken'
 import { daoConfigPda } from '@/lib/solana/programs/dao'
 import { eolConfigPda, eolDepositPda, eolMintAuthorityPda } from '@/lib/solana/programs/eol-token'
-import { factoryCtokenPda, factoryPda, launchPda } from '@/lib/solana/programs/factory'
+import { factoryCtokenPda, factoryMintIndexPda, factoryPda, launchPda } from '@/lib/solana/programs/factory'
 import { registryConfigPda } from '@/lib/solana/programs/registry'
 import { escrowConfigPda } from '@/lib/solana/programs/runway-escrow'
 import { stakeAccountPda, stakingConfigPda } from '@/lib/solana/programs/staking'
@@ -36,6 +36,9 @@ describe('per-program PDA wrappers', () => {
 		expect(launchPda(7).toBase58()).toBe(pda(PROGRAM_IDS.factory, Buffer.from('launch'), u64Le(7)))
 		expect(factoryCtokenPda(mint).toBase58()).toBe(
 			pda(PROGRAM_IDS.factory, Buffer.from('ctoken'), mint.toBuffer())
+		)
+		expect(factoryMintIndexPda(mint).toBase58()).toBe(
+			pda(PROGRAM_IDS.factory, Buffer.from('mint'), mint.toBuffer())
 		)
 	})
 

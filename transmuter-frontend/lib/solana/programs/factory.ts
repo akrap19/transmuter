@@ -24,3 +24,7 @@ export function launchPda(launchId: number | bigint): PublicKey {
 export function factoryCtokenPda(mint: PublicKey): PublicKey {
 	return findPda(FACTORY_PROGRAM_ID, Buffer.from('ctoken'), mint.toBuffer())
 }
+
+export function factoryMintIndexPda(mint: PublicKey): PublicKey {
+	return findPda(FACTORY_PROGRAM_ID, Buffer.from('mint'), mint.toBuffer())
+}

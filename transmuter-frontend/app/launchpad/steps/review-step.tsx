@@ -3,19 +3,22 @@
 import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE } from "@/lib/launchpad/fee-calculator";
 import { formatMcap, formatNum, formatPrice } from "@/lib/launchpad/launch-solver";
 import { useLaunchpad } from "../launchpad-context";
+import { LaunchDeployBar } from "../launch-deploy-bar";
+import { useSubmitLaunch } from "../use-submit-launch";
 
 export function ReviewStep() {
-  const { state, goToStep, dispatch, launchSolve: L } = useLaunchpad();
+  const { state, goToStep, launchSolve: L } = useLaunchpad();
+  const { submit, busy, connected } = useSubmitLaunch();
   const price = L?.feasible ? L.price : undefined;
   const supply = parseFloat(state.tokenSupply);
 
-  function handleLaunch() {
+  async function handleLaunch() {
     if (!state.tokenName || !state.tokenTicker) {
       alert("Please fill in Token Name and Ticker before launching.");
       goToStep(1);
       return;
     }
-    dispatch({ type: "LAUNCH" });
+    await submit();
   }
 
   const pubLp = L?.lpFrac ? (L.lpFrac * 100).toFixed(0) : "—";
@@ -67,10 +70,14 @@ export function ReviewStep() {
         </ReviewBlock>
       </div>
 
-      <div className="btn-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-        <button type="button" className="btn btn-outline" onClick={() => goToStep(4)}>← Back</button>
-        <button type="button" className="btn btn-launch" onClick={handleLaunch}>🚀 Deploy Token</button>
-      </div>
+      <LaunchDeployBar
+        busy={busy}
+        connected={connected}
+        error={state.launchError}
+        status={state.launchStatus}
+        onBack={() => goToStep(4)}
+        onLaunch={handleLaunch}
+      />
     </div>
   );
 }

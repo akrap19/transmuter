@@ -101,8 +101,8 @@ export function LogoUpload() {
         onChange={handleFile}
       />
       <div className="small-note" style={{ marginTop: 6 }}>
-        Logo is stored as platform metadata (IPFS/CDN) - not part of the on-chain
-        contract.
+        Logo is stored in object storage and referenced from the Metaplex metadata uri at
+        launch — not as an on-chain account field.
       </div>
     </div>
   );

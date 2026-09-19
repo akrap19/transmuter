@@ -1,3 +1,5 @@
+import { fallbackCtoken, resolveCtokens } from "./ctokens";
+
 export type SaleType = "fixed" | "dutch" | "overflow";
 
 export type VestingPreset =
@@ -13,6 +15,7 @@ export type CToken = {
   icon: string;
   base: string;
   eol: string;
+  mint: string;
 };
 
 export type ToggleKey = "daoAirdrop" | "burnFee" | "creatorFee";
@@ -74,6 +77,8 @@ export type AllocationState = {
   daoAirdrop: boolean;
 };
 
+export type LaunchStatus = "idle" | "uploading" | "signing" | "success" | "error";
+
 export type LaunchpadState = {
   currentStep: number;
   tokenName: string;
@@ -112,12 +117,17 @@ export type LaunchpadState = {
   raiseTouched: boolean;
   lastMinRaise: number;
   launched: boolean;
+  launchStatus: LaunchStatus;
+  launchError: string | null;
+  launchedMint: string | null;
+  launchSignature: string | null;
+  launchId: number | null;
+  metadataUri: string | null;
 };
 
-export const CTOKENS: CToken[] = [
-  { name: "cBTC", icon: "₿", base: "BTC", eol: "Tokenized Gold" },
-  { name: "cSOL", icon: "◎", base: "SOL", eol: "Tokenized Gold" },
-];
+export { fallbackCtoken, resolveCtokens };
+
+export const CTOKENS: CToken[] = resolveCtokens();
 
 export const VESTING_PRESETS: { label: string; value: VestingPreset; sub: string }[] = [
   { label: "None", value: "None", sub: "All tokens unlock at launch" },
@@ -174,7 +184,7 @@ export const initialLaunchpadState: LaunchpadState = {
   overflowCap: "",
   overflowForego: 0,
   allocLP: 20,
-  allocTeam: 0,
+  allocTeam: 10,
   allocPublic: 70,
   allocInvestors: 10,
   showInvestors: false,
@@ -187,4 +197,10 @@ export const initialLaunchpadState: LaunchpadState = {
   raiseTouched: false,
   lastMinRaise: 0,
   launched: false,
+  launchStatus: "idle",
+  launchError: null,
+  launchedMint: null,
+  launchSignature: null,
+  launchId: null,
+  metadataUri: null,
 };
