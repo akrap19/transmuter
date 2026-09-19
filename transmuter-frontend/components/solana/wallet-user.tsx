@@ -1,8 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { Copy, ExternalLink, LogOut } from 'lucide-react'
+import { Coins, Copy, ExternalLink, LayoutDashboard, LogOut } from 'lucide-react'
 import { explorerAddressUrl, shortenAddress, solanaNetworkName } from '@/lib/solana/config'
+import { routes } from '@/lib/routes'
 
 type WalletChipProps = {
 	address: string
@@ -36,6 +38,12 @@ export function WalletUserMenu({ address }: WalletUserMenuProps) {
 
 	return (
 		<>
+			<Link href={routes.myCoins} role='menuitem'>
+				<Coins size={14} /> My Coins
+			</Link>
+			<Link href={routes.portfolio} role='menuitem'>
+				<LayoutDashboard size={14} /> Portfolio
+			</Link>
 			<button type='button' role='menuitem' onClick={() => navigator.clipboard.writeText(address)}>
 				<Copy size={14} /> Copy address
 			</button>
