@@ -123,7 +123,7 @@ function forPublicCluster(base: anchor.AnchorProvider): anchor.AnchorProvider {
     base.wallet,
     {
       commitment: "confirmed",
-      skipPreflight: /devnet|mainnet/i.test(url),
+      skipPreflight: false,
       maxRetries: 12,
     },
   );
@@ -180,9 +180,26 @@ export async function runLifecycle(
   ];
   const txOpts = {
     commitment: "confirmed" as const,
-    skipPreflight: publicCluster,
-    maxRetries: 8,
+    skipPreflight: false,
+    maxRetries: 12,
   };
+  async function retry<T>(label: string, fn: () => Promise<T>): Promise<T> {
+    let last: unknown;
+    for (let i = 0; i < 8; i++) {
+      try {
+        return await fn();
+      } catch (err) {
+        last = err;
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!/expired|block height|429|Too many|blockhash|fetch/i.test(msg) || i === 7) {
+          throw err;
+        }
+        console.log(`${label} retry ${i + 1}:`, msg.slice(0, 140));
+        await sleep(2_000 * (i + 1));
+      }
+    }
+    throw last;
+  }
   async function pace() {
     if (publicCluster) await sleep(600);
   }
@@ -190,6 +207,394 @@ export async function runLifecycle(
     if (publicCluster) console.log("step:", name);
   }
   await pace();
+
+  async function ataFor(
+    mintPk: PublicKey,
+    owner: PublicKey,
+    programId: PublicKey = TOKEN_2022_PROGRAM_ID,
+  ): Promise<PublicKey> {
+    const ata = getAssociatedTokenAddressSync(mintPk, owner, true, programId);
+    if (!(await connection.getAccountInfo(ata))) {
+      await retry("create ata " + ata.toBase58().slice(0, 8), () =>
+        createAssociatedTokenAccount(
+          connection,
+          payer,
+          mintPk,
+          owner,
+          txOpts,
+          programId,
+        ),
+      );
+    }
+    return ata;
+  }
+
+  async function finishAfterConvert(args: {
+    mint: PublicKey;
+    config: PublicKey;
+    mintAuthority: PublicKey;
+    saleTokenVault: PublicKey;
+    depositPda: PublicKey;
+    feeVault: PublicKey;
+    protocolPk: PublicKey;
+    csMint: PublicKey;
+    csAuth: PublicKey;
+    csConfig: PublicKey;
+    csReserve: PublicKey;
+    csRevenue: PublicKey;
+    ctokenTreasury: PublicKey;
+    eolRecord: PublicKey;
+    treasuryUsdc: PublicKey;
+    userUsdc: PublicKey;
+    raydiumLp: boolean;
+    raydiumConvert: boolean;
+  }): Promise<LifecycleResult> {
+    const {
+      mint,
+      config,
+      mintAuthority,
+      saleTokenVault,
+      depositPda,
+      feeVault,
+      protocolPk,
+      csMint,
+      csAuth,
+      csConfig,
+      csReserve,
+      csRevenue,
+      ctokenTreasury,
+      eolRecord,
+      treasuryUsdc,
+      userUsdc,
+      raydiumLp,
+      raydiumConvert,
+    } = args;
+    const userEol = await ataFor(mint, payer.publicKey);
+    step("claim tokens");
+    const dep = await eolAcc.deposit.fetch(depositPda);
+    if (!dep.claimed) {
+      await retry("claimTokens", () =>
+        eol.methods
+          .claimTokens()
+          .accounts({
+            depositor: payer.publicKey,
+            config,
+            saleTokenVault,
+            destination: userEol,
+            mint,
+            deposit: depositPda,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+          })
+          .rpc(txOpts),
+      );
+      await pace();
+    }
+
+    const held = await getAccount(connection, userEol, undefined, TOKEN_2022_PROGRAM_ID);
+    const protocolEol = await ataFor(mint, protocolPk);
+    const feeAmt = held.amount / 100n;
+    if (feeAmt > 0n) {
+      step("protocol fees");
+      await retry("accrueProtocolFees", () =>
+        eol.methods
+          .accrueProtocolFees(new anchor.BN(feeAmt.toString()))
+          .accounts({
+            payer: payer.publicKey,
+            config,
+            source: userEol,
+            feeVault,
+            mint,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+          })
+          .rpc(txOpts),
+      );
+      await pace();
+      await retry("settleProtocol", () =>
+        eol.methods
+          .settleProtocol()
+          .accounts({
+            cranker: payer.publicKey,
+            config,
+            feeVault,
+            protocolEol,
+            mint,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+          })
+          .rpc(txOpts),
+      );
+      await pace();
+    }
+
+    const [feed] = pda([Buffer.from("price_feed"), payer.publicKey.toBuffer()], pyth.programId);
+    if (!(await connection.getAccountInfo(feed))) {
+      await retry("pyth initialize", () =>
+        pyth.methods
+          .initialize(-8)
+          .accounts({ payer: payer.publicKey, priceFeed: feed })
+          .rpc(txOpts),
+      );
+      await pace();
+    }
+    step("pyth PriceUpdateV2");
+    const pythPost = await postOrWritePyth({ connection, payer, pyth, opts: txOpts });
+    await retry("snapshotOracle v2", () =>
+      eol.methods
+        .snapshotOracle()
+        .accounts({
+          cranker: payer.publicKey,
+          config,
+          mint,
+          priceFeed: pythPost.priceUpdate,
+          ctokenTreasury,
+          treasuryUsdc,
+        })
+        .rpc(txOpts),
+    );
+    await pace();
+    const v2Snap = await eolAcc.config.fetch(config);
+    if (Number(v2Snap.oraclePrice.toString()) <= 0) {
+      throw new Error("PriceUpdateV2 snapshot did not store a price");
+    }
+    const snapNow = Math.floor(Date.now() / 1000);
+    step("oracle set_price + snapshot");
+    await retry("setPrice", () =>
+      pyth.methods
+        .setPrice(new anchor.BN(1), new anchor.BN(0), new anchor.BN(snapNow))
+        .accounts({ priceFeed: feed, owner: payer.publicKey })
+        .rpc(txOpts),
+    );
+    await pace();
+    await retry("snapshotOracle mock", () =>
+      eol.methods
+        .snapshotOracle()
+        .accounts({
+          cranker: payer.publicKey,
+          config,
+          mint,
+          priceFeed: feed,
+          ctokenTreasury,
+          treasuryUsdc,
+        })
+        .rpc(txOpts),
+    );
+    await pace();
+    const afterSnap = await eolAcc.config.fetch(config);
+    if (afterSnap.oraclePrice.toString() !== "1") {
+      throw new Error("oracle snapshot did not store the set_price print");
+    }
+
+    step("reserve mint");
+    await sleep(1500);
+    await retry("openReserveAuto", () =>
+      eol.methods
+        .openReserveAuto()
+        .accounts({ cranker: payer.publicKey, config, mint })
+        .rpc(txOpts),
+    );
+    await pace();
+    await retry("reserveMint", () =>
+      eol.methods
+        .reserveMint(new anchor.BN(50_000_000))
+        .accounts({
+          user: payer.publicKey,
+          config,
+          mint,
+          mintAuthority,
+          userEol,
+          protocolRevenueWallet: protocolPk,
+          ctokenProgram: ctoken.programId,
+          ctokenConfig: csConfig,
+          ctokenReserve: csReserve,
+          ctokenRevenue: csRevenue,
+          ctokenMint: csMint,
+          ctokenMintAuthority: csAuth,
+          ctokenTreasury,
+          eolRecord,
+          token2022Ctoken: TOKEN_2022_PROGRAM_ID,
+          tokenProgram: TOKEN_2022_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .preInstructions(cu)
+        .rpc(txOpts),
+    );
+    await pace();
+
+    await retry("crankVolume", () =>
+      eol.methods
+        .crankVolume(new anchor.BN(0))
+        .accounts({ cranker: payer.publicKey, config, mint })
+        .rpc(txOpts),
+    );
+    await pace();
+    await retry("openTroubleGate", () =>
+      eol.methods
+        .openTroubleGate()
+        .accounts({ cranker: payer.publicKey, config, mint })
+        .rpc(txOpts),
+    );
+    await pace();
+    step("liquidation vote");
+    await retry("openLiquidationVote", () =>
+      eol.methods
+        .openLiquidationVote()
+        .accounts({ cranker: payer.publicKey, config, mint })
+        .rpc(txOpts),
+    );
+    await pace();
+    const supply = (await getMint(connection, mint, undefined, TOKEN_2022_PROGRAM_ID)).supply;
+    await retry("castLiquidationVote", () =>
+      eol.methods
+        .castLiquidationVote(true, new anchor.BN(supply.toString()))
+        .accounts({
+          voter: payer.publicKey,
+          config,
+          stakingProgram: SystemProgram.programId,
+          stakingConfig: SystemProgram.programId,
+          stakeAccount: SystemProgram.programId,
+        })
+        .rpc(txOpts),
+    );
+    await pace();
+    step("execute liquidation");
+    await sleep(35_000);
+    await retry("executeLiquidation", () =>
+      eol.methods
+        .executeLiquidation()
+        .accounts({
+          cranker: payer.publicKey,
+          config,
+          mint,
+          treasuryUsdc,
+          protocolRevenueWallet: protocolPk,
+          stakingProgram: SystemProgram.programId,
+          stakingConfig: payer.publicKey,
+          vestingProgram: SystemProgram.programId,
+          vestingConfig: payer.publicKey,
+          teamPot: payer.publicKey,
+          teamEntry: payer.publicKey,
+          escrowProgram: SystemProgram.programId,
+          escrowConfig: payer.publicKey,
+          escrowVault: payer.publicKey,
+          ctokenProgram: ctoken.programId,
+          ctokenConfig: csConfig,
+          ctokenReserve: csReserve,
+          ctokenMint: csMint,
+          ctokenMintAuthority: csAuth,
+          ctokenTreasury,
+          eolRecord,
+          token2022Ctoken: TOKEN_2022_PROGRAM_ID,
+          tokenProgram: TOKEN_2022_PROGRAM_ID,
+          usdcProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .preInstructions(cu)
+        .rpc(txOpts),
+    );
+    await pace();
+
+    const [redeemState] = pda(
+      [Buffer.from("redeem"), config.toBuffer(), payer.publicKey.toBuffer()],
+      eol.programId,
+    );
+    const left = await getAccount(connection, userEol, undefined, TOKEN_2022_PROGRAM_ID);
+    const redeemAmt = left.amount / 10n;
+    step("redeem");
+    if (redeemAmt > 0n) {
+      await retry("redeem", () =>
+        eol.methods
+          .redeem(new anchor.BN(redeemAmt.toString()))
+          .accounts({
+            user: payer.publicKey,
+            config,
+            mint,
+            userEol,
+            treasuryUsdc,
+            userUsdc,
+            redeemState,
+            ctokenProgram: ctoken.programId,
+            ctokenConfig: csConfig,
+            ctokenReserve: csReserve,
+            ctokenMint: csMint,
+            ctokenMintAuthority: csAuth,
+            ctokenTreasury,
+            eolRecord,
+            token2022Ctoken: TOKEN_2022_PROGRAM_ID,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+            usdcProgram: TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .preInstructions(cu)
+          .rpc(txOpts),
+      );
+      await pace();
+    }
+
+    const finalCfg = await eolAcc.config.fetch(config);
+    const rec =
+      redeemAmt > 0n ? await eolAcc.redeemState.fetch(redeemState) : null;
+    return {
+      convertDone: finalCfg.convertDone as boolean,
+      oracleSnapped: finalCfg.oraclePrice.toString() === "1",
+      pythLive: pythPost.live,
+      raydiumConvert,
+      raydiumLp,
+      reserveMinted: Number(finalCfg.rmMinted.toString()) > 0,
+      liquidated: finalCfg.liquidated as boolean,
+      redeemed: rec ? BigInt(rec.eolBurned.toString()) === redeemAmt : redeemAmt === 0n,
+      status: finalCfg.status as number,
+    };
+  }
+
+  if (process.env.LIFECYCLE_RESUME_CONFIG) {
+    const config = new PublicKey(process.env.LIFECYCLE_RESUME_CONFIG);
+    const cfg = await eolAcc.config.fetch(config);
+    if (!cfg.convertDone || cfg.status !== STATUS_ACTIVE) {
+      throw new Error("resume config is not ACTIVE with convertDone");
+    }
+    const mint = cfg.mint as PublicKey;
+    const csMint = cfg.ctokenMint as PublicKey;
+    const usdc = cfg.usdcMint as PublicKey;
+    const protocolPk = cfg.protocolRevenueWallet as PublicKey;
+    const [mintAuthority] = mintAuthorityPda(eol.programId, mint);
+    const [csAuth] = mintAuthorityPda(ctoken.programId, csMint);
+    const [csConfig] = pda([Buffer.from("config"), csMint.toBuffer()], ctoken.programId);
+    const [csReserve] = pda([Buffer.from("reserve"), csMint.toBuffer()], ctoken.programId);
+    const [csRevenue] = pda([Buffer.from("revenue"), csMint.toBuffer()], ctoken.programId);
+    const [eolRecord] = pda(
+      [Buffer.from("eol"), csConfig.toBuffer(), mint.toBuffer()],
+      ctoken.programId,
+    );
+    const [depositPda] = pda(
+      [Buffer.from("deposit"), config.toBuffer(), payer.publicKey.toBuffer()],
+      eol.programId,
+    );
+    const ctokenTreasury = cfg.ctokenTreasury as PublicKey;
+    const treasuryUsdc = cfg.treasuryUsdc as PublicKey;
+    const userUsdc = getAssociatedTokenAddressSync(usdc, payer.publicKey);
+    step("resume after convert");
+    console.log("mint:", mint.toBase58());
+    console.log("config:", config.toBase58());
+    return finishAfterConvert({
+      mint,
+      config,
+      mintAuthority,
+      saleTokenVault: cfg.saleTokenVault as PublicKey,
+      depositPda,
+      feeVault: cfg.feeVault as PublicKey,
+      protocolPk,
+      csMint,
+      csAuth,
+      csConfig,
+      csReserve,
+      csRevenue,
+      ctokenTreasury,
+      eolRecord,
+      treasuryUsdc,
+      userUsdc,
+      raydiumLp: true,
+      raydiumConvert: true,
+    });
+  }
 
   const protocolKp = Keypair.generate();
   step("fund protocol");
@@ -713,266 +1118,32 @@ export async function runLifecycle(
     throw new Error("convertTreasury did not finish");
   }
 
-  const userEol = await createAssociatedTokenAccount(
-    connection,
-    payer,
+  return finishAfterConvert({
     mint,
-    payer.publicKey,
-    txOpts,
-    TOKEN_2022_PROGRAM_ID,
-  );
-  await eol.methods
-    .claimTokens()
-    .accounts({
-      depositor: payer.publicKey,
-      config,
-      saleTokenVault: saleToken.publicKey,
-      destination: userEol,
-      mint,
-      deposit: depositPda,
-      tokenProgram: TOKEN_2022_PROGRAM_ID,
-    })
-    .rpc(txOpts);
-    await pace();
-
-  const held = await getAccount(connection, userEol, undefined, TOKEN_2022_PROGRAM_ID);
-  const protocolEol = await createAssociatedTokenAccount(
-    connection,
-    payer,
-    mint,
-    protocolKp.publicKey,
-    txOpts,
-    TOKEN_2022_PROGRAM_ID,
-  );
-  const feeAmt = held.amount / 100n;
-  if (feeAmt > 0n) {
-    await eol.methods
-      .accrueProtocolFees(new anchor.BN(feeAmt.toString()))
-      .accounts({
-        payer: payer.publicKey,
-        config,
-        source: userEol,
-        feeVault: feeVault.publicKey,
-        mint,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-      })
-      .rpc(txOpts);
-    await pace();
-    await eol.methods
-      .settleProtocol()
-      .accounts({
-        cranker: payer.publicKey,
-        config,
-        feeVault: feeVault.publicKey,
-        protocolEol,
-        mint,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-      })
-      .rpc(txOpts);
-    await pace();
-  }
-
-  const [feed] = pda([Buffer.from("price_feed"), payer.publicKey.toBuffer()], pyth.programId);
-  if (!(await connection.getAccountInfo(feed))) {
-    await pyth.methods
-      .initialize(-8)
-      .accounts({ payer: payer.publicKey, priceFeed: feed })
-      .rpc(txOpts);
-    await pace();
-  }
-  step("pyth PriceUpdateV2");
-  const pythPost = await postOrWritePyth({ connection, payer, pyth, opts: txOpts });
-  await eol.methods
-    .snapshotOracle()
-    .accounts({
-      cranker: payer.publicKey,
-      config,
-      mint,
-      priceFeed: pythPost.priceUpdate,
-      ctokenTreasury,
-      treasuryUsdc: treasuryUsdc.publicKey,
-    })
-    .rpc(txOpts);
-  await pace();
-  const v2Snap = await eolAcc.config.fetch(config);
-  if (Number(v2Snap.oraclePrice.toString()) <= 0) {
-    throw new Error("PriceUpdateV2 snapshot did not store a price");
-  }
-  const snapNow = Math.floor(Date.now() / 1000);
-  // Tiny SOL/USD print (expo -8) so cSOL treasury values to ~0 USDC and Path A arms.
-  step("oracle set_price + snapshot");
-  await pyth.methods
-    .setPrice(new anchor.BN(1), new anchor.BN(0), new anchor.BN(snapNow))
-    .accounts({ priceFeed: feed, owner: payer.publicKey })
-    .rpc(txOpts);
-    await pace();
-  await eol.methods
-    .snapshotOracle()
-    .accounts({
-      cranker: payer.publicKey,
-      config,
-      mint,
-      priceFeed: feed,
-      ctokenTreasury,
-      treasuryUsdc: treasuryUsdc.publicKey,
-    })
-    .rpc(txOpts);
-    await pace();
-  const afterSnap = await eolAcc.config.fetch(config);
-  if (afterSnap.oraclePrice.toString() !== "1") {
-    throw new Error("oracle snapshot did not store the set_price print");
-  }
-
-  step("reserve mint");
-  await sleep(1500);
-  await eol.methods
-    .openReserveAuto()
-    .accounts({ cranker: payer.publicKey, config, mint })
-    .rpc(txOpts);
-    await pace();
-  await eol.methods
-    .reserveMint(new anchor.BN(50_000_000))
-    .accounts({
-      user: payer.publicKey,
-      config,
-      mint,
-      mintAuthority,
-      userEol,
-      protocolRevenueWallet: protocolKp.publicKey,
-      ctokenProgram: ctoken.programId,
-      ctokenConfig: csConfig,
-      ctokenReserve: csReserve,
-      ctokenRevenue: csRevenue,
-      ctokenMint: csMint,
-      ctokenMintAuthority: csAuth,
-      ctokenTreasury,
-      eolRecord,
-      token2022Ctoken: TOKEN_2022_PROGRAM_ID,
-      tokenProgram: TOKEN_2022_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
-    })
-    .preInstructions(cu)
-    .rpc(txOpts);
-    await pace();
-
-  await eol.methods
-    .crankVolume(new anchor.BN(0))
-    .accounts({ cranker: payer.publicKey, config, mint })
-    .rpc(txOpts);
-    await pace();
-  await eol.methods
-    .openTroubleGate()
-    .accounts({ cranker: payer.publicKey, config, mint })
-    .rpc(txOpts);
-    await pace();
-  step("liquidation vote");
-  await eol.methods
-    .openLiquidationVote()
-    .accounts({ cranker: payer.publicKey, config, mint })
-    .rpc(txOpts);
-    await pace();
-  const supply = (await getMint(connection, mint, undefined, TOKEN_2022_PROGRAM_ID)).supply;
-  await eol.methods
-    .castLiquidationVote(true, new anchor.BN(supply.toString()))
-    .accounts({
-      voter: payer.publicKey,
-      config,
-      stakingProgram: SystemProgram.programId,
-      stakingConfig: SystemProgram.programId,
-      stakeAccount: SystemProgram.programId,
-    })
-    .rpc(txOpts);
-    await pace();
-  step("execute liquidation");
-  await sleep(35_000);
-  await eol.methods
-    .executeLiquidation()
-    .accounts({
-      cranker: payer.publicKey,
-      config,
-      mint,
-      treasuryUsdc: treasuryUsdc.publicKey,
-      protocolRevenueWallet: protocolKp.publicKey,
-      stakingProgram: SystemProgram.programId,
-      stakingConfig: payer.publicKey,
-      vestingProgram: SystemProgram.programId,
-      vestingConfig: payer.publicKey,
-      teamPot: payer.publicKey,
-      teamEntry: payer.publicKey,
-      escrowProgram: SystemProgram.programId,
-      escrowConfig: payer.publicKey,
-      escrowVault: payer.publicKey,
-      ctokenProgram: ctoken.programId,
-      ctokenConfig: csConfig,
-      ctokenReserve: csReserve,
-      ctokenMint: csMint,
-      ctokenMintAuthority: csAuth,
-      ctokenTreasury,
-      eolRecord,
-      token2022Ctoken: TOKEN_2022_PROGRAM_ID,
-      tokenProgram: TOKEN_2022_PROGRAM_ID,
-      usdcProgram: TOKEN_PROGRAM_ID,
-      systemProgram: SystemProgram.programId,
-    })
-    .preInstructions(cu)
-    .rpc(txOpts);
-    await pace();
-
-  const [redeemState] = pda(
-    [Buffer.from("redeem"), config.toBuffer(), payer.publicKey.toBuffer()],
-    eol.programId,
-  );
-  const left = await getAccount(connection, userEol, undefined, TOKEN_2022_PROGRAM_ID);
-  const redeemAmt = left.amount / 10n;
-  step("redeem");
-  if (redeemAmt > 0n) {
-    await eol.methods
-      .redeem(new anchor.BN(redeemAmt.toString()))
-      .accounts({
-        user: payer.publicKey,
-        config,
-        mint,
-        userEol,
-        treasuryUsdc: treasuryUsdc.publicKey,
-        userUsdc,
-        redeemState,
-        ctokenProgram: ctoken.programId,
-        ctokenConfig: csConfig,
-        ctokenReserve: csReserve,
-        ctokenMint: csMint,
-        ctokenMintAuthority: csAuth,
-        ctokenTreasury,
-        eolRecord,
-        token2022Ctoken: TOKEN_2022_PROGRAM_ID,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-        usdcProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-      })
-      .preInstructions(cu)
-      .rpc(txOpts);
-    await pace();
-  }
-
-  const finalCfg = await eolAcc.config.fetch(config);
-  const rec =
-    redeemAmt > 0n ? await eolAcc.redeemState.fetch(redeemState) : null;
-  return {
-    convertDone: finalCfg.convertDone as boolean,
-    oracleSnapped: finalCfg.oraclePrice.toString() === "1",
-    pythLive: pythPost.live,
-    raydiumConvert: cpmm !== null,
+    config,
+    mintAuthority,
+    saleTokenVault: saleToken.publicKey,
+    depositPda,
+    feeVault: feeVault.publicKey,
+    protocolPk: protocolKp.publicKey,
+    csMint,
+    csAuth,
+    csConfig,
+    csReserve,
+    csRevenue,
+    ctokenTreasury,
+    eolRecord,
+    treasuryUsdc: treasuryUsdc.publicKey,
+    userUsdc,
     raydiumLp,
-    reserveMinted: Number(finalCfg.rmMinted.toString()) > 0,
-    liquidated: finalCfg.liquidated as boolean,
-    redeemed: rec ? BigInt(rec.eolBurned.toString()) === redeemAmt : redeemAmt === 0n,
-    status: finalCfg.status as number,
-  };
+    raydiumConvert: cpmm !== null,
+  });
 }
 
 function publicProvider(url: string): anchor.AnchorProvider {
   return new anchor.AnchorProvider(quietConnection(url), walletFromEnv(), {
     commitment: "confirmed",
-    skipPreflight: true,
+    skipPreflight: false,
     maxRetries: 12,
   });
 }
