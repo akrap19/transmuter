@@ -297,7 +297,7 @@ nav:has(.nav-in) .nav-links a.btn-gold {
 	text-align: center;
 }
 
-@media (max-width: 880px) {
+@media (max-width: 1140px) {
 	.nav-links--desktop,
 	.nav-cta--desktop {
 		display: none !important;
@@ -4398,6 +4398,7 @@ nav.launchpad-nav .nav-links a:hover {
 	font-family: var(--tm-font-display);
 	font-size: 10px;
 	letter-spacing: 0.08em;
+	object-fit: cover;
 }
 
 .catalog-name {
@@ -4463,6 +4464,11 @@ nav.launchpad-nav .nav-links a:hover {
 	line-height: 1.6;
 }
 
+.catalog-empty .wallet-btn,
+.catalog-empty .btn {
+	margin: 0 6px 8px;
+}
+
 .page-catalog section.catalog-section {
 	padding: 28px 0 8px;
 }
@@ -4513,6 +4519,193 @@ nav.launchpad-nav .nav-links a:hover {
 	font-variant-numeric: tabular-nums;
 }
 
+.catalog-coin-meta {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 16px 24px;
+	margin-top: 28px;
+	padding: 20px 24px;
+	border: 1px solid var(--tm-border);
+	background: rgb(0 0 0 / 0.2);
+}
+
+.catalog-coin-meta dt {
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--tm-muted);
+	margin-bottom: 6px;
+}
+
+.catalog-coin-meta dd {
+	margin: 0;
+	font-size: 15px;
+	color: var(--tm-white);
+}
+
+.catalog-coin-head {
+	padding-top: 24px;
+}
+
+.catalog-coin-head .catalog-identity {
+	margin-bottom: 12px;
+}
+
+.catalog-coin-head .catalog-avatar {
+	width: 48px;
+	height: 48px;
+	font-size: 14px;
+}
+
+.catalog-coin-head .catalog-name {
+	font-family: var(--tm-font-display);
+	font-size: 28px;
+	font-weight: 900;
+}
+
+.catalog-socials {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px 18px;
+	margin: 16px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.catalog-socials a {
+	font-size: 11px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+}
+
+.catalog-muted {
+	margin: 0 0 16px;
+	color: var(--tm-muted);
+	font-size: 12px;
+}
+
+.catalog-progress {
+	height: 8px;
+	margin: 4px 0 12px;
+	border: 1px solid var(--tm-gold-line);
+	border-radius: 999px;
+	background: rgba(240, 194, 75, 0.08);
+	overflow: hidden;
+}
+
+.catalog-progress i {
+	display: block;
+	height: 100%;
+	background: linear-gradient(90deg, var(--tm-gold-deep), var(--tm-gold));
+}
+
+.catalog-sale-actions {
+	display: grid;
+	grid-template-columns: minmax(160px, 240px) auto;
+	gap: 12px;
+	align-items: end;
+	margin-top: 12px;
+}
+
+.catalog-sale-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.catalog-sale-note {
+	grid-column: 1 / -1;
+	margin: 0;
+	color: var(--tm-steel);
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.catalog-trade-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.catalog-trade-grid article {
+	display: grid;
+	gap: 10px;
+	padding: 16px 18px;
+	border: 1px solid var(--tm-gold-line);
+	border-radius: 8px;
+	background: rgba(10, 12, 17, 0.6);
+}
+
+.catalog-trade-grid span {
+	font-size: 9.5px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--tm-gold-deep);
+}
+
+.catalog-trade-grid strong {
+	font-family: var(--tm-font-display);
+	color: var(--tm-white);
+}
+
+.catalog-trade-grid .btn {
+	justify-self: start;
+}
+
+.catalog-chart {
+	width: 100%;
+	height: auto;
+	margin: 0 0 16px;
+	border: 1px solid var(--tm-gold-line-soft);
+	background: rgba(10, 12, 17, 0.45);
+}
+
+.catalog-chart-line {
+	fill: none;
+	stroke: var(--tm-gold);
+	stroke-width: 2;
+}
+
+.catalog-chart-bar {
+	fill: rgba(239, 217, 143, 0.35);
+}
+
+.catalog-vote-list {
+	display: grid;
+	gap: 16px;
+}
+
+.catalog-vote-card {
+	padding: 16px 18px;
+	border: 1px solid var(--tm-gold-line);
+	border-radius: 8px;
+	background: rgba(10, 12, 17, 0.6);
+}
+
+.catalog-vote-card h3 {
+	margin: 0 0 8px;
+	font-family: var(--tm-font-display);
+	font-size: 16px;
+	color: var(--tm-white);
+}
+
+.catalog-vote-card > p {
+	margin: 0 0 14px;
+}
+
+.catalog-vote-card .catalog-stats {
+	margin-bottom: 12px;
+}
+
+.catalog-vote-card .catalog-sale-buttons {
+	margin-top: 12px;
+}
+
+.catalog-vote-card .catalog-empty {
+	padding: 20px 12px;
+	margin-top: 12px;
+}
+
 @media (max-width: 880px) {
 	.catalog-toolbar {
 		grid-template-columns: 1fr 1fr;
@@ -4522,14 +4715,18 @@ nav.launchpad-nav .nav-links a:hover {
 		grid-column: 1 / -1;
 	}
 
-	.catalog-stats {
+	.catalog-stats,
+	.catalog-trade-grid,
+	.catalog-sale-actions {
 		grid-template-columns: 1fr 1fr;
 	}
 }
 
 @media (max-width: 560px) {
 	.catalog-toolbar,
-	.catalog-stats {
+	.catalog-stats,
+	.catalog-trade-grid,
+	.catalog-sale-actions {
 		grid-template-columns: 1fr;
 	}
 }

@@ -47,6 +47,9 @@ export function HomePage() {
 					</p>
 					<div className='hero-cta'>
 						<GoldButton href={routes.access}>Get early access</GoldButton>
+						<GoldButton href={routes.coins} variant='ghost'>
+							Explore launches
+						</GoldButton>
 						<GoldButton href='#protocol' variant='ghost'>
 							How it works
 						</GoldButton>

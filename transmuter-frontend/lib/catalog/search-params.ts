@@ -31,6 +31,10 @@ export function searchParamsFromRecord(raw: Record<string, string | string[] | u
   return params;
 }
 
+export function parsePreviewFlag(params: URLSearchParams): boolean {
+  return params.get("preview") === "1";
+}
+
 export function parseCoinSearchParams(params: URLSearchParams): CoinQuery {
   const query: CoinQuery = {};
   const search = params.get("q")?.trim();

@@ -30,7 +30,7 @@ export function CoinTable<T extends CoinListItem>({ items, extra, extraLabel }: 
           {items.map((item) => (
             <tr key={item.mint}>
               <td>
-                <CoinIdentity mint={item.mint} name={item.name} symbol={item.symbol} />
+                <CoinIdentity mint={item.mint} name={item.name} symbol={item.symbol} logoUrl={item.logoUrl} />
               </td>
               <td>
                 <CoinStatus status={item.status} />

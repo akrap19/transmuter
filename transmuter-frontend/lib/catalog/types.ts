@@ -38,6 +38,77 @@ export type CoinListItem = {
   metadataUri: string | null;
 };
 
+export type CoinSocials = {
+  website: string | null;
+  twitter: string | null;
+  telegram: string | null;
+  discord: string | null;
+};
+
+export type ReserveMintStatus = {
+  pathAReady: boolean;
+  pathBActivated: boolean;
+  governedPct: number;
+  mintsThisYear: number;
+  yearlyCap: number;
+};
+
+export type TreasurySnapshot = {
+  cTokenAmount: number;
+  unconvertedUsdc: number;
+  cTokenPriceUsd: number;
+  circulatingSupply: number;
+  backingValueUsd: number;
+  redemptionRatio: number;
+  reserveMint: ReserveMintStatus;
+};
+
+export type SaleSnapshot = {
+  capUsdc: number;
+  raisedUsdc: number;
+  remainingUsdc: number;
+  priceUsd: number;
+  closesAt: number;
+  depositsOpen: boolean;
+  myDepositUsdc: number;
+};
+
+export type TradePool = {
+  label: "EOL/USDC" | "EOL/SOL";
+  pool: string;
+  href: string;
+};
+
+export type TradeSnapshot = {
+  pools: TradePool[];
+};
+
+export type CoinStake = {
+  staked: number;
+  weight: number;
+  voterLockedUntil: number | null;
+  walletBalance: number;
+  feeBps: number;
+  liquidated: boolean;
+};
+
+export type ChartPoint = {
+  t: number;
+  priceUsd: number;
+  volumeUsd: number;
+};
+
+export type CoinDetail = CoinListItem & {
+  description: string;
+  socials: CoinSocials;
+  treasury: TreasurySnapshot;
+  sale: SaleSnapshot | null;
+  trade: TradeSnapshot | null;
+  chart: ChartPoint[];
+  stake: CoinStake | null;
+  votes: CoinVote[];
+};
+
 export type CoinQuery = {
   search?: string;
   status?: LaunchStatus | LaunchStatus[];
@@ -94,6 +165,16 @@ export type OpenVoteKind =
   | "escrow_halt"
   | "escrow_resume"
   | "escrow_advance";
+
+export type CoinVote = {
+  kind: OpenVoteKind;
+  closesAt: number;
+  yesWeight: number;
+  noWeight: number;
+  quorumBps: number;
+  passBps: number;
+  denom: number;
+};
 
 export type OpenVote = {
   mint: string;

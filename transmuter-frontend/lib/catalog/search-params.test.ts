@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCoinSearchParams, searchParamsFromRecord, serializeCoinQuery } from "./search-params";
+import { parseCoinSearchParams, parsePreviewFlag, searchParamsFromRecord, serializeCoinQuery } from "./search-params";
 
 describe("parseCoinSearchParams", () => {
   it("reads search, multi-status, sort, and backing from the query string", () => {
@@ -28,6 +28,14 @@ describe("parseCoinSearchParams", () => {
     );
 
     expect(query).toEqual({ search: "helix", status: ["sale", "voided"], sort: "name" });
+  });
+});
+
+describe("parsePreviewFlag", () => {
+  it("turns on sample-wallet preview only for preview=1", () => {
+    expect(parsePreviewFlag(new URLSearchParams("preview=1"))).toBe(true);
+    expect(parsePreviewFlag(new URLSearchParams("preview=true"))).toBe(false);
+    expect(parsePreviewFlag(new URLSearchParams())).toBe(false);
   });
 });
 
