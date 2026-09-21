@@ -92,6 +92,50 @@ export type CoinStake = {
   liquidated: boolean;
 };
 
+export type RedeemAsset = "cSOL" | "USDC";
+
+export type RedeemLeg = {
+  asset: RedeemAsset;
+  owed: number;
+  paid: number;
+};
+
+export type CoinRedeem = {
+  walletBalance: number;
+  circulatingSupply: number;
+  cTokenTreasury: number;
+  unconvertedUsdc: number;
+  escrowUsdc: number;
+  treasuryFeeBps: number;
+  treasuryCsolAvailable: number;
+  treasuryUsdcAvailable: number;
+  legs: RedeemLeg[];
+};
+
+export type VestingKind = "team" | "investor";
+
+export type CoinVesting = {
+  recipient: string;
+  kind: VestingKind;
+  schedule: number;
+  startTime: number;
+  liquidationTimestamp: number;
+  totalAllocation: number;
+  alreadyClaimed: number;
+};
+
+export type EscrowStatus = "active" | "halted" | "liquidated";
+
+export type CoinEscrow = {
+  teamRecipient: string;
+  schedule: number;
+  startTime: number;
+  fundedPrincipal: number;
+  alreadyDrawn: number;
+  advanceUnlocked: number;
+  status: EscrowStatus;
+};
+
 export type ChartPoint = {
   t: number;
   priceUsd: number;
@@ -107,6 +151,9 @@ export type CoinDetail = CoinListItem & {
   chart: ChartPoint[];
   stake: CoinStake | null;
   votes: CoinVote[];
+  redeem: CoinRedeem | null;
+  vesting: CoinVesting | null;
+  escrow: CoinEscrow | null;
 };
 
 export type CoinQuery = {

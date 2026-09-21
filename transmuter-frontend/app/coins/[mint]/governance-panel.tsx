@@ -7,7 +7,7 @@ export function GovernancePanel({ coin }: { coin: CoinDetail }) {
   if (!stakingAvailable(coin.status) && coin.votes.length === 0) return null;
 
   return (
-    <section className="catalog-section">
+    <section className="catalog-section" id="governance">
       <h2>Governance / Voting</h2>
       <p>
         Liquidation, Path B reserve mint, and escrow halt/resume/advance are holder votes. DAO and council shims report

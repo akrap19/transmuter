@@ -94,8 +94,12 @@ describe("catalog client", () => {
 
     expect(portfolio.holdings.length).toBeGreaterThan(0);
     expect(portfolio.stakes.length).toBeGreaterThan(0);
-    expect(portfolio.claimables.map((item) => item.kind)).toEqual(
-      expect.arrayContaining(["vesting", "redemption", "escrow"]),
+    expect(portfolio.claimables).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "vesting", amount: 500, asset: "FRG" }),
+        expect.objectContaining({ kind: "redemption", amount: 80, asset: "USDC" }),
+        expect.objectContaining({ kind: "escrow", amount: 240, asset: "USDC" }),
+      ]),
     );
     expect(portfolio.openVotes.some((vote) => vote.kind === "liquidation")).toBe(true);
     expect(portfolio.totals.openVoteCount).toBe(portfolio.openVotes.length);
@@ -153,5 +157,42 @@ describe("catalog client", () => {
     ]);
     expect(getCoinDetail("MintAurora11111111111111111111111111111111")?.stake).toBeNull();
     expect(getCoinDetail("MintAurora11111111111111111111111111111111")?.votes).toEqual([]);
+  });
+
+  it("keeps Helix redemption open and loads Forge vesting plus escrow for the preview wallet", () => {
+    const helix = getCoinDetail("MintHelix111111111111111111111111111111111", MOCK_PREVIEW_WALLET);
+    const forge = getCoinDetail("MintForge11111111111111111111111111111111", MOCK_PREVIEW_WALLET);
+    const aurora = getCoinDetail("MintAurora11111111111111111111111111111111", MOCK_PREVIEW_WALLET);
+
+    expect(helix?.redeem).toEqual(
+      expect.objectContaining({
+        walletBalance: 40,
+        cTokenTreasury: 400,
+        unconvertedUsdc: 8_000,
+        treasuryFeeBps: 35,
+      }),
+    );
+    expect(helix?.vesting?.kind).toBe("team");
+    expect(helix?.escrow?.status).toBe("active");
+    expect(forge?.vesting).toEqual(
+      expect.objectContaining({ totalAllocation: 500, alreadyClaimed: 0, schedule: 0 }),
+    );
+    expect(forge?.escrow).toEqual(expect.objectContaining({ fundedPrincipal: 1_000, alreadyDrawn: 760 }));
+    expect(aurora?.redeem).toBeNull();
+    expect(aurora?.vesting).toBeNull();
+    expect(aurora?.escrow).toBeNull();
+  });
+
+  it("keeps Solace unpaid USDC independent of the paid cSOL leg after liquidation", () => {
+    const solace = getCoinDetail("MintSolace1111111111111111111111111111111", MOCK_PREVIEW_WALLET);
+
+    expect(solace?.status).toBe("liquidating");
+    expect(solace?.redeem?.escrowUsdc).toBe(300);
+    expect(solace?.redeem?.treasuryUsdcAvailable).toBe(10);
+    expect(solace?.redeem?.legs).toEqual([
+      { asset: "cSOL", owed: 1.2, paid: 1.2 },
+      { asset: "USDC", owed: 80, paid: 0 },
+    ]);
+    expect(solace?.escrow?.status).toBe("liquidated");
   });
 });

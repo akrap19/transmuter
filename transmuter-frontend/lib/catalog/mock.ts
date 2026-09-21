@@ -7,6 +7,8 @@ import type {
 export const MOCK_PREVIEW_WALLET = "TmPrev1111111111111111111111111111111111111";
 export const MOCK_OTHER_WALLET = "TmOthr1111111111111111111111111111111111111";
 
+export const CATALOG_NOW = 1_789_000_000;
+
 export const CATALOG_NOTICE =
   "Showing sample indexed launches until the backend index is live. VOIDED sales stay in the list.";
 

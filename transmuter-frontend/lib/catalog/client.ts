@@ -1,16 +1,28 @@
+import { claimablesFromCoin } from "./claimables";
 import { MOCK_DETAILS, MOCK_SALE_DEPOSITS } from "./mock-detail";
-import { MOCK_ACCOUNTS, MOCK_CATALOG, MOCK_PORTFOLIOS } from "./mock";
+import {
+  emptyRedeemLegs,
+  MOCK_ESCROW,
+  MOCK_REDEEM_LEGS,
+  MOCK_REDEEM_OVERLAY,
+  MOCK_VESTING,
+} from "./mock-claims";
+import { MOCK_ACCOUNTS, MOCK_CATALOG, MOCK_PORTFOLIOS, CATALOG_NOW } from "./mock";
 import { createdCoins, heldCoins } from "./my-coins";
 import { buildPortfolio, holdingsFromCoins } from "./portfolio";
 import { queryCoins } from "./query";
+import { REDEMPTION_TREASURY_FEE_BPS, redeemAvailable } from "./redeem";
 import { STAKE_FEE_BPS, stakingAvailable } from "./stake";
 import { buildTreasury } from "./treasury";
 import type {
   CoinDetail,
+  CoinEscrow,
   CoinListItem,
   CoinQuery,
+  CoinRedeem,
   CoinSocials,
   CoinStake,
+  CoinVesting,
   PortfolioInput,
   TokenAccountBalance,
   TreasurySnapshot,
@@ -69,6 +81,9 @@ export function getCoinDetail(mint: string, wallet?: string): CoinDetail | null 
     chart: extras?.chart ?? [],
     stake: coinStake(coin, wallet),
     votes: extras?.votes ?? [],
+    redeem: coinRedeem(coin, wallet),
+    vesting: coinVesting(coin.mint),
+    escrow: coinEscrow(coin.mint),
   };
 }
 
@@ -100,14 +115,47 @@ export function listHeld(wallet: string, accounts?: TokenAccountBalance[]) {
   return heldCoins(MOCK_CATALOG, accounts ?? MOCK_ACCOUNTS[wallet] ?? []);
 }
 
-export function getPortfolio(wallet: string, accounts?: TokenAccountBalance[]) {
+function coinRedeem(coin: CoinListItem, wallet?: string): CoinRedeem | null {
+  if (!redeemAvailable(coin.status)) return null;
+  const extras = MOCK_DETAILS[coin.mint];
+  const treasury = extras ? buildTreasury(extras.treasury) : EMPTY_TREASURY;
+  const overlay = MOCK_REDEEM_OVERLAY[coin.mint];
+  const walletBalance = (wallet && MOCK_ACCOUNTS[wallet]?.find((row) => row.mint === coin.mint)?.amount) ?? 0;
+  const unconvertedUsdc = treasury.unconvertedUsdc;
+  return {
+    walletBalance,
+    circulatingSupply: treasury.circulatingSupply,
+    cTokenTreasury: treasury.cTokenAmount,
+    unconvertedUsdc,
+    escrowUsdc: overlay?.escrowUsdc ?? 0,
+    treasuryFeeBps: REDEMPTION_TREASURY_FEE_BPS,
+    treasuryCsolAvailable: treasury.cTokenAmount,
+    treasuryUsdcAvailable: overlay?.treasuryUsdcAvailable ?? unconvertedUsdc,
+    legs: (wallet && MOCK_REDEEM_LEGS[wallet]?.[coin.mint]) ?? emptyRedeemLegs(),
+  };
+}
+
+function coinVesting(mint: string): CoinVesting | null {
+  return MOCK_VESTING[mint] ?? null;
+}
+
+function coinEscrow(mint: string): CoinEscrow | null {
+  return MOCK_ESCROW[mint] ?? null;
+}
+
+export function getPortfolio(wallet: string, accounts?: TokenAccountBalance[], now = CATALOG_NOW) {
   const extras = MOCK_PORTFOLIOS[wallet];
-  if (extras && accounts == null) return buildPortfolio(extras);
+  const claimables = MOCK_CATALOG.flatMap((item) => {
+    const detail = getCoinDetail(item.mint, wallet);
+    return detail ? claimablesFromCoin(detail, wallet, now) : [];
+  });
+
+  if (extras && accounts == null) return buildPortfolio({ ...extras, claimables });
 
   return buildPortfolio({
     holdings: holdingsFromCoins(listHeld(wallet, accounts)),
     stakes: extras?.stakes ?? EMPTY_PORTFOLIO.stakes,
-    claimables: extras?.claimables ?? EMPTY_PORTFOLIO.claimables,
+    claimables,
     openVotes: extras?.openVotes ?? EMPTY_PORTFOLIO.openVotes,
   });
 }

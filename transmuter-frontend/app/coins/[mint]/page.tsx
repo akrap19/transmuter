@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import { ChartsPanel } from "@/app/coins/[mint]/charts-panel";
+import { EscrowPanel } from "@/app/coins/[mint]/escrow-panel";
 import { GovernancePanel } from "@/app/coins/[mint]/governance-panel";
 import { OverviewPanel } from "@/app/coins/[mint]/overview-panel";
+import { RedeemPanel } from "@/app/coins/[mint]/redeem-panel";
 import { SalePanel } from "@/app/coins/[mint]/sale-panel";
 import { StakePanel } from "@/app/coins/[mint]/stake-panel";
 import { TradePanel } from "@/app/coins/[mint]/trade-panel";
 import { TreasuryPanel } from "@/app/coins/[mint]/treasury-panel";
+import { VestingPanel } from "@/app/coins/[mint]/vesting-panel";
 import { CatalogBanner } from "@/components/catalog/catalog-banner";
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { SiteFooter, SiteNav } from "@/components/transmuter/site-chrome";
@@ -46,6 +49,9 @@ export default async function CoinPage({ params }: CoinPageProps) {
             <ChartsPanel points={coin.chart} />
             <StakePanel coin={coin} />
             <GovernancePanel coin={coin} />
+            <RedeemPanel coin={coin} />
+            <VestingPanel coin={coin} />
+            <EscrowPanel coin={coin} />
             <TreasuryPanel coin={coin} />
           </>
         ) : (

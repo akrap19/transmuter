@@ -4366,7 +4366,7 @@ nav.launchpad-nav .nav-links a:hover {
 }
 
 .catalog-table-wrap {
-	margin: 0;
+	margin: 0 0 16px;
 	border: 1px solid var(--tm-gold-line-soft);
 }
 
