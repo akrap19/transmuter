@@ -9,7 +9,8 @@ wins**, except where a founder ruling in this file or in
 
 - [`smart contracts/`](smart%20contracts/) — Anchor 0.32.1 workspace (Token-2022 localnet proofs; CU is a mock-DEX stand-in, not convertTreasury)
 - [`transmuter-frontend/`](transmuter-frontend/) — Next.js 16 Launchpad UI (not wired on-chain yet)
-- Backend (Node.js + MySQL) — not created yet; agent rules live under [`backend/.cursor/rules/`](backend/.cursor/rules/)
+- [`backend/`](backend/) — **Done:** Fastify read-model API, MySQL schema, media upload, Redis cache, indexer worker (Helius webhook + RPC catch-up, last-slot cursor)
+
 
 ## Founder rulings that override the spec pack
 

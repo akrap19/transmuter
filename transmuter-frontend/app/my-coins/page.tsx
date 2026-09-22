@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CatalogHeader } from "@/components/catalog/catalog-header";
 import { SiteFooter, SiteNav } from "@/components/transmuter/site-chrome";
 import { Wrap } from "@/components/transmuter/wrap";
+import { parsePreviewFlag, searchParamsFromRecord } from "@/lib/catalog/search-params";
 import { MyCoinsView } from "./my-coins-view";
 
 export const metadata: Metadata = {
@@ -9,7 +10,13 @@ export const metadata: Metadata = {
   description: "Launches you created on Transmuter and EOL tokens you hold.",
 };
 
-export default function MyCoinsPage() {
+type MyCoinsPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function MyCoinsPage({ searchParams }: MyCoinsPageProps) {
+  const preview = parsePreviewFlag(searchParamsFromRecord(await searchParams));
+
   return (
     <div className="page-docs page-catalog">
       <SiteNav />
@@ -23,7 +30,7 @@ export default function MyCoinsPage() {
           }
           subtitle="Created launches from the Factory registry, plus EOL tokens this wallet holds."
         />
-        <MyCoinsView />
+        <MyCoinsView preview={preview} />
       </Wrap>
       <SiteFooter />
     </div>

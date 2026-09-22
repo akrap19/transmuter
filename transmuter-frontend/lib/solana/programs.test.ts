@@ -8,7 +8,7 @@ import {
 	ctokenRevenuePda
 } from '@/lib/solana/programs/ctoken'
 import { daoConfigPda } from '@/lib/solana/programs/dao'
-import { eolConfigPda, eolDepositPda, eolMintAuthorityPda } from '@/lib/solana/programs/eol-token'
+import { eolConfigPda, eolDepositPda, eolMintAuthorityPda, eolRedeemPda } from '@/lib/solana/programs/eol-token'
 import { factoryCtokenPda, factoryMintIndexPda, factoryPda, launchPda } from '@/lib/solana/programs/factory'
 import { registryConfigPda } from '@/lib/solana/programs/registry'
 import { escrowConfigPda } from '@/lib/solana/programs/runway-escrow'
@@ -65,6 +65,9 @@ describe('per-program PDA wrappers', () => {
 		)
 		expect(eolDepositPda(config, owner).toBase58()).toBe(
 			pda(PROGRAM_IDS.eolToken, Buffer.from('deposit'), config.toBuffer(), owner.toBuffer())
+		)
+		expect(eolRedeemPda(config, owner).toBase58()).toBe(
+			pda(PROGRAM_IDS.eolToken, Buffer.from('redeem'), config.toBuffer(), owner.toBuffer())
 		)
 	})
 

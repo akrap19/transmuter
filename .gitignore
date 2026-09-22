@@ -1,6 +1,9 @@
 transmuter_full_mvp_242e83cf.plan.md
 Transmuter_MVP_Spec_Pack_r42-MVP1.md
 Transmuter_System_Logic.md
+devnet-e2e-checklist.md
+
+transmuter-new-frontend/
 
 # Local Solana test validator (default ledger when run from repo root)
 test-ledger/

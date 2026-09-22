@@ -36,7 +36,12 @@ const footerLinks = [
 ] as const
 
 function useNavDrawer() {
+	const pathname = usePathname()
 	const [open, setOpen] = useState(false)
+
+	useEffect(() => {
+		setOpen(false)
+	}, [pathname])
 
 	useEffect(() => {
 		if (!open) return

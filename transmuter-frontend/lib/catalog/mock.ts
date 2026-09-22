@@ -7,6 +7,8 @@ import type {
 export const MOCK_PREVIEW_WALLET = "TmPrev1111111111111111111111111111111111111";
 export const MOCK_OTHER_WALLET = "TmOthr1111111111111111111111111111111111111";
 
+export const CATALOG_NOW = 1_789_000_000;
+
 export const CATALOG_NOTICE =
   "Showing sample indexed launches until the backend index is live. VOIDED sales stay in the list.";
 
@@ -38,6 +40,7 @@ export const MOCK_CATALOG: CoinListItem[] = [
     marketCapUsd: 42_000,
     saleProgressBps: 6100,
     launchedAt: 1_746_200_000,
+    logoUrl: "https://cdn.transmuter.test/aurora.png",
   }),
   coin({
     mint: "MintHelix111111111111111111111111111111111",
@@ -48,6 +51,7 @@ export const MOCK_CATALOG: CoinListItem[] = [
     priceUsd: 2.15,
     marketCapUsd: 860_000,
     backingRatioBps: 2140,
+    logoUrl: "https://cdn.transmuter.test/helix.png",
     holderCount: 318,
     launchedAt: 1_745_100_000,
   }),
@@ -136,7 +140,15 @@ export const MOCK_PORTFOLIOS: Record<string, PortfolioInput> = {
         symbol: "HLX",
         staked: 10,
         weight: 10,
-        voterLockedUntil: 1_747_200_000,
+        voterLockedUntil: 1_800_600_000,
+      },
+      {
+        mint: "MintForge11111111111111111111111111111111",
+        name: "Forge",
+        symbol: "FRG",
+        staked: 4,
+        weight: 4,
+        voterLockedUntil: null,
       },
     ],
     claimables: [
@@ -146,13 +158,23 @@ export const MOCK_PORTFOLIOS: Record<string, PortfolioInput> = {
     ],
     openVotes: [
       {
+        mint: "MintHelix111111111111111111111111111111111",
+        name: "Helix",
+        symbol: "HLX",
+        kind: "escrow_halt",
+        closesAt: 1_800_300_000,
+        yesWeight: 8_000,
+        noWeight: 2_000,
+        quorumBps: 1000,
+      },
+      {
         mint: "MintSolace1111111111111111111111111111111",
         name: "Solace",
         symbol: "SLC",
         kind: "liquidation",
-        closesAt: 1_747_000_000,
-        yesWeight: 18_400,
-        noWeight: 2_100,
+        closesAt: 1_800_500_000,
+        yesWeight: 5_200,
+        noWeight: 800,
         quorumBps: 1000,
       },
       {
@@ -160,10 +182,10 @@ export const MOCK_PORTFOLIOS: Record<string, PortfolioInput> = {
         name: "Forge",
         symbol: "FRG",
         kind: "reserve_mint",
-        closesAt: 1_746_900_000,
+        closesAt: 1_800_400_000,
         yesWeight: 4_200,
         noWeight: 6_800,
-        quorumBps: 1000,
+        quorumBps: 300,
       },
     ],
   },

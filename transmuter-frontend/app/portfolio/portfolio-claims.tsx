@@ -19,7 +19,7 @@ export function ClaimablesTable({ rows }: { rows: Claimable[] }) {
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={`${row.mint}-${row.kind}`}>
+            <tr key={`${row.mint}-${row.kind}-${row.asset}`}>
               <td>
                 <CoinIdentity mint={row.mint} name={row.name} symbol={row.symbol} />
               </td>

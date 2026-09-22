@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LAUNCH_STATUSES, type CoinQuery, type LaunchStatus } from "@/lib/catalog/types";
+import { formatStatus } from "@/lib/catalog/format";
 import { serializeCoinQuery } from "@/lib/catalog/search-params";
+import { LAUNCH_STATUSES, type CoinQuery, type LaunchStatus } from "@/lib/catalog/types";
 import { routes } from "@/lib/routes";
 
 const SORTS = [
@@ -52,7 +53,7 @@ export function ExploreToolbar({ query }: ExploreToolbarProps) {
           <option value="">All (incl. VOIDED)</option>
           {LAUNCH_STATUSES.map((status) => (
             <option key={status} value={status}>
-              {status}
+              {formatStatus(status)}
             </option>
           ))}
         </select>
