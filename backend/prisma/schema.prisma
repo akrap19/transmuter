@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// Factory registry cache. Rebuildable from chain; includes VOIDED launches.
+model Launch {
+  mint            String        @id @db.VarChar(64)
+  name            String        @db.VarChar(64)
+  symbol          String        @db.VarChar(16)
+  creator         String        @db.VarChar(64)
+  backing         String        @db.VarChar(64)
+  status          String        @db.VarChar(16)
+  metadataUri     String?       @map("metadata_uri") @db.VarChar(512)
+  logoUrl         String?       @map("logo_url") @db.VarChar(512)
+  description     String        @default("") @db.Text
+  website         String?       @db.VarChar(256)
+  twitter         String?       @db.VarChar(256)
+  telegram        String?       @db.VarChar(256)
+  discord         String?       @db.VarChar(256)
+  launchedAt      Int           @map("launched_at")
+  eolConfig       String?       @map("eol_config") @db.VarChar(64)
+  targetRaiseUsdc BigInt?       @map("target_raise_usdc")
+  priceUsd        Decimal?      @map("price_usd") @db.Decimal(20, 8)
+  marketCapUsd    Decimal?      @map("market_cap_usd") @db.Decimal(20, 2)
+  backingRatioBps Int?          @map("backing_ratio_bps")
+  saleProgressBps Int?          @map("sale_progress_bps")
+  holderCount     Int           @default(0) @map("holder_count")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  stats           TokenStat[]
+  prices          PriceHistory[]
+
+  @@index([creator])
+  @@index([status])
+  @@index([backing])
+  @@index([eolConfig])
+  @@map("launches")
+}
+
+/// Periodic snapshots. `launches` holds the current stats used by list/sort.
+model TokenStat {
+  id              BigInt   @id @default(autoincrement())
+  mint            String   @db.VarChar(64)
+  launch          Launch   @relation(fields: [mint], references: [mint], onDelete: Cascade)
+  priceUsd        Decimal? @map("price_usd") @db.Decimal(20, 8)
+  marketCapUsd    Decimal? @map("market_cap_usd") @db.Decimal(20, 2)
+  backingRatioBps Int?     @map("backing_ratio_bps")
+  saleProgressBps Int?     @map("sale_progress_bps")
+  holderCount     Int      @default(0) @map("holder_count")
+  capturedAt      Int      @map("captured_at")
+
+  @@unique([mint, capturedAt])
+  @@index([mint, capturedAt])
+  @@map("token_stats")
+}
+
+model PriceHistory {
+  id        BigInt  @id @default(autoincrement())
+  mint      String  @db.VarChar(64)
+  launch    Launch  @relation(fields: [mint], references: [mint], onDelete: Cascade)
+  t         Int
+  priceUsd  Decimal @map("price_usd") @db.Decimal(20, 8)
+  volumeUsd Decimal @map("volume_usd") @db.Decimal(20, 2)
+
+  @@unique([mint, t])
+  @@index([mint, t])
+  @@map("price_history")
+}
+
+/// Off-chain prefs keyed by wallet. No auth/user table.
+model Profile {
+  wallet    String   @id @db.VarChar(64)
+  prefs     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("profiles")
+}
+
+/// High-water mark for catch-up. Webhooks still apply out-of-order txs idempotently.
+model IndexerCursor {
+  id        Int      @id
+  lastSlot  BigInt   @map("last_slot")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("indexer_cursor")
+}

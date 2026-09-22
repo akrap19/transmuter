@@ -10,13 +10,14 @@ A project raises USDC in a fixed-price sale. At finalize, proceeds seed two liqu
 
 Hackathon build in progress. The Launchpad UI is not wired to programs yet.
 
-| Piece | State |
-|---|---|
+| Piece                                                               | State                                            |
+| ------------------------------------------------------------------- | ------------------------------------------------ |
 | Token-2022 proofs, Pyth-shaped oracle, pinned DEX, lifecycle keeper | Done (localnet + public-devnet `yarn lifecycle`) |
-| cSOL, Vesting, Runway Escrow, Staking, EOL Token, Factory | Done |
-| Registry, DAO | Shims (`exists=true`, quorum not met) |
-| Launchpad UI (wizard, docs, wallet connect) | Built, not on-chain |
-| Indexer / API | Not started |
+| cSOL, Vesting, Runway Escrow, Staking, EOL Token, Factory           | Done                                             |
+| Registry, DAO                                                       | Shims (`exists=true`, quorum not met)            |
+| Launchpad UI (wizard, docs, wallet connect)                         | Built, not on-chain                              |
+| Backend API (Fastify, MySQL schema, media upload, Redis cache)      | Done                                             |
+| Indexer worker (chain → `launches` / stats / charts)                | Done (Helius webhook + RPC catch-up)             |
 
 There is no gold mint in this build.
 
@@ -25,7 +26,7 @@ There is no gold mint in this build.
 ```
 smart contracts/          Anchor 0.32.1 programs, tests, keeper
 transmuter-frontend/      Next.js 16 Launchpad
-backend/                  planned Node.js + MySQL indexer (rules only)
+backend/                  Fastify read-model API + indexer worker
 ```
 
 Program details, CU proofs, and instruction tables live in [`smart contracts/README.md`](smart%20contracts/README.md).
@@ -41,6 +42,23 @@ pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Launch wizard is at `/launchpad`.
+
+### API (read model)
+
+Needs Docker for MySQL 8.4 + Redis, or set `DATABASE_URL` / `REDIS_URL` yourself.
+
+```bash
+cd backend
+cp .env.example .env
+docker compose up -d
+pnpm install
+pnpm db:generate
+pnpm db:migrate
+pnpm dev
+```
+
+The API listens on [http://localhost:3001](http://localhost:3001). Coin lists stay empty until the indexer writes `launches` from Factory logs (Helius webhook or RPC catch-up).
+
 
 ### Programs (localnet)
 
@@ -71,10 +89,3 @@ Rust, Anchor 0.32, Token-2022, SPL Token, Pyth, Raydium/Orca CLMM, Jupiter, Meta
 Localnet swaps use the pinned mock DEX venue for new EOL mints.
 Public-devnet `convertTreasury` and new-token LP seed Raydium CPMM. Oracle reads are Pyth `PriceUpdateV2` or mock_pyth; the
 lifecycle script still `set_price`s to force reserve-mint Path A.
-
-## Docs
-
-- [`Transmuter_System_Logic.md`](Transmuter_System_Logic.md) — what the system is for
-- [`Transmuter_MVP_Spec_Pack_r42-MVP1.md`](Transmuter_MVP_Spec_Pack_r42-MVP1.md) — normative spec
-- [`smart contracts/README.md`](smart%20contracts/README.md) — programs, toolchain, test results
-# transmuter
