@@ -3,8 +3,8 @@ import type { RedeemLeg } from "@/lib/catalog/types";
 
 export function RedeemLegs({ legs }: { legs: RedeemLeg[] }) {
   return (
-    <div className="tbl-scroll catalog-table-wrap">
-      <table className="catalog-table">
+    <div className="coin-table-wrap">
+      <table className="coin-table">
         <thead>
           <tr>
             <th>Leg</th>

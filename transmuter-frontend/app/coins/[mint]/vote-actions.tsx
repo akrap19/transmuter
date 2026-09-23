@@ -27,15 +27,15 @@ export function VoteActions({ vote, stake }: { vote: CoinVote; stake: CoinStake 
 
   return (
     <>
-      <div className="catalog-sale-buttons">
-        <button type="button" className="btn btn-gold" onClick={() => run(true)}>
+      <div className="coin-buttons">
+        <button type="button" className="button button-primary" onClick={() => run(true)}>
           Vote yes
         </button>
-        <button type="button" className="btn btn-ghost" onClick={() => run(false)}>
+        <button type="button" className="button button-ghost" onClick={() => run(false)}>
           Vote no
         </button>
       </div>
-      {message ? <p className="catalog-sale-note">{message}</p> : null}
+      {message ? <p className="coin-note">{message}</p> : null}
     </>
   );
 }

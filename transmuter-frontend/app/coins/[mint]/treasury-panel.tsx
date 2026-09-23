@@ -1,3 +1,6 @@
+import { CoinMeta } from "@/app/coins/[mint]/coin-meta";
+import { CoinSection } from "@/app/coins/[mint]/coin-section";
+import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { formatAmount, formatUsd } from "@/lib/catalog/format";
 import type { CoinDetail } from "@/lib/catalog/types";
 
@@ -6,58 +9,28 @@ export function TreasuryPanel({ coin }: { coin: CoinDetail }) {
   const { reserveMint } = treasury;
 
   return (
-    <section className="catalog-section">
-      <h2>Treasury transparency</h2>
-      <p>
-        Every backing read counts unconverted USDC. Redemption is quantity-based ({coin.backing} / circulating), not an
-        oracle price.
-      </p>
-      <div className="catalog-stats">
-        <article>
-          <span>{coin.backing} treasury</span>
-          <strong>{formatAmount(treasury.cTokenAmount)}</strong>
-        </article>
-        <article>
-          <span>Unconverted USDC</span>
-          <strong>{formatUsd(treasury.unconvertedUsdc)}</strong>
-        </article>
-        <article>
-          <span>Backing value</span>
-          <strong>{formatUsd(treasury.backingValueUsd)}</strong>
-        </article>
-        <article>
-          <span>Redemption</span>
-          <strong>{formatAmount(treasury.redemptionRatio)}</strong>
-        </article>
-      </div>
-      <dl className="catalog-coin-meta">
-        <div>
-          <dt>Path A</dt>
-          <dd>{reserveMint.pathAReady ? "Ready" : "Idle"}</dd>
-        </div>
-        <div>
-          <dt>Path B</dt>
-          <dd>{reserveMint.pathBActivated ? "Activated" : "Not activated"}</dd>
-        </div>
-        <div>
-          <dt>Governed mint</dt>
-          <dd>{reserveMint.governedPct}% of supply</dd>
-        </div>
-        <div>
-          <dt>Reserve mints this year</dt>
-          <dd>
-            {reserveMint.mintsThisYear} / {reserveMint.yearlyCap}
-          </dd>
-        </div>
-        <div>
-          <dt>Circulating</dt>
-          <dd>{formatAmount(treasury.circulatingSupply)}</dd>
-        </div>
-        <div>
-          <dt>cToken mark</dt>
-          <dd>{formatUsd(treasury.cTokenPriceUsd)}</dd>
-        </div>
-      </dl>
-    </section>
+    <CoinSection
+      title="Treasury transparency"
+      lede={`Every backing read counts unconverted USDC. Redemption is quantity-based (${coin.backing} / circulating), not an oracle price.`}
+    >
+      <CoinStats
+        items={[
+          { label: `${coin.backing} treasury`, value: formatAmount(treasury.cTokenAmount) },
+          { label: "Unconverted USDC", value: formatUsd(treasury.unconvertedUsdc) },
+          { label: "Backing value", value: formatUsd(treasury.backingValueUsd) },
+          { label: "Redemption", value: formatAmount(treasury.redemptionRatio) },
+        ]}
+      />
+      <CoinMeta
+        items={[
+          { label: "Path A", value: reserveMint.pathAReady ? "Ready" : "Idle" },
+          { label: "Path B", value: reserveMint.pathBActivated ? "Activated" : "Not activated" },
+          { label: "Governed mint", value: `${reserveMint.governedPct}% of supply` },
+          { label: "Reserve mints this year", value: `${reserveMint.mintsThisYear} / ${reserveMint.yearlyCap}` },
+          { label: "Circulating", value: formatAmount(treasury.circulatingSupply) },
+          { label: "cToken mark", value: formatUsd(treasury.cTokenPriceUsd) },
+        ]}
+      />
+    </CoinSection>
   );
 }

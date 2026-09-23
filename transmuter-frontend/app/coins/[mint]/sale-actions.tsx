@@ -79,20 +79,20 @@ function SaleForm({
   }
 
   return (
-    <div className="catalog-sale-actions">
-      <label className="catalog-field">
+    <div className="coin-actions">
+      <label className="coin-field">
         <span>Deposit USDC</span>
         <input inputMode="decimal" value={amount} onChange={(event) => onAmount(event.target.value)} />
       </label>
-      <div className="catalog-sale-buttons">
-        <button type="button" className="btn btn-gold" onClick={() => run("deposit")}>
+      <div className="coin-buttons">
+        <button type="button" className="button button-primary" onClick={() => run("deposit")}>
           Deposit
         </button>
-        <button type="button" className="btn btn-ghost" onClick={() => run("withdraw")}>
+        <button type="button" className="button button-ghost" onClick={() => run("withdraw")}>
           Withdraw {formatUsd(sale.myDepositUsdc)}
         </button>
       </div>
-      {message ? <p className="catalog-sale-note">{message}</p> : null}
+      {message ? <p className="coin-note">{message}</p> : null}
     </div>
   );
 }

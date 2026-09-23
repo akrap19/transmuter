@@ -1,73 +1,83 @@
 export function GlossarySection() {
   return (
-    <div className="tbl-scroll" style={{ marginTop: 28 }}>
+    <div className="tw" style={{ marginTop: 28 }}>
       <table>
-        <tbody>
+        <thead>
           <tr>
             <th>Term</th>
             <th>In one line</th>
           </tr>
+        </thead>
+        <tbody>
           <tr>
             <td>
-              <b>EOL token</b>
+              <strong>EOL token</strong>
             </td>
             <td>
-              The token a project launches here. Carries its own reserve and a defined end
-              of life path.
+              The token a project launches here. Carries its own reserves from the first block and
+              a defined procedure for what happens if the project ends.
             </td>
           </tr>
           <tr>
             <td>
-              <b>cToken</b>
+              <strong>cToken</strong>
             </td>
             <td>
-              The contingency asset that backs an EOL token (cBTC, cSOL). Deflationary, and
-              gold-backed underneath.
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <b>DAO token</b>
-            </td>
-            <td>
-              The protocol governance token. Staking it sets voting weight and earns a share
-              of opted-in airdrops.
+              The reserve asset an EOL token&apos;s treasury is held in, such as cSOL. A system
+              token: nobody buys, trades or holds one directly.
             </td>
           </tr>
           <tr>
             <td>
-              <b>Reserve / treasury</b>
+              <strong>DAO token</strong>
             </td>
             <td>
-              The pool of cTokens backing an EOL token. Non-custodial, grows from fees,
-              redeemable by holders.
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <b>Escrow</b>
-            </td>
-            <td>
-              The team&apos;s development runway, locked at launch and released in vested
-              tranches, not payable at will.
+              The protocol governance token. Backed by its own reserves in cSOL.
             </td>
           </tr>
           <tr>
             <td>
-              <b>Redemption ratio</b>
+              <strong>Reserves</strong>
             </td>
             <td>
-              What each token can claim from the reserve. Quantity based, so no price feed
-              can move it.
+              Everything standing behind a token: its treasury, its contract-owned liquidity and
+              any unspent escrow.
             </td>
           </tr>
           <tr>
             <td>
-              <b>Backing ratio</b>
+              <strong>Treasury</strong>
             </td>
             <td>
-              Live reserve value against market cap. Price based, and only ever used to
-              trigger mints, never to price a redemption.
+              The project&apos;s own reserve account, held in a cToken. Non-custodial, grows from
+              fees, redeemable by holders.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Escrow</strong>
+            </td>
+            <td>
+              The team&apos;s runway, held in USDC and released in tranches. Unspent escrow is
+              paid to holders if the project ends.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Redemption ratio</strong>
+            </td>
+            <td>
+              What each token can claim from the treasury. Quantity based, so no price feed can
+              move it.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Backing ratio</strong>
+            </td>
+            <td>
+              Treasury value against market cap. Price based, and used only to open Mint to Scale,
+              never to price a redemption.
             </td>
           </tr>
         </tbody>

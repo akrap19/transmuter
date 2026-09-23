@@ -8,7 +8,7 @@ import { PortfolioBlock } from "./portfolio-block";
 export function ClaimablesTable({ rows }: { rows: Claimable[] }) {
   return (
     <PortfolioBlock title="Claimables" empty="Nothing to claim." rows={rows}>
-      <table className="catalog-table">
+      <table className="coin-table">
         <thead>
           <tr>
             <th>Token</th>
@@ -37,7 +37,7 @@ export function ClaimablesTable({ rows }: { rows: Claimable[] }) {
 export function VotesTable({ rows }: { rows: OpenVote[] }) {
   return (
     <PortfolioBlock title="Open votes" empty="No open votes." rows={rows}>
-      <table className="catalog-table">
+      <table className="coin-table">
         <thead>
           <tr>
             <th>Token</th>

@@ -1,0 +1,219 @@
+/* My Coins and Portfolio — brand-width windows, matching home/explore/detail. */
+
+.wallet-page .subhero {
+	min-height: auto;
+	padding: 148px 0 40px;
+	justify-content: flex-start;
+}
+
+.wallet-page h1 {
+	max-width: none;
+	font-size: clamp(52px, 7vw, 96px);
+}
+
+.wallet-page .subhero > p:not(.eyebrow) {
+	max-width: 720px;
+}
+
+.wallet-section {
+	padding: 0 0 120px;
+}
+
+.wallet-page .catalog-banner {
+	margin: 0 0 22px;
+	padding: 16px 20px;
+	border: 0;
+	border-radius: 18px;
+	background: linear-gradient(145deg, rgba(229, 182, 84, 0.1), rgba(139, 108, 255, 0.06));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+	color: #cfc8bb;
+	font-size: 14px;
+	line-height: 1.6;
+	letter-spacing: 0;
+}
+
+.wallet-page .coin-stats {
+	margin-bottom: 28px;
+}
+
+.wallet-page .coin-stats {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 14px;
+	margin: 24px 0 28px;
+}
+
+.wallet-page .coin-stats article {
+	min-width: 0;
+	padding: 18px 20px;
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.wallet-page .coin-stats span {
+	display: block;
+	margin: 0 0 8px;
+	color: #7c776e;
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.wallet-page .coin-stats strong {
+	display: block;
+	color: var(--text);
+	font: 500 22px/1.2 var(--font-manrope), sans-serif;
+	letter-spacing: -0.02em;
+	overflow-wrap: anywhere;
+}
+
+.wallet-page .coin-lede {
+	margin: 0 0 22px;
+	max-width: 720px;
+	color: #8d877d;
+	font-size: 16px;
+	line-height: 1.7;
+}
+
+.wallet-page .coin-extra {
+	color: var(--gold);
+	font-variant-numeric: tabular-nums;
+}
+
+.wallet-page .coin-section,
+.wallet-page .coin-table-wrap {
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 28px;
+	background:
+		radial-gradient(circle at 0 0, rgba(229, 182, 84, 0.08), transparent 42%),
+		linear-gradient(160deg, rgba(22, 21, 28, 0.92), rgba(10, 10, 14, 0.88));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+	margin-bottom: 16px;
+}
+
+.wallet-page .coin-section {
+	padding: 32px;
+}
+
+.wallet-page .coin-section:nth-of-type(3n + 2) {
+	background:
+		radial-gradient(circle at 100% 0, rgba(139, 108, 255, 0.14), transparent 46%),
+		linear-gradient(160deg, rgba(22, 21, 28, 0.92), rgba(10, 10, 14, 0.88));
+}
+
+.wallet-page .coin-section:nth-of-type(3n) {
+	background:
+		radial-gradient(circle at 100% 100%, rgba(87, 216, 206, 0.12), transparent 46%),
+		linear-gradient(160deg, rgba(22, 21, 28, 0.92), rgba(10, 10, 14, 0.88));
+}
+
+.wallet-page .coin-section h2 {
+	margin: 0 0 12px;
+	color: var(--text);
+	font: 500 32px/1.1 var(--font-manrope), sans-serif;
+	letter-spacing: -0.03em;
+}
+
+.wallet-page .coin-table-wrap {
+	overflow-x: auto;
+	padding: 8px;
+}
+
+.wallet-page .coin-table {
+	width: 100%;
+	border-collapse: collapse;
+	color: var(--text);
+	font-size: 14px;
+}
+
+.wallet-page .coin-table th,
+.wallet-page .coin-table td {
+	padding: 14px 18px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	text-align: left;
+	white-space: nowrap;
+}
+
+.wallet-page .coin-table th {
+	color: #7c776e;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.wallet-page .coin-table tr:last-child td {
+	border-bottom: 0;
+}
+
+.wallet-page .catalog-empty {
+	padding: 48px 24px;
+	border: 0;
+	border-radius: 28px;
+	background: rgba(255, 255, 255, 0.03);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+	text-align: left;
+}
+
+.wallet-page .catalog-empty h2 {
+	margin: 0 0 8px;
+	font: 500 28px/1.1 var(--font-manrope), sans-serif;
+	letter-spacing: -0.03em;
+	color: var(--text);
+}
+
+.wallet-page .catalog-empty p {
+	max-width: 520px;
+	margin: 0 0 18px;
+	color: #8d877d;
+	font-size: 16px;
+	line-height: 1.7;
+}
+
+@media (max-width: 1100px) {
+	.wallet-page .coin-table-wrap {
+		margin-bottom: 24px;
+	}
+}
+
+@media (max-width: 800px) {
+	.wallet-page .subhero {
+		padding: 128px 0 28px;
+	}
+
+	.wallet-page h1 {
+		font-size: clamp(42px, 12vw, 68px);
+	}
+
+	.wallet-page .subhero > p:not(.eyebrow) {
+		margin-top: 18px;
+		font-size: 16px;
+	}
+
+	.wallet-section {
+		padding-bottom: 88px;
+	}
+
+	.wallet-page .coin-section {
+		padding: 22px;
+	}
+
+	.wallet-page .coin-section h2 {
+		font-size: 26px;
+	}
+
+	.wallet-page .coin-stats {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+@media (max-width: 640px) {
+	.wallet-page .coin-stats {
+		grid-template-columns: 1fr;
+	}
+
+	.wallet-page .coin-stats strong {
+		font-size: 20px;
+	}
+}

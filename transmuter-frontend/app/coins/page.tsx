@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
+import "@/app/brand/explore.css";
 import { CatalogBanner } from "@/components/catalog/catalog-banner";
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
-import { CatalogHeader } from "@/components/catalog/catalog-header";
-import { CoinTable } from "@/components/catalog/coin-table";
+import { CoinGrid } from "@/components/catalog/coin-grid";
 import { ExploreToolbar } from "@/components/catalog/explore-toolbar";
-import { SiteFooter, SiteNav } from "@/components/transmuter/site-chrome";
-import { Wrap } from "@/components/transmuter/wrap";
 import { listCoins } from "@/lib/catalog/client";
 import { parseCoinSearchParams, searchParamsFromRecord } from "@/lib/catalog/search-params";
 
@@ -23,30 +21,24 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const result = listCoins(query);
 
   return (
-    <div className="page-docs page-catalog">
-      <SiteNav />
-      <Wrap>
-        <CatalogHeader
-          eyebrow="TRANSMUTER · EXPLORE"
-          title={
-            <>
-              <span className="c">ALL</span> COINS
-            </>
-          }
-          subtitle="Every Factory-registered launch, including VOIDED. Search, sort, and filter the index."
-        />
+    <main className="explore-page">
+      <section className="subhero section-shell explore-hero">
+        <p className="eyebrow">EXPLORE</p>
+        <h1>All coins</h1>
+        <p>Every Factory-registered launch, including VOIDED. Search, sort, and filter the index.</p>
+      </section>
+      <section className="explore-section section-shell">
         <CatalogBanner />
         <ExploreToolbar query={query} />
-        <p className="catalog-count">
+        <p className="explore-count">
           {result.total} launch{result.total === 1 ? "" : "es"}
         </p>
         {result.items.length === 0 ? (
           <CatalogEmpty title="No launches match" body="Clear search or filters to see the full index, including VOIDED sales." />
         ) : (
-          <CoinTable items={result.items} />
+          <CoinGrid items={result.items} />
         )}
-      </Wrap>
-      <SiteFooter />
-    </div>
+      </section>
+    </main>
   );
 }

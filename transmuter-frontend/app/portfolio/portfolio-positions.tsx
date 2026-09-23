@@ -6,7 +6,7 @@ import { PortfolioBlock } from "./portfolio-block";
 export function HoldingsTable({ rows }: { rows: Holding[] }) {
   return (
     <PortfolioBlock title="Holdings" empty="No indexed balances for this wallet." rows={rows}>
-      <table className="catalog-table">
+      <table className="coin-table">
         <thead>
           <tr>
             <th>Token</th>
@@ -33,7 +33,7 @@ export function HoldingsTable({ rows }: { rows: Holding[] }) {
 export function StakesTable({ rows }: { rows: StakePosition[] }) {
   return (
     <PortfolioBlock title="Stakes" empty="No staked positions." rows={rows}>
-      <table className="catalog-table">
+      <table className="coin-table">
         <thead>
           <tr>
             <th>Token</th>

@@ -10,7 +10,6 @@ import { FeesStep } from "./steps/fees-step";
 import { IdentityStep } from "./steps/identity-step";
 import { ReviewStep } from "./steps/review-step";
 import { TokenomicsStep } from "./steps/tokenomics-step";
-
 import { usePaintRangeSliders } from "./use-paint-range-sliders";
 
 function WizardContent() {
@@ -30,40 +29,35 @@ function WizardContent() {
 
   if (state.launched) {
     return (
-      <div className="layout">
+      <section className="launch-body section-shell page-wrapper">
         <LaunchSuccess />
-      </div>
+      </section>
     );
   }
 
   return (
     <>
-      <div className="page-header">
-        <div className="proto-banner">
-          ⚠️ Devnet launchpad — Deploy signs a Factory createLaunch transaction. Logo and
-          Metaplex metadata upload first; the chain still enforces sale math, floors, and the
-          whitelist.
-        </div>
-        <div className="page-eyebrow">TRANSMUTER · BY THE MIDAS INITIATIVE</div>
-        <h1 className="page-title">
-          <span className="c">CREATE</span> YOUR <span className="g">REINFORCED TOKEN</span>
-        </h1>
-        <p className="page-subtitle">
-          Launch a treasury-backed token inheriting the full collateral chain, down to gold.
-          No creator access to funds, ever. Built-in end of life protection.
+      <section className="subhero section-shell launch-hero">
+        <p className="eyebrow">LAUNCHPAD</p>
+        <h1>Create your reinforced token</h1>
+        <p>
+          Launch a treasury-backed token inheriting the full collateral chain, down to gold. No
+          creator access to funds, ever. Built-in end of life protection.
         </p>
-      </div>
-      <StepsBar />
-      <div className="layout">
-        <div>
-          {state.currentStep === 1 && <IdentityStep />}
-          {state.currentStep === 2 && <TokenomicsStep />}
-          {state.currentStep === 3 && <BackingStep />}
-          {state.currentStep === 4 && <FeesStep />}
-          {state.currentStep === 5 && <ReviewStep />}
+      </section>
+      <section className="launch-body section-shell page-wrapper">
+        <StepsBar />
+        <div className="launch-layout">
+          <div>
+            {state.currentStep === 1 && <IdentityStep />}
+            {state.currentStep === 2 && <TokenomicsStep />}
+            {state.currentStep === 3 && <BackingStep />}
+            {state.currentStep === 4 && <FeesStep />}
+            {state.currentStep === 5 && <ReviewStep />}
+          </div>
+          <PreviewSidebar />
         </div>
-        <PreviewSidebar />
-      </div>
+      </section>
     </>
   );
 }

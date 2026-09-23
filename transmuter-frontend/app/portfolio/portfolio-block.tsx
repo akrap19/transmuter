@@ -10,12 +10,12 @@ type PortfolioBlockProps = {
 
 export function PortfolioBlock({ title, empty, rows, children }: PortfolioBlockProps) {
   return (
-    <section className="catalog-section">
+    <section className="coin-section">
       <h2>{title}</h2>
       {rows.length === 0 ? (
         <CatalogEmpty title={empty} />
       ) : (
-        <div className="tbl-scroll catalog-table-wrap">{children}</div>
+        <div className="coin-table-wrap">{children}</div>
       )}
     </section>
   );

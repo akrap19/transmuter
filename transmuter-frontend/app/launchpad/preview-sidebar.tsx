@@ -32,14 +32,14 @@ export function PreviewSidebar() {
   return (
     <div className="sidebar">
       <div className="preview-panel">
-        <div className="preview-title">⬡ Live Preview</div>
+        <div className="preview-title">Live preview</div>
         <div className="preview-token-header">
           <div className="preview-token-icon">
             {state.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={state.logoUrl} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+              <img className="preview-token-preview" src={state.logoUrl} alt="" />
             ) : (
-              "🛡️"
+              (ticker.slice(0, 2) || "TK")
             )}
           </div>
           <div>
@@ -77,10 +77,7 @@ export function PreviewSidebar() {
       </div>
 
       <div className="panel benefits-panel">
-        <div className="panel-title benefits-title">
-          <div className="dot dot-green" />
-          Reinforced Token Benefits
-        </div>
+        <div className="panel-title benefits-title">Reinforced token benefits</div>
         <div className="benefits-list">
           ✓ Non-custodial treasury<br />
           ✓ No creator access, ever<br />

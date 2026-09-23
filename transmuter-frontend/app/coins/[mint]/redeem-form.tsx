@@ -49,20 +49,20 @@ export function RedeemForm({
   return (
     <>
       <RedeemLegs legs={redeem.legs} />
-      <div className="catalog-sale-actions">
-        <label className="catalog-field">
+      <div className="coin-actions">
+        <label className="coin-field">
           <span>Burn amount ({formatAmount(redeem.walletBalance)} in wallet)</span>
           <input inputMode="decimal" value={amount} onChange={(event) => onAmount(event.target.value)} />
         </label>
-        <div className="catalog-sale-buttons">
-          <button type="button" className="btn btn-gold" onClick={() => run("redeem")}>
+        <div className="coin-buttons">
+          <button type="button" className="button button-primary" onClick={() => run("redeem")}>
             Redeem
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => run("claim_legs")}>
+          <button type="button" className="button button-ghost" onClick={() => run("claim_legs")}>
             Retry unpaid legs
           </button>
         </div>
-        {message ? <p className="catalog-sale-note">{message}</p> : null}
+        {message ? <p className="coin-note">{message}</p> : null}
       </div>
     </>
   );
