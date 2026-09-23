@@ -1,3 +1,4 @@
+import { CoinSection } from "@/app/coins/[mint]/coin-section";
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { shortenAddress } from "@/lib/solana/config";
 import { tradeAvailable } from "@/lib/catalog/trade";
@@ -9,28 +10,28 @@ export function TradePanel({ coin }: { coin: CoinDetail }) {
   const pools = coin.trade?.pools ?? [];
   if (pools.length === 0) {
     return (
-      <section className="catalog-section">
-        <h2>Trade</h2>
+      <CoinSection title="Trade">
         <CatalogEmpty title="Pools not indexed yet" body="After finalize, EOL/USDC and EOL/SOL links will land here." />
-      </section>
+      </CoinSection>
     );
   }
 
   return (
-    <section className="catalog-section">
-      <h2>Trade</h2>
-      <p>Buy or sell through the post-finalize EOL/USDC and EOL/SOL pools. Deep-links open the DEX with this mint selected.</p>
-      <div className="catalog-trade-grid">
+    <CoinSection
+      title="Trade"
+      lede="Buy or sell through the post-finalize EOL/USDC and EOL/SOL pools. Deep-links open the DEX with this mint selected."
+    >
+      <div className="coin-trade">
         {pools.map((pool) => (
           <article key={pool.label}>
             <span>{pool.label}</span>
             <strong>{shortenAddress(pool.pool, 6)}</strong>
-            <a className="btn btn-gold" href={pool.href} target="_blank" rel="noopener noreferrer">
+            <a className="button button-primary" href={pool.href} target="_blank" rel="noopener noreferrer">
               Swap {pool.label === "EOL/USDC" ? "USDC" : "SOL"}
             </a>
           </article>
         ))}
       </div>
-    </section>
+    </CoinSection>
   );
 }

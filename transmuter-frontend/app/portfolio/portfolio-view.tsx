@@ -7,6 +7,7 @@ import { formatUsd } from "@/lib/catalog/format";
 import { MOCK_PREVIEW_WALLET } from "@/lib/catalog/mock";
 import type { TokenAccountBalance } from "@/lib/catalog/types";
 import { routes } from "@/lib/routes";
+import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { useOwnedBalances } from "@/components/catalog/use-owned-balances";
 import { ClaimablesTable, VotesTable } from "./portfolio-claims";
 import { HoldingsTable, StakesTable } from "./portfolio-positions";
@@ -42,24 +43,14 @@ function Dashboard({ wallet, accounts }: { wallet: string; accounts?: TokenAccou
   return (
     <>
       <CatalogBanner />
-      <div className="catalog-stats">
-        <article>
-          <span>Holdings</span>
-          <strong>{formatUsd(snapshot.totals.holdingsUsd)}</strong>
-        </article>
-        <article>
-          <span>Stakes</span>
-          <strong>{snapshot.totals.stakedCount}</strong>
-        </article>
-        <article>
-          <span>Claimable</span>
-          <strong>{snapshot.totals.claimableCount}</strong>
-        </article>
-        <article>
-          <span>Open votes</span>
-          <strong>{snapshot.totals.openVoteCount}</strong>
-        </article>
-      </div>
+      <CoinStats
+        items={[
+          { label: "Holdings", value: formatUsd(snapshot.totals.holdingsUsd) },
+          { label: "Stakes", value: snapshot.totals.stakedCount },
+          { label: "Claimable", value: snapshot.totals.claimableCount },
+          { label: "Open votes", value: snapshot.totals.openVoteCount },
+        ]}
+      />
       <HoldingsTable rows={snapshot.holdings} />
       <StakesTable rows={snapshot.stakes} />
       <ClaimablesTable rows={snapshot.claimables} />

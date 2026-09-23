@@ -16,7 +16,7 @@ export function GovernanceVotes({
   governedPct: number;
 }) {
   return (
-    <div className="catalog-vote-list">
+    <div className="coin-votes">
       {votes.map((vote) => (
         <VoteCard key={vote.kind} vote={vote} governedPct={governedPct}>
           <WalletGate

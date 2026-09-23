@@ -1,3 +1,4 @@
+import { CoinSection } from "@/app/coins/[mint]/coin-section";
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { formatUsd, formatUnix } from "@/lib/catalog/format";
 import type { ChartPoint } from "@/lib/catalog/types";
@@ -8,16 +9,14 @@ const PAD = 16;
 
 export function ChartsPanel({ points }: { points: ChartPoint[] }) {
   return (
-    <section className="catalog-section">
-      <h2>Charts</h2>
-      <p>Price and volume from the indexer price_history series. Sample points until the backend is live.</p>
+    <CoinSection title="Charts" lede="Price and volume from the indexer price_history series. Sample points until the backend is live.">
       {points.length === 0 ? (
         <CatalogEmpty title="No price history" body="Charts fill after the first indexed trades or sale prints." />
       ) : (
         <>
           <PriceVolumeChart points={points} />
-          <div className="tbl-scroll catalog-table-wrap">
-            <table className="catalog-table">
+          <div className="coin-table-wrap">
+            <table className="coin-table">
               <thead>
                 <tr>
                   <th>When</th>
@@ -38,7 +37,7 @@ export function ChartsPanel({ points }: { points: ChartPoint[] }) {
           </div>
         </>
       )}
-    </section>
+    </CoinSection>
   );
 }
 
@@ -60,12 +59,12 @@ function PriceVolumeChart({ points }: { points: ChartPoint[] }) {
     .join(" ");
 
   return (
-    <svg className="catalog-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="Price and volume">
-      <path d={line} className="catalog-chart-line" />
+    <svg className="coin-chart" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="Price and volume">
+      <path d={line} className="coin-chart-line" />
       {points.map((point, index) => {
         const x = PAD + index * gap - barW / 2;
         const h = (point.volumeUsd / maxVolume) * volumeH;
-        return <rect key={point.t} className="catalog-chart-bar" x={x} y={HEIGHT - PAD - h} width={barW} height={h} />;
+        return <rect key={point.t} className="coin-chart-bar" x={x} y={HEIGHT - PAD - h} width={barW} height={h} />;
       })}
     </svg>
   );

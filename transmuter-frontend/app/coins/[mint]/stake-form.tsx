@@ -1,5 +1,6 @@
 "use client";
 
+import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { formatAmount, formatUnix } from "@/lib/catalog/format";
 import { CATALOG_NOTICE } from "@/lib/catalog/mock";
 import { evaluateStakeAction } from "@/lib/catalog/stake";
@@ -47,38 +48,28 @@ export function StakeForm({
 
   return (
     <>
-      <div className="catalog-stats">
-        <article>
-          <span>Staked</span>
-          <strong>{formatAmount(stake.staked)}</strong>
-        </article>
-        <article>
-          <span>Voting weight</span>
-          <strong>{formatAmount(stake.weight)}</strong>
-        </article>
-        <article>
-          <span>Voter lock</span>
-          <strong>{stake.voterLockedUntil ? `Until ${formatUnix(stake.voterLockedUntil)}` : "Unlocked"}</strong>
-        </article>
-        <article>
-          <span>Wallet</span>
-          <strong>{formatAmount(stake.walletBalance)}</strong>
-        </article>
-      </div>
-      <div className="catalog-sale-actions">
-        <label className="catalog-field">
+      <CoinStats
+        items={[
+          { label: "Staked", value: formatAmount(stake.staked) },
+          { label: "Voting weight", value: formatAmount(stake.weight) },
+          { label: "Voter lock", value: stake.voterLockedUntil ? `Until ${formatUnix(stake.voterLockedUntil)}` : "Unlocked" },
+          { label: "Wallet", value: formatAmount(stake.walletBalance) },
+        ]}
+      />
+      <div className="coin-actions">
+        <label className="coin-field">
           <span>Amount</span>
           <input inputMode="decimal" value={amount} onChange={(event) => onAmount(event.target.value)} />
         </label>
-        <div className="catalog-sale-buttons">
-          <button type="button" className="btn btn-gold" onClick={() => run("stake")}>
+        <div className="coin-buttons">
+          <button type="button" className="button button-primary" onClick={() => run("stake")}>
             Stake
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => run("unstake")}>
+          <button type="button" className="button button-ghost" onClick={() => run("unstake")}>
             Unstake
           </button>
         </div>
-        {message ? <p className="catalog-sale-note">{message}</p> : null}
+        {message ? <p className="coin-note">{message}</p> : null}
       </div>
     </>
   );

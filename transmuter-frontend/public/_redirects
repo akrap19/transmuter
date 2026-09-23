@@ -1,0 +1,23 @@
+# Netlify domain and legacy path redirects (SEO pack). Next.js redirects in next.config.ts cover app paths.
+# Requires themidasinitiative.com and transmuter.net on this site as domain aliases.
+
+https://themidasinitiative.com/launchpad      https://www.transmuter.net/access/    301!
+https://www.themidasinitiative.com/launchpad  https://www.transmuter.net/access/    301!
+https://themidasinitiative.com/contact        https://www.transmuter.net/access/    301!
+https://www.themidasinitiative.com/contact    https://www.transmuter.net/access/    301!
+https://themidasinitiative.com/eol-tokens     https://www.transmuter.net/glossary/  301!
+https://www.themidasinitiative.com/eol-tokens https://www.transmuter.net/glossary/  301!
+https://themidasinitiative.com/d-tokens       https://www.transmuter.net/glossary/  301!
+https://www.themidasinitiative.com/d-tokens   https://www.transmuter.net/glossary/  301!
+https://themidasinitiative.com/dao            https://www.transmuter.net/faq/       301!
+https://www.themidasinitiative.com/dao        https://www.transmuter.net/faq/       301!
+https://themidasinitiative.com/*      https://www.transmuter.net/:splat  301!
+https://www.themidasinitiative.com/*  https://www.transmuter.net/:splat  301!
+https://transmuter.net/*  https://www.transmuter.net/:splat  301!
+
+/eol-tokens  /glossary/  301
+/d-tokens    /glossary/  301
+/dg          /           301
+/dao         /faq/       301
+/invest      /           301
+/analytics   /           301

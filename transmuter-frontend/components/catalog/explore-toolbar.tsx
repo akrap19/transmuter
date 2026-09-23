@@ -1,10 +1,26 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ExploreSelect } from "@/components/catalog/explore-select";
 import { formatStatus } from "@/lib/catalog/format";
 import { serializeCoinQuery } from "@/lib/catalog/search-params";
 import { LAUNCH_STATUSES, type CoinQuery, type LaunchStatus } from "@/lib/catalog/types";
 import { routes } from "@/lib/routes";
+
+const ALL = "all";
+const SEARCH_DELAY_MS = 200;
+
+const STATUS_OPTIONS = [
+  { value: ALL, label: "All (incl. VOIDED)" },
+  ...LAUNCH_STATUSES.map((status) => ({ value: status, label: formatStatus(status) })),
+];
+
+const BACKING_OPTIONS = [
+  { value: ALL, label: "All" },
+  { value: "cSOL", label: "cSOL" },
+  { value: "cBTC", label: "cBTC" },
+];
 
 const SORTS = [
   { value: "launchedAt:desc", label: "Newest" },
@@ -25,69 +41,79 @@ function sortValue(query: CoinQuery) {
 
 export function ExploreToolbar({ query }: ExploreToolbarProps) {
   const router = useRouter();
+  const searchTimer = useRef<number>(0);
+  const lastAppliedSearch = useRef(query.search);
+  const [search, setSearch] = useState(query.search ?? "");
+  const [searchFromUrl, setSearchFromUrl] = useState(query.search);
+
+  if (query.search !== searchFromUrl) {
+    setSearchFromUrl(query.search);
+    if (query.search !== lastAppliedSearch.current) {
+      lastAppliedSearch.current = query.search;
+      setSearch(query.search ?? "");
+    }
+  }
 
   function apply(next: CoinQuery) {
     const qs = serializeCoinQuery(next).toString();
     router.replace(qs ? `${routes.coins}?${qs}` : routes.coins);
   }
 
+  function applySearch(value: string, extra: Partial<CoinQuery> = {}) {
+    const nextSearch = value.trim() || undefined;
+    lastAppliedSearch.current = nextSearch;
+    apply({ ...query, ...extra, search: nextSearch });
+  }
+
+  function onSearchChange(value: string) {
+    setSearch(value);
+    window.clearTimeout(searchTimer.current);
+    searchTimer.current = window.setTimeout(() => applySearch(value), SEARCH_DELAY_MS);
+  }
+
   return (
     <form
-      className="catalog-toolbar"
+      className="explore-toolbar"
       onSubmit={(event) => {
         event.preventDefault();
-        const data = new FormData(event.currentTarget);
-        apply({ ...query, search: String(data.get("q") ?? "") || undefined });
+        window.clearTimeout(searchTimer.current);
+        applySearch(search);
       }}
     >
-      <label className="catalog-field">
+      <label className="explore-field explore-field-search">
         <span>Search</span>
-        <input name="q" type="search" placeholder="Name, ticker, or mint" defaultValue={query.search ?? ""} />
+        <input
+          name="q"
+          type="search"
+          placeholder="Name, ticker, or mint"
+          value={search}
+          autoComplete="off"
+          onChange={(event) => onSearchChange(event.target.value)}
+        />
       </label>
-      <label className="catalog-field">
-        <span>Status</span>
-        <select
-          value={Array.isArray(query.status) ? "" : (query.status ?? "")}
-          onChange={(event) => apply({ ...query, status: (event.target.value || undefined) as LaunchStatus | undefined })}
-        >
-          <option value="">All (incl. VOIDED)</option>
-          {LAUNCH_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {formatStatus(status)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="catalog-field">
-        <span>Backing</span>
-        <select
-          value={query.backing ?? ""}
-          onChange={(event) => apply({ ...query, backing: event.target.value || undefined })}
-        >
-          <option value="">All</option>
-          <option value="cSOL">cSOL</option>
-          <option value="cBTC">cBTC</option>
-        </select>
-      </label>
-      <label className="catalog-field">
-        <span>Sort</span>
-        <select
-          value={sortValue(query)}
-          onChange={(event) => {
-            const [sort, dir] = event.target.value.split(":") as [CoinQuery["sort"], CoinQuery["dir"]];
-            apply({ ...query, sort, dir });
-          }}
-        >
-          {SORTS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <button type="submit" className="btn btn-gold catalog-search-btn">
-        Search
-      </button>
+      <ExploreSelect
+        label="Status"
+        value={Array.isArray(query.status) ? ALL : (query.status ?? ALL)}
+        options={STATUS_OPTIONS}
+        onValueChange={(value) =>
+          applySearch(search, { status: value === ALL ? undefined : (value as LaunchStatus) })
+        }
+      />
+      <ExploreSelect
+        label="Backing"
+        value={query.backing ?? ALL}
+        options={BACKING_OPTIONS}
+        onValueChange={(value) => applySearch(search, { backing: value === ALL ? undefined : value })}
+      />
+      <ExploreSelect
+        label="Sort"
+        value={sortValue(query)}
+        options={[...SORTS]}
+        onValueChange={(value) => {
+          const [sort, dir] = value.split(":") as [CoinQuery["sort"], CoinQuery["dir"]];
+          applySearch(search, { sort, dir });
+        }}
+      />
     </form>
   );
 }

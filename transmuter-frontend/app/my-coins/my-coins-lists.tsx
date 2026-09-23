@@ -15,25 +15,25 @@ export function MyCoinsLists({ wallet, accounts }: MyCoinsListsProps) {
 
   return (
     <>
-      <section className="catalog-section">
+      <section className="coin-section">
         <h2>Created</h2>
-        <p>Factory registry entries whose creator is this wallet.</p>
+        <p className="coin-lede">Factory registry entries whose creator is this wallet.</p>
         {created.length === 0 ? (
           <CatalogEmpty title="No created launches" body="Launches you deploy will land here, including VOIDED sales." />
         ) : (
           <CoinTable items={created} />
         )}
       </section>
-      <section className="catalog-section">
+      <section className="coin-section">
         <h2>Held</h2>
-        <p>Token accounts intersected with known EOL mints.</p>
+        <p className="coin-lede">Token accounts intersected with known EOL mints.</p>
         {held.length === 0 ? (
           <CatalogEmpty title="No holdings" body="Balances on indexed Transmuter mints will show here." />
         ) : (
           <CoinTable
             items={held}
             extraLabel="Amount"
-            extra={(item) => <span className="catalog-extra">{formatAmount(item.amount)}</span>}
+            extra={(item) => <span className="coin-extra">{formatAmount(item.amount)}</span>}
           />
         )}
       </section>

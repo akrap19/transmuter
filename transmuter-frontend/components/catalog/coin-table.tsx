@@ -12,8 +12,8 @@ type CoinTableProps<T extends CoinListItem> = {
 
 export function CoinTable<T extends CoinListItem>({ items, extra, extraLabel }: CoinTableProps<T>) {
   return (
-    <div className="tbl-scroll catalog-table-wrap">
-      <table className="catalog-table">
+    <div className="coin-table-wrap">
+      <table className="coin-table">
         <thead>
           <tr>
             <th>Token</th>

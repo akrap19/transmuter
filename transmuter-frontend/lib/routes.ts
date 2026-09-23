@@ -7,6 +7,10 @@ export const routes = {
   coins: "/coins",
   myCoins: "/my-coins",
   portfolio: "/portfolio",
+  faq: "/faq",
+  glossary: "/glossary",
+  holders: "/holders",
+  integrate: "/integrate",
 } as const;
 
 export function coinPath(mint: string) {

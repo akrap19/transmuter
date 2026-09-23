@@ -1,0 +1,132 @@
+/* V16 visual atmosphere: warm-charcoal / graphite editorial bands, restrained
+   starlight and one warm-stone evidence surface. Copy/layout/JS unchanged. */
+
+/* The shared field is decorative and deliberately static: no layout work or canvas. */
+body::before {
+  z-index: 0;
+  opacity: .47;
+  background-image:
+    radial-gradient(circle at 19px 32px, rgba(243,239,222,.52) 0 .8px, transparent 1.4px),
+    radial-gradient(circle at 131px 79px, rgba(220,179,100,.48) 0 .75px, transparent 1.5px),
+    radial-gradient(circle at 86px 157px, rgba(247,244,230,.36) 0 .65px, transparent 1.35px),
+    radial-gradient(circle at 212px 48px, rgba(243,239,222,.42) 0 .7px, transparent 1.4px),
+    radial-gradient(circle at 56px 214px, rgba(224,178,95,.39) 0 .6px, transparent 1.3px),
+    radial-gradient(circle at 81% 14%, rgba(211,170,98,.045), transparent 24rem),
+    radial-gradient(circle at 13% 69%, rgba(175,188,196,.032), transparent 28rem);
+  background-size: 241px 239px, 307px 293px, 367px 359px, 421px 409px, 541px 523px, auto, auto;
+  background-position: 0 0, 41px 30px, -31px 52px, 73px -17px, -39px 103px, 0 0, 0 0;
+}
+
+/* Remove the full-width cream panels without disturbing their inner HTML. */
+.section-light::before {
+  background: none;
+  border: 0;
+}
+
+/* Warm graphite for editorial/problem and FAQ; cool graphite for the mechanism.
+   All bands feather at both edges into the site's near-black ground. */
+.problem-section::before,
+.faq-section::before,
+.verification-section::before {
+  content: "";
+  position: absolute;
+  width: 100vw;
+  height: 100%;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: -1;
+  border: 0;
+}
+.problem-section::before {
+  top: 0;
+  height: 100%;
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 22%, #000 78%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 22%, #000 78%, rgba(0, 0, 0, 0) 100%);
+  background:
+    radial-gradient(ellipse 90% 72% at 15% 38%, rgba(130, 104, 64, 0.12), rgba(130, 104, 64, 0) 72%),
+    radial-gradient(ellipse 86% 68% at 87% 62%, rgba(168, 124, 65, 0.06), rgba(168, 124, 65, 0) 70%),
+    radial-gradient(ellipse 130% 88% at 50% 48%, rgba(31, 29, 25, 0.45), rgba(31, 29, 25, 0) 78%);
+}
+.verification-section::before {
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 22%, #000 78%, rgba(0, 0, 0, 0) 100%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 22%, #000 78%, rgba(0, 0, 0, 0) 100%);
+  background:
+    radial-gradient(ellipse 80% 65% at 80% 38%, rgba(90, 114, 129, 0.14), rgba(90, 114, 129, 0) 70%),
+    radial-gradient(ellipse 70% 55% at 8% 90%, rgba(218, 174, 89, 0.045), rgba(218, 174, 89, 0) 68%);
+}
+.faq-section::before {
+  background: none;
+}
+
+/* Returning to the dark system after v15's dark-on-white type overrides. */
+.section-light h2,
+.section-light h3,
+.section-light strong,
+.section-light .faq-question,
+.section-light .bridge-line,
+.section-light .text-link,
+.section-light .verification-point strong { color: #f0ecdf; }
+.section-light .eyebrow { color: #d8ad59; }
+.section-light .problem-point p,
+.section-light .verification-point p,
+.section-light .faq-intro > p:last-child,
+.section-light .faq-item .faq-answer { color: #b8b1a5; }
+.section-light .verification-point strong,
+.section-light .bridge-line,
+.section-light .faq-intro h2 span { color: #f0d590; }
+.section-light .faq-question { color: #e8e1d4; }
+.section-light .faq-more .text-link,
+.section-light .fit-link,
+.section-light a.text-link { color: #edce86; }
+.section-light .problem-index { color: rgba(216,173,89,.18); }
+.section-light .problem-section.is-visible .problem-index { color: rgba(216,173,89,.2); }
+.section-light .problem-editorial::before { background: linear-gradient(90deg,rgba(216,173,89,.38),rgba(240,236,223,.085) 40%,transparent); }
+.section-light .bridge-line,
+.section-light .faq-list,
+.section-light .faq-item { border-color: rgba(240,236,223,.12); }
+.section-light .verification-points::before { background: linear-gradient(180deg,rgba(216,173,89,.23),rgba(240,236,223,.07),transparent); }
+.section-light .verification-orbit,
+.section-light .faq-question i { border-color: rgba(216,173,89,.28); }
+.section-light .verification-orbit::before,
+.section-light .verification-orbit::after { border-color: rgba(216,173,89,.12); }
+.section-light .verification-orbit i { background: #e8c879; box-shadow: 0 0 18px rgba(216,173,89,.55); }
+.section-light .faq-question i { background: rgba(216,173,89,.03); }
+.section-light .faq-question i::before,
+.section-light .faq-question i::after { background: #d8ad59; }
+.section-light .faq-question[aria-expanded="true"] i { background: rgba(216,173,89,.10); border-color: rgba(216,173,89,.39); }
+.section-light .faq-item:hover { background: rgba(216,173,89,.025); }
+
+/* The constraint table becomes a single warm-stone 'evidence sheet'.
+   Its section remains dark. The surface is matte rather than white. */
+.constraint-section .constraint-table {
+  background: linear-gradient(145deg, #d6cbb6, #c8bba3 65%, #c0b299);
+  border: 1px solid rgba(226,201,150,.3);
+  box-shadow: 0 30px 85px rgba(0,0,0,.19), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.constraint-section .constraint-row {
+  border-top-color: rgba(49,40,27,.17);
+}
+.constraint-section .constraint-row > * {
+  border-left-color: rgba(49,40,27,.13);
+  color: #493f30;
+}
+.constraint-section .constraint-row strong { color: #221c14; font-weight: 600; }
+.constraint-section .constraint-row.head { background: rgba(90,69,32,.095); }
+.constraint-section .constraint-row.head > * { color: #655024; font-weight: 700; }
+
+/* Keep dark diagrams dark, even inside the tonal bands, and soften transitions. */
+.section-shell { isolation: isolate; }
+.site-header, .cursor-glow, .page-noise { isolation: auto; }
+
+@media (max-width: 800px) {
+  body::before { opacity: .34; }
+  .problem-section::before,
+  .faq-section::before,
+  .verification-section::before { background-size: cover; }
+  .constraint-section .constraint-table { box-shadow: 0 17px 45px rgba(0,0,0,.2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before { background-attachment: scroll; }
+}

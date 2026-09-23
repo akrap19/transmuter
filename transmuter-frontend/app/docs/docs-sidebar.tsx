@@ -1,18 +1,20 @@
-import { docsNavGroups } from '@/app/docs/docs-nav-data'
+import { docsNavGroups } from "@/app/docs/docs-nav-data";
 
 export function DocsSidebar() {
-	return (
-		<aside className='docs-sidebar'>
-			{docsNavGroups.map(group => (
-				<div key={group.label}>
-					<div className='side-label'>{group.label}</div>
-					{group.links.map(link => (
-						<a key={link.href} href={link.href}>
-							{link.label}
-						</a>
-					))}
-				</div>
-			))}
-		</aside>
-	)
+  return (
+    <nav className="docs-sidebar" aria-label="Docs sidebar">
+      {docsNavGroups.map((group) => (
+        <div key={group.label}>
+          <h3>{group.label}</h3>
+          <ul>
+            {group.links.map((link) => (
+              <li key={link.href}>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  );
 }

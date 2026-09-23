@@ -1,65 +1,54 @@
 export function TokensSection() {
   return (
-    <section id="tokens">
+    <section id="token-types">
       <h2>Token Types</h2>
       <p>
-        Three token types make up the protocol. One is created at every launch,
-        the project&apos;s own token; the other two, the contingency asset that
-        backs it and the governance token that runs the system, are protocol wide
-        and shared across every launch.
+        Three token types make up the protocol. One is created at every launch; the other two are
+        shared across every launch.
       </p>
-      <div className="tbl-scroll">
+      <div className="tw">
         <table>
-          <tbody>
+          <thead>
             <tr>
               <th>Token</th>
               <th>What it is</th>
             </tr>
+          </thead>
+          <tbody>
             <tr>
               <td>
-                <b>EOL token</b>
+                <strong>EOL token</strong>
               </td>
               <td>
-                <b>End of life token.</b> The token a project launches on
-                Transmuter. It carries a funded, non-custodial reserve from day
-                one and a contract defined end of life path: if the project
-                ends, holders vote, the protocol liquidates, and everyone
-                redeems their share of the reserve. Its treasury is held in
-                cTokens.
+                <strong>End of life token.</strong> The token a project launches. It trades like any
+                other token, and it carries a treasury held in a cToken plus a defined end of life
+                procedure.
               </td>
             </tr>
             <tr>
               <td>
-                <b>cToken</b>
+                <strong>cToken</strong>
               </td>
               <td>
-                <b>Contingency token.</b> A deflationary wrapper of a blue-chip
-                asset such as BTC or SOL, traded as cBTC or cSOL. It burns supply
-                on every trade, so backing per token only grows, and it holds
-                its own isolated reserve of tokenized gold as the last resort.
-                EOL token treasuries hold cTokens as their backing.
+                <strong>Contingency token.</strong> A system token that records how much of a
+                reserve asset stands behind an EOL token. It is non-transferable, has no public mint
+                and no market, and is created only when an EOL token&apos;s own contract mints it
+                into its own treasury. Holders never receive one: when they redeem, they receive the
+                asset underneath it.
               </td>
             </tr>
             <tr>
               <td>
-                <b>DAO token</b>
+                <strong>DAO token</strong>
               </td>
               <td>
-                <b>Protocol governance token.</b> Staking it sets voting weight
-                over protocol wide decisions, and stakers receive a share of any
-                launch that opts into a DAO airdrop, which aligns the wider
-                community with every new token. There are no hidden admin keys:
-                staked DAO holders, alongside elected ambassadors, hold the
-                authority.
+                <strong>Protocol governance token.</strong> Staking it sets voting weight over
+                protocol wide decisions. It is backed the same way the tokens beneath it are, with
+                its own treasury held in cSOL.
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
-      <div className="note">
-        <b>How they stack:</b> an EOL token is backed by cTokens, each cToken
-        is backed by tokenized gold, and the DAO token governs the protocol that
-        runs all of it. The collateral chain below walks each fallback in order.
       </div>
     </section>
   );

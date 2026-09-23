@@ -77,7 +77,7 @@ a {
 }
 
 /* ── Marketing nav ── */
-nav.site-nav,
+nav.legacy-site-nav,
 nav:has(.nav-in) {
 	position: sticky;
 	top: 0;
@@ -178,12 +178,12 @@ nav:has(.nav-in) {
 	color: var(--tm-gold);
 }
 
-nav.site-nav .btn,
+nav.legacy-site-nav .btn,
 nav:has(.nav-in) .btn {
 	padding: 8px 16px;
 }
 
-nav.site-nav .nav-links a.btn-gold,
+nav.legacy-site-nav .nav-links a.btn-gold,
 nav:has(.nav-in) .nav-links a.btn-gold {
 	color: #1a1407;
 }
@@ -662,7 +662,7 @@ header h1 {
 }
 
 /* ── Sections (marketing) ── */
-section {
+.page-docs section {
 	padding: 96px 0;
 }
 
@@ -1023,7 +1023,7 @@ h2 {
 }
 
 /* ── Footer ── */
-footer {
+footer.docs-footer {
 	border-top: 1px solid var(--tm-gold-line);
 	padding: 34px 0;
 	font-size: 11px;
@@ -1565,7 +1565,7 @@ nav.top .btn {
 	border-left-color: transparent;
 }
 
-main {
+.page-docs main {
 	padding: 44px 0 100px;
 	max-width: 720px;
 }
@@ -1578,7 +1578,7 @@ main {
 	margin-bottom: 12px;
 }
 
-main h1 {
+.page-docs main h1 {
 	font-family: var(--tm-font-display);
 	font-weight: 900;
 	font-size: clamp(26px, 4vw, 38px);
@@ -1596,26 +1596,26 @@ main h1 {
 	margin-bottom: 8px;
 }
 
-main section {
+.page-docs main section {
 	padding-top: 64px;
 	border-top: 1px solid var(--tm-gold-line);
 	margin-top: 64px;
 }
 
-main section:first-of-type {
+.page-docs main section:first-of-type {
 	border-top: none;
 	margin-top: 28px;
 	padding-top: 0;
 }
 
-main h2 {
+.page-docs main h2 {
 	font-size: 19px;
 	color: var(--tm-gold);
 	letter-spacing: 0.05em;
 	margin-bottom: 18px;
 }
 
-main h3 {
+.page-docs main h3 {
 	font-family: var(--tm-font-display);
 	font-weight: 700;
 	font-size: 13px;
@@ -1624,11 +1624,11 @@ main h3 {
 	margin: 28px 0 10px;
 }
 
-main p {
+.page-docs main p {
 	margin-bottom: 14px;
 }
 
-main p b {
+.page-docs main p b {
 	color: var(--tm-white);
 	font-weight: 500;
 }
@@ -1666,7 +1666,7 @@ main p b {
 	font-weight: 600;
 }
 
-main p i {
+.page-docs main p i {
 	color: var(--tm-gold);
 	font-style: normal;
 }

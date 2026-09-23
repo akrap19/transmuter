@@ -73,19 +73,7 @@ export function LogoUpload() {
         ) : (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={state.logoUrl}
-              alt="Logo preview"
-              style={{
-                display: "block",
-                width: 72,
-                height: 72,
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "2px solid var(--tm-cyan)",
-                boxShadow: "0 0 16px rgba(240,194,75,0.3)",
-              }}
-            />
+            <img className="logo-upload-preview" src={state.logoUrl} alt="Logo preview" />
             <div className="logo-upload-meta">
               <span className="logo-upload-filename">{state.logoFileName}</span>
               <span className="logo-upload-change">Click to change</span>

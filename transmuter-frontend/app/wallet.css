@@ -23,8 +23,8 @@
 	transition: transform 0.2s ease;
 }
 
-.wallet-dropdown:hover .wallet-chevron,
-.wallet-dropdown:focus-within .wallet-chevron {
+.wallet-chevron.is-open,
+.wallet-dropdown.is-open .wallet-chevron {
 	transform: rotate(180deg);
 }
 
@@ -127,7 +127,8 @@
 }
 
 .wallet-dropdown:hover .wallet-user-menu,
-.wallet-dropdown:focus-within .wallet-user-menu {
+.wallet-dropdown:focus-within .wallet-user-menu,
+.wallet-dropdown.is-open .wallet-user-menu {
 	opacity: 1;
 	visibility: visible;
 	pointer-events: auto;

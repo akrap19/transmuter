@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import "@/app/brand/coin-detail.css";
 import { ChartsPanel } from "@/app/coins/[mint]/charts-panel";
 import { EscrowPanel } from "@/app/coins/[mint]/escrow-panel";
 import { GovernancePanel } from "@/app/coins/[mint]/governance-panel";
@@ -11,11 +13,8 @@ import { TreasuryPanel } from "@/app/coins/[mint]/treasury-panel";
 import { VestingPanel } from "@/app/coins/[mint]/vesting-panel";
 import { CatalogBanner } from "@/components/catalog/catalog-banner";
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
-import { SiteFooter, SiteNav } from "@/components/transmuter/site-chrome";
-import { Wrap } from "@/components/transmuter/wrap";
 import { getCoinDetail } from "@/lib/catalog/client";
 import { routes } from "@/lib/routes";
-import Link from "next/link";
 
 type CoinPageProps = {
   params: Promise<{ mint: string }>;
@@ -37,13 +36,12 @@ export default async function CoinPage({ params }: CoinPageProps) {
   const coin = getCoinDetail(mint);
 
   return (
-    <div className="page-docs page-catalog">
-      <SiteNav />
-      <Wrap>
-        <CatalogBanner />
-        {coin ? (
-          <>
-            <OverviewPanel coin={coin} />
+    <main className="coin-page">
+      {coin ? (
+        <>
+          <OverviewPanel coin={coin} />
+          <section className="coin-body section-shell">
+            <CatalogBanner />
             <SalePanel coin={coin} />
             <TradePanel coin={coin} />
             <ChartsPanel points={coin.chart} />
@@ -53,19 +51,30 @@ export default async function CoinPage({ params }: CoinPageProps) {
             <VestingPanel coin={coin} />
             <EscrowPanel coin={coin} />
             <TreasuryPanel coin={coin} />
-          </>
-        ) : (
-          <CatalogEmpty
-            title={mint}
-            body="Mint not found in the sample index. After the Factory registry is indexed, every launch (including VOIDED) will resolve here."
-          >
-            <Link href={routes.coins} className="btn btn-gold">
-              Back to Explore
+          </section>
+        </>
+      ) : (
+        <>
+          <section className="subhero section-shell coin-hero">
+            <Link href={routes.coins} className="coin-back">
+              All coins
             </Link>
-          </CatalogEmpty>
-        )}
-      </Wrap>
-      <SiteFooter />
-    </div>
+            <p className="eyebrow">EXPLORE · TOKEN</p>
+            <h1>Mint not found</h1>
+            <p>This address is not in the sample index yet. VOIDED and live launches both resolve here once indexed.</p>
+          </section>
+          <section className="coin-body section-shell">
+            <CatalogEmpty
+              title={mint}
+              body="After the Factory registry is indexed, every launch (including VOIDED) will resolve here."
+            >
+              <Link href={routes.coins} className="button button-primary">
+                Back to Explore
+              </Link>
+            </CatalogEmpty>
+          </section>
+        </>
+      )}
+    </main>
   );
 }

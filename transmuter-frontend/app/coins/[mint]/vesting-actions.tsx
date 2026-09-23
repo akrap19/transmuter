@@ -53,12 +53,12 @@ function VestingClaim({
 
   return (
     <>
-      <div className="catalog-sale-buttons">
-        <button type="button" className="btn btn-gold" onClick={run}>
+      <div className="coin-buttons">
+        <button type="button" className="button button-primary" onClick={run}>
           Claim vested
         </button>
       </div>
-      {message ? <p className="catalog-sale-note">{message}</p> : null}
+      {message ? <p className="coin-note">{message}</p> : null}
     </>
   );
 }

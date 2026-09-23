@@ -10,11 +10,11 @@ const LABELS: Array<[keyof CoinSocials, string]> = [
 export function CoinSocials({ socials }: { socials: CoinSocials }) {
   const links = LABELS.filter(([key]) => socials[key]);
   if (links.length === 0) {
-    return <p className="catalog-muted">No socials on the metadata uri yet.</p>;
+    return <p className="coin-note">No socials on the metadata uri yet.</p>;
   }
 
   return (
-    <ul className="catalog-socials">
+    <ul className="coin-socials">
       {links.map(([key, label]) => (
         <li key={key}>
           <a href={socials[key] ?? undefined} target="_blank" rel="noopener noreferrer">

@@ -24,7 +24,6 @@ export function WalletChip({ address, walletName, walletIcon }: WalletChipProps)
 				<span className='wallet-user-name'>{walletName ?? 'Wallet'}</span>
 				<span className='wallet-user-address'>{shortenAddress(address)}</span>
 			</span>
-			<span className='wallet-user-network'>{solanaNetworkName}</span>
 		</>
 	)
 }
