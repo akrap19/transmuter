@@ -2,7 +2,14 @@ import type { CToken } from "./types";
 
 export type CtokenEnv = Record<string, string | undefined>;
 
-export function resolveCtokens(env: CtokenEnv = process.env): CToken[] {
+function readProcessEnv(): CtokenEnv {
+  return {
+    NEXT_PUBLIC_CSOL_MINT: process.env.NEXT_PUBLIC_CSOL_MINT,
+    NEXT_PUBLIC_CBTC_MINT: process.env.NEXT_PUBLIC_CBTC_MINT,
+  };
+}
+
+export function resolveCtokens(env: CtokenEnv = readProcessEnv()): CToken[] {
   return [
     {
       name: "cSOL",

@@ -69,7 +69,7 @@ export function getCoinDetail(mint: string, wallet?: string): CoinDetail | null 
   if (!coin) return null;
 
   const extras = MOCK_DETAILS[mint];
-  const myDepositUsdc = (wallet && MOCK_SALE_DEPOSITS[wallet]?.[mint]) ?? 0;
+  const myDepositUsdc = wallet ? (MOCK_SALE_DEPOSITS[wallet]?.[mint] ?? 0) : 0;
 
   return {
     ...coin,
@@ -91,7 +91,9 @@ function coinStake(coin: CoinListItem, wallet?: string): CoinStake | null {
   if (!stakingAvailable(coin.status)) return null;
 
   const position = wallet ? MOCK_PORTFOLIOS[wallet]?.stakes.find((row) => row.mint === coin.mint) : undefined;
-  const walletBalance = (wallet && MOCK_ACCOUNTS[wallet]?.find((row) => row.mint === coin.mint)?.amount) ?? 0;
+  const walletBalance = wallet
+    ? (MOCK_ACCOUNTS[wallet]?.find((row) => row.mint === coin.mint)?.amount ?? 0)
+    : 0;
 
   return {
     staked: position?.staked ?? 0,
@@ -120,7 +122,9 @@ function coinRedeem(coin: CoinListItem, wallet?: string): CoinRedeem | null {
   const extras = MOCK_DETAILS[coin.mint];
   const treasury = extras ? buildTreasury(extras.treasury) : EMPTY_TREASURY;
   const overlay = MOCK_REDEEM_OVERLAY[coin.mint];
-  const walletBalance = (wallet && MOCK_ACCOUNTS[wallet]?.find((row) => row.mint === coin.mint)?.amount) ?? 0;
+  const walletBalance = wallet
+    ? (MOCK_ACCOUNTS[wallet]?.find((row) => row.mint === coin.mint)?.amount ?? 0)
+    : 0;
   const unconvertedUsdc = treasury.unconvertedUsdc;
   return {
     walletBalance,
@@ -131,7 +135,7 @@ function coinRedeem(coin: CoinListItem, wallet?: string): CoinRedeem | null {
     treasuryFeeBps: REDEMPTION_TREASURY_FEE_BPS,
     treasuryCsolAvailable: treasury.cTokenAmount,
     treasuryUsdcAvailable: overlay?.treasuryUsdcAvailable ?? unconvertedUsdc,
-    legs: (wallet && MOCK_REDEEM_LEGS[wallet]?.[coin.mint]) ?? emptyRedeemLegs(),
+    legs: wallet ? (MOCK_REDEEM_LEGS[wallet]?.[coin.mint] ?? emptyRedeemLegs()) : emptyRedeemLegs(),
   };
 }
 
