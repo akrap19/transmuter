@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { explorerAddressUrl, resolveSolanaConfig } from '@/lib/solana/config'
+import { DEVNET_USDC_MINT, explorerAddressUrl, resolveSolanaConfig, resolveUsdcMint } from '@/lib/solana/config'
 
 const DEVNET_RPC = 'https://api.devnet.solana.com'
 
@@ -9,6 +9,7 @@ describe('resolveSolanaConfig', () => {
 
 		expect(config.networkName).toBe('devnet')
 		expect(config.endpoint).toBe(DEVNET_RPC)
+		expect(config.usdcMint).toBe(DEVNET_USDC_MINT)
 	})
 
 	it('treats an unknown network name as devnet', () => {
@@ -26,6 +27,13 @@ describe('resolveSolanaConfig', () => {
 
 		expect(config.networkName).toBe('mainnet-beta')
 		expect(config.endpoint).toBe('https://example-rpc.invalid')
+		expect(config.usdcMint).toBe(DEVNET_USDC_MINT)
+	})
+
+	it('honors an explicit USDC mint', () => {
+		expect(resolveUsdcMint({ NEXT_PUBLIC_USDC_MINT: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' })).toBe(
+			'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+		)
 	})
 })
 
