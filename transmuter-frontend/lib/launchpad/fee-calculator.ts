@@ -1,11 +1,12 @@
 import type { FeeState, ToggleStates } from "./types";
 
 const PROTOCOL_FEE = 0.15;
-const CTOKEN_RESERVE_FEE = 0.05;
+const CTOKEN_RESERVE_FEE = 0.1;
 const MIN_LP = 0.10;
 const MIN_TREASURY = 0.10;
 const MAX_CREATOR = 0.5;
 const FIXED = PROTOCOL_FEE + CTOKEN_RESERVE_FEE;
+const MIN_TOTAL_FEE = parseFloat((FIXED + MIN_LP + MIN_TREASURY).toFixed(2));
 
 export type FeeChangeSource = "lp" | "treasury" | "burn" | "creator" | "total";
 
@@ -30,42 +31,28 @@ export function calculateFees(input: FeeCalculationInput): FeeState {
   let tre = input.treasuryFee;
   let burn = burnOn ? input.burnFee : 0;
   let creator = creatorOn ? input.creatorFee : 0;
-  let over = false;
 
   if (changed === "lp") {
     const room = parseFloat((adjustable - tre - burn - creator).toFixed(2));
-    if (lp > room) {
-      lp = Math.max(MIN_LP, room);
-      over = true;
-    }
+    if (lp > room) lp = Math.max(MIN_LP, room);
     if (lp < MIN_LP) lp = MIN_LP;
   } else if (changed === "treasury") {
     const room = parseFloat((adjustable - lp - burn - creator).toFixed(2));
-    if (tre > room) {
-      tre = Math.max(MIN_TREASURY, room);
-      over = true;
-    }
+    if (tre > room) tre = Math.max(MIN_TREASURY, room);
     if (tre < MIN_TREASURY) tre = MIN_TREASURY;
   } else if (changed === "burn") {
     const room = parseFloat((adjustable - lp - tre - creator).toFixed(2));
-    if (burn > room) {
-      burn = Math.max(MIN_BURN, room);
-      over = true;
-    }
+    if (burn > room) burn = Math.max(MIN_BURN, room);
     if (burnOn && burn < MIN_BURN) burn = MIN_BURN;
   } else if (changed === "creator") {
     const room = parseFloat((adjustable - lp - tre - burn).toFixed(2));
-    if (creator > room) {
-      creator = Math.max(0, room);
-      over = true;
-    }
+    if (creator > room) creator = Math.max(0, room);
     if (creator > MAX_CREATOR) creator = MAX_CREATOR;
     if (creator < 0) creator = 0;
   }
 
   const sum = parseFloat((lp + tre + burn + creator).toFixed(2));
   if (sum > adjustable) {
-    over = true;
     let excess = parseFloat((sum - adjustable).toFixed(2));
     let t = Math.min(excess, creator);
     if (t > 0) {
@@ -88,13 +75,17 @@ export function calculateFees(input: FeeCalculationInput): FeeState {
     }
   }
 
+  const allocated = parseFloat((FIXED + lp + tre + burn + creator).toFixed(2));
+  const feeGap = parseFloat((totalFee - allocated).toFixed(2));
+
   return {
     totalFee,
     lpFee: lp,
     treasuryFee: tre,
     burnFee: burn,
     creatorFee: creator,
-    feeWarning: over,
+    feeWarning: Math.abs(feeGap) > 0.001,
+    feeGap,
     lpMax: Math.max(MIN_LP, parseFloat((adjustable - tre - burn - creator).toFixed(2))),
     treasuryMax: Math.max(MIN_TREASURY, parseFloat((adjustable - lp - burn - creator).toFixed(2))),
     burnMax: Math.min(1, Math.max(MIN_BURN, parseFloat((adjustable - lp - tre - creator).toFixed(2)))),
@@ -106,4 +97,4 @@ export function feeSegmentPct(value: number, totalFee: number): number {
   return totalFee > 0 ? (value / totalFee) * 100 : 0;
 }
 
-export { PROTOCOL_FEE, CTOKEN_RESERVE_FEE };
+export { PROTOCOL_FEE, CTOKEN_RESERVE_FEE, MIN_TOTAL_FEE };

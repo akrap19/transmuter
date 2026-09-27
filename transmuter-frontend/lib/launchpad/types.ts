@@ -28,6 +28,7 @@ export type LaunchSolveInput = {
   allocLP: number;
   allocPublic: number;
   targetRaise: number | null;
+  treasuryAsk?: number;
 };
 
 export type LaunchSolveResult = {
@@ -61,6 +62,7 @@ export type FeeState = {
   burnFee: number;
   creatorFee: number;
   feeWarning: boolean;
+  feeGap: number;
   lpMax: number;
   treasuryMax: number;
   burnMax: number;
@@ -95,6 +97,7 @@ export type LaunchpadState = {
   tokenSupply: string;
   escrowNeed: string;
   targetRaise: string;
+  treasuryBackingPct: number;
   tokenPrice: string;
   saleWindow: string;
   saleType: SaleType;
@@ -147,14 +150,15 @@ export const STEP_LABELS = [
 ] as const;
 
 export const initialFeeState: FeeState = {
-  totalFee: 0.8,
-  lpFee: 0.35,
-  treasuryFee: 0.3,
-  burnFee: 0.2,
-  creatorFee: 0.1,
+  totalFee: 0.6,
+  lpFee: 0.15,
+  treasuryFee: 0.2,
+  burnFee: 0,
+  creatorFee: 0,
   feeWarning: false,
-  lpMax: 1.75,
-  treasuryMax: 1.75,
+  feeGap: 0,
+  lpMax: 0.2,
+  treasuryMax: 0.2,
   burnMax: 1,
   creatorMax: 0.5,
 };
@@ -175,6 +179,7 @@ export const initialLaunchpadState: LaunchpadState = {
   tokenSupply: "",
   escrowNeed: "0",
   targetRaise: "",
+  treasuryBackingPct: 10,
   tokenPrice: "",
   saleWindow: "1 week",
   saleType: "fixed",

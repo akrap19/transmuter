@@ -89,10 +89,10 @@ describe("mapLaunchpadToCreateLaunch", () => {
     expect(params.reserveMintVoteWindowSecs.toString()).toBe(String(48 * 3600));
     expect(params.liqVoteWindowSecs.toString()).toBe(String(14 * 24 * 3600));
     expect(params.convertChunk.toString()).toBe("0");
-    expect(params.transferFeeBps).toBe(50);
+    expect(params.transferFeeBps).toBe(55);
     expect(params.feeLpBps).toBe(15);
     expect(params.feeTreasuryBps).toBe(15);
-    expect(params.feeCtokenBps).toBe(5);
+    expect(params.feeCtokenBps).toBe(10);
     expect(params.feeProtocolBps).toBe(15);
     expect(params.feeCreatorBps).toBe(0);
     expect(params.feeBurnBps).toBe(0);

@@ -197,8 +197,7 @@
 
 .launch-page input[type="text"],
 .launch-page input[type="number"],
-.launch-page textarea,
-.launch-page select {
+.launch-page textarea {
 	min-height: 52px;
 	padding: 0 16px;
 	border: 1px solid rgba(255, 255, 255, 0.1);
@@ -216,15 +215,34 @@
 
 .launch-page input[type="text"]:focus,
 .launch-page input[type="number"]:focus,
-.launch-page textarea:focus,
-.launch-page select:focus {
+.launch-page textarea:focus {
 	border-color: rgba(229, 182, 84, 0.45);
 	background: rgba(17, 17, 24, 0.88);
 	box-shadow: none;
 }
 
-.launch-page select {
+.launch-page .page-wrapper select {
+	appearance: none;
+	-webkit-appearance: none;
+	min-height: 52px;
+	padding: 0 40px 0 16px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 16px;
+	background-color: rgba(17, 17, 24, 0.72);
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23e5b654' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 16px center;
+	background-size: 12px 8px;
+	box-shadow: none;
+	color: var(--text);
+	font: 400 15px var(--font-inter), sans-serif;
+	cursor: pointer;
+}
+
+.launch-page .page-wrapper select:focus {
+	border-color: rgba(229, 182, 84, 0.45);
+	background-color: rgba(17, 17, 24, 0.88);
+	box-shadow: none;
 }
 
 .launch-page select option {

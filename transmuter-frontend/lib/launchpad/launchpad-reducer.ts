@@ -21,6 +21,7 @@ export type LaunchpadAction =
   | { type: "UPDATE_FEES"; changed?: FeeChangeSource; totalFee?: number; feeOverrides?: Partial<Pick<FeeState, "lpFee" | "treasuryFee" | "burnFee" | "creatorFee">> }
   | { type: "SET_LOGO"; url: string | null; fileName: string | null }
   | { type: "ON_ESCROW_INPUT"; escrowNeed?: string; tokenSupply?: string }
+  | { type: "SET_TREASURY_BACKING"; pct: number }
   | { type: "USE_MINIMUM_RAISE" }
   | { type: "LAUNCH_STATUS"; status: Exclude<LaunchStatus, "idle" | "success" | "error"> }
   | { type: "LAUNCH_ERROR"; error: string }
@@ -90,7 +91,7 @@ export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction)
         },
         action.changed,
       );
-      return { ...state, ...synced };
+      return withSolvedRaise({ ...state, ...synced }, true);
     }
     case "UPDATE_FEES": {
       const totalFee = action.totalFee ?? state.fees.totalFee;
@@ -116,20 +117,11 @@ export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction)
         ...(action.escrowNeed !== undefined ? { escrowNeed: action.escrowNeed } : {}),
         ...(action.tokenSupply !== undefined ? { tokenSupply: action.tokenSupply } : {}),
       };
-      const cur = parseFloat(next.targetRaise);
-      const headroom =
-        next.raiseTouched && cur && !isNaN(cur)
-          ? Math.max(0, cur - next.lastMinRaise)
-          : 0;
-      const L = solveFromState(next);
-      if (L?.minRaise !== undefined && isFinite(L.minRaise)) {
-        return {
-          ...next,
-          targetRaise: String(Math.round(L.minRaise + headroom)),
-          lastMinRaise: L.minRaise,
-        };
-      }
-      return next;
+      return withSolvedRaise(next, true);
+    }
+    case "SET_TREASURY_BACKING": {
+      const pct = Math.max(10, action.pct);
+      return withSolvedRaise({ ...state, treasuryBackingPct: pct, raiseTouched: false }, false);
     }
     case "USE_MINIMUM_RAISE": {
       const L = solveFromState(state);
@@ -162,4 +154,21 @@ export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction)
     default:
       return state;
   }
+}
+
+function withSolvedRaise(state: LaunchpadState, preserveHeadroom: boolean): LaunchpadState {
+  const cur = parseFloat(state.targetRaise);
+  const headroom =
+    preserveHeadroom && state.raiseTouched && cur && !isNaN(cur)
+      ? Math.max(0, cur - state.lastMinRaise)
+      : 0;
+  const solved = solveFromState(state);
+  if (solved?.minRaise !== undefined && isFinite(solved.minRaise)) {
+    return {
+      ...state,
+      targetRaise: String(Math.round(solved.minRaise + headroom)),
+      lastMinRaise: solved.minRaise,
+    };
+  }
+  return state;
 }

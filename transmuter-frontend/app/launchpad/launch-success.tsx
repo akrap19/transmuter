@@ -14,7 +14,7 @@ export function LaunchSuccess() {
       <div className="launch-success-title">DEPLOYED - SALE OPEN</div>
       <div className="launch-success-name">{state.tokenName}</div>
       <div className="launch-success-meta">
-        ${state.tokenTicker} · Reinforced Token · Backed by {state.selectedCToken.name}
+        ${state.tokenTicker} · EOL token · Backed by {state.selectedCToken.name}
       </div>
       <p className="launch-success-desc">
         Factory createLaunch landed. Your mint is registered; wiring opens the sale. Deposits in{" "}

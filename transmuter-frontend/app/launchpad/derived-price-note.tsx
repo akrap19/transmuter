@@ -1,12 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { TREASURY_ASK } from "@/lib/launchpad/floors";
 import { formatMcap, formatPrice } from "@/lib/launchpad/launch-solver";
 import { useLaunchpad } from "./launchpad-context";
 
 export function DerivedPriceNote({ variant }: { variant: "hint" | "outcome" }) {
-  const { launchSolve: L } = useLaunchpad();
+  const { state, launchSolve: L } = useLaunchpad();
+  const ask = state.treasuryBackingPct;
 
   if (variant === "hint") {
     if (L?.clampedUp) {
@@ -55,17 +55,17 @@ export function DerivedPriceNote({ variant }: { variant: "hint" | "outcome" }) {
 
   if (!L.feasible) {
     const isRaiseTooSmall =
-      L.treasPctMCP !== undefined && L.treasPctMCP < TREASURY_ASK && (L.minRaise ?? 0) > 0;
+      L.treasPctMCP !== undefined && L.treasPctMCP < ask / 100 && (L.minRaise ?? 0) > 0;
     const prefix = isRaiseTooSmall ? "Raise too small." : "Not fundable.";
     const body = isRaiseTooSmall
       ? <>
           After pairing the LP (${formatMcap(L.lpCash ?? 0)}) and funding escrow ($
           {formatMcap(L.escrowNeed ?? 0)}), the treasury would be only{" "}
-          {((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of MCP, under the {(TREASURY_ASK * 100).toFixed(0)}% ask. Raise at
+          {((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of MCP, under the {ask}% ask. Raise at
           least <strong>${formatMcap(L.minRaise ?? 0)}</strong>, or cut the LP allocation.
         </>
       : <>
-          Your LP ({((L.lpPct ?? 0) * 100).toFixed(0)}%) plus the {(TREASURY_ASK * 100).toFixed(0)}% treasury ask needs at
+          Your LP ({((L.lpPct ?? 0) * 100).toFixed(0)}%) plus the {ask}% treasury ask needs at
           least as much as the sale ({((L.salePct ?? 0) * 100).toFixed(0)}%) brings in. Sell
           more supply, or lower the LP allocation.
         </>;

@@ -31,7 +31,7 @@ export function ReviewStep() {
       <div className="launch-warning">
         <strong>⚠️ Before you launch:</strong> Deploying opens your sale, it does not distribute
         tokens. Deposits stay withdrawable until the sale concludes; if the raise can&apos;t fund
-        the backing minimums (treasury 10% ask in this wizard; on-chain accept 8% of MCP
+        the backing minimums (treasury {state.treasuryBackingPct}% ask in this wizard; on-chain accept 8% of MCP
         after conversion, combined 18%), the launch voids and
         every deposit is reclaimable. Once finalized, the treasury is fully non-custodial: no
         human, including you, can access it. End of life liquidation requires a community vote.

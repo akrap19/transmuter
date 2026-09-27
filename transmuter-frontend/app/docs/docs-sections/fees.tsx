@@ -4,7 +4,7 @@ export function FeesSection() {
       <h2>Fees</h2>
       <h3 id="the-transfer-fee">The transfer fee</h3>
       <p>
-        Every trade pays a transfer fee, set by the creator between <strong>0.40% and 2%</strong>.
+        Every trade pays a transfer fee, set by the creator between <strong>0.45% and 2%</strong>.
         Going above 1% is not recommended; the upper range exists for experimental products.
       </p>
       <div className="tw">
@@ -32,7 +32,7 @@ export function FeesSection() {
             </tr>
             <tr>
               <td>cToken reserve</td>
-              <td>fixed 0.05%</td>
+              <td>fixed 0.10%</td>
               <td>
                 Added to the cToken&apos;s reserve: its base asset for a pure cToken, or its gold
                 for one with a gold contingency.
@@ -52,7 +52,7 @@ export function FeesSection() {
         <strong>creator fee</strong> (0, up to 0.5%). Both are shown before launch.
       </p>
       <p>
-        <strong>The full fee a holder pays is the creator-set total, 0.40% to 2%.</strong> The 0.15%
+        <strong>The full fee a holder pays is the creator-set total, 0.45% to 2%.</strong> The 0.15%
         is Transmuter&apos;s share inside it.
       </p>
       <h3 id="what-transmuter-earns">What Transmuter earns</h3>

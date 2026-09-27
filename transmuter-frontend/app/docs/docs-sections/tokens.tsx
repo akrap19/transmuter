@@ -20,7 +20,7 @@ export function TokensSection() {
                 <strong>EOL token</strong>
               </td>
               <td>
-                <strong>End of life token.</strong> The token a project launches. It trades like any
+                <strong>End of life token, also called a reinforced token.</strong> The token a project launches. It trades like any
                 other token, and it carries a treasury held in a cToken plus a defined end of life
                 procedure.
               </td>
