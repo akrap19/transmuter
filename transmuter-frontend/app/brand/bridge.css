@@ -186,6 +186,37 @@ header.site-header .wallet-user-menu {
 	display: contents;
 }
 
+.access-form input,
+.access-form textarea,
+.access-form .segopt {
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+.access-form em {
+	font-style: normal;
+	text-transform: none;
+	letter-spacing: 0;
+	color: #b7b1a6;
+}
+
+.access-form .field > span {
+	color: #d4cec3;
+	font-size: 12px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.access-form .seg {
+	margin-top: 8px;
+}
+
+.access-form .segopt {
+	border-radius: 14px;
+	color: #efeae0;
+	font-size: 15px;
+}
+
 .access-form .field {
 	margin: 0;
 }

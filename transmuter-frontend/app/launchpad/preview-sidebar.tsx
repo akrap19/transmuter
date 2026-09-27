@@ -68,11 +68,7 @@ export function PreviewSidebar() {
         <div className="preview-chain">
           <div className="preview-chain-title">Collateral Chain</div>
           <ChainNode pill={ticker || "TOKEN"} pillClass="cn-gold" desc="backed by" />
-          <ChainNode pill={state.selectedCToken.name} pillClass="cn-cyan" desc="backed by" />
-          <ChainNode pill={state.selectedCToken.eol} pillClass="cn-green" desc="backed by" />
-          <div className="chain-node">
-            <span className="cn-pill cn-gold-pale">🥇 Tokenized Gold</span>
-          </div>
+          <ChainNode pill={state.selectedCToken.name} pillClass="cn-cyan" />
         </div>
       </div>
 
@@ -83,8 +79,7 @@ export function PreviewSidebar() {
           ✓ No creator access, ever<br />
           ✓ Treasury grows with every TX<br />
           ✓ Backing per token only grows<br />
-          ✓ Tokenized gold contingency<br />
-          ✓ Built-in end-of-life plan<br />
+          ✓ Built-in end of life plan<br />
           ✓ Community governance<br />
           ✓ Anti-rug architecture
         </div>

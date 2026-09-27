@@ -8,6 +8,7 @@ import { DerivedPriceNote } from "../derived-price-note";
 import { useLaunchpad } from "../launchpad-context";
 import { PublicFundBox } from "../public-fund-box";
 import { AllocationSection } from "./allocation-section";
+import { MidasDaoSection } from "./midas-dao-section";
 import { SaleTypeExtras } from "./sale-type-extras";
 
 const SALE_NOTES = {
@@ -57,7 +58,7 @@ export function TokenomicsStep() {
         <strong style={{ color: "var(--tm-cyan)" }}>{mcap ? `$${formatMcap(mcap)}` : "-"}</strong>
         {" "}&nbsp;·&nbsp; USD shown for sizing; the sale itself is denominated in your backing cToken.
       </div>
-      <hr className="section-divider" />
+      <MidasDaoSection />
       <AllocationSection total={total} />
       <PublicFundBox />
       <VestingBlock />
@@ -128,7 +129,7 @@ function SaleTypeFields({ note }: { note: ReactNode }) {
   const { state, setField } = useLaunchpad();
   return (
     <>
-      <div className="form-row cols-2">
+      <div className="form-row">
         <div className="field">
           <label className="field-label">Sale Window <span className="badge required">Required</span></label>
           <div className="input-wrap">

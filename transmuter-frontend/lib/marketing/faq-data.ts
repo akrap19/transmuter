@@ -17,8 +17,8 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "What is Transmuter?",
         "answers": [
-          "Transmuter is value recovery infrastructure for tokens on Solana. An isolated treasury and contract-owned liquidity sit beneath each token, with recovery rules defined before trading. A team may set a fixed escrow schedule or choose no escrow; those terms are set before launch.",
-          "The team chooses whether to use escrow and sets any schedule before launch. Every token has an isolated treasury and predefined recovery rules."
+          "Transmuter is value recovery infrastructure for tokens on Solana. An isolated treasury and contract-owned liquidity sit beneath each token, with recovery rules defined before trading.",
+          "Escrow is optional. If used, its schedule is fixed before trading."
         ]
       },
       {
@@ -200,7 +200,7 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "How long does recovery take?",
         "answers": [
-          "Recovery requires an end-of-life gate and governance approval before contract-defined distribution.",
+          "Recovery requires an end-of-life gate and governance approval before distribution defined in the contract.",
           "The actual duration depends on the governance process. Exact voting thresholds and an authoritative timeline have not yet been published."
         ]
       },

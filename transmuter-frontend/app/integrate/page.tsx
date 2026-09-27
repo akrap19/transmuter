@@ -83,8 +83,8 @@ export default function IntegratePage() {
       <section className="closing-section section-shell">
         <div className="closing-content">
           <p>
-            Commercial terms and any platform-set additional fee are not finalized. We have not published the
-            requirements for moving an already-live token onto the protocol.
+            Commercial terms and any additional fee set by the platform are not finalized. We have not published the
+            requirements for moving an already live token onto the protocol.
           </p>
           <div className="hero-actions closing-actions">
             <a className="button button-primary" href={externalLinks.email}>

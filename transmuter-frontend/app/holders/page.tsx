@@ -57,7 +57,7 @@ export default function HoldersPage() {
       </section>
       <section className="content-section section-shell">
         <p className="eyebrow">WHAT TRIGGERS RECOVERY</p>
-        <h2>A vote, followed by contract-defined recovery.</h2>
+        <h2>A vote, followed by recovery defined in the contract.</h2>
         <p>
           The end-of-life gate precedes the governance vote. Once recovery is approved, the contract unwinds
           contract-owned liquidity, moves any unspent escrow into the treasury, burns unsold allocation and unvested

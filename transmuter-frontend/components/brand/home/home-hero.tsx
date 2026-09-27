@@ -27,7 +27,7 @@ export function HomeHero() {
         </p>
         <div className="hero-actions">
           <Link className="button button-primary" href={routes.access}>
-            Get early access
+            Beta testing
           </Link>
           <Link className="button button-ghost" href={routes.docs}>
             Read the docs
