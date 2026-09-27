@@ -8,7 +8,7 @@ export const glossaryTerms: GlossaryTerm[] = [
   {
     "id": "eol-token",
     "title": "EOL token",
-    "body": "The token a project launches on Transmuter. It trades and behaves like an ordinary token, and it carries reserves underneath it from the first block plus a defined procedure for what happens if the project is finished."
+    "body": "The token a project launches on Transmuter, also called a reinforced token. It trades and behaves like an ordinary token, and it carries reserves underneath it from the first block plus a defined procedure for what happens if the project is finished."
   },
   {
     "id": "ctoken",

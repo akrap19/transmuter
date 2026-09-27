@@ -1,19 +1,20 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { TREASURY_ASK, TREASURY_ACCEPT, COMBINED_BACKING_MIN } from "@/lib/launchpad/floors";
+import { TREASURY_ACCEPT, COMBINED_BACKING_MIN } from "@/lib/launchpad/floors";
 import { formatMcap } from "@/lib/launchpad/launch-solver";
 import { useLaunchpad } from "./launchpad-context";
 
 export function PublicFundBox() {
-  const { launchSolve: L } = useLaunchpad();
+  const { state, launchSolve: L } = useLaunchpad();
+  const ask = state.treasuryBackingPct;
 
   const intro = (
     <p style={{ fontSize: 10.5, color: "#bbb", lineHeight: 1.7, marginBottom: 14 }}>
       This is the outcome, not a set of dials. Escrow takes the fixed amount the team asked
       for, the Liquidity Pool takes exactly what it needs to pair its token allocation at the
       sale price, and the Treasury takes everything left. The wizard sizes the raise so
-      treasury starts at a {(TREASURY_ASK * 100).toFixed(0)}% of MCP ask. On-chain, conversion
+      treasury starts at a {ask}% of MCP ask. On-chain, conversion
       slippage can land it as low as {(TREASURY_ACCEPT * 100).toFixed(0)}%; below that the
       sale voids.{" "}
       <strong style={{ color: "var(--tm-green)" }}>
@@ -21,7 +22,7 @@ export function PublicFundBox() {
         on-chain
       </strong>
       . A realised treasury between {(TREASURY_ACCEPT * 100).toFixed(0)}% and{" "}
-      {(TREASURY_ASK * 100).toFixed(0)}% is a shortfall event, not an automatic void.
+      {ask}% is a shortfall event, not an automatic void.
     </p>
   );
 
@@ -58,11 +59,11 @@ export function PublicFundBox() {
               <strong style={{ color: "var(--tm-green)" }}>
                 {((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of MCP
               </strong>
-              . Wizard ask is {(TREASURY_ASK * 100).toFixed(0)}%; chain accepts down to{" "}
+              . Wizard ask is {ask}%; chain accepts down to{" "}
               {(TREASURY_ACCEPT * 100).toFixed(0)}%.
             </>
           ) : (
-            `Everything left after the LP pairs and escrow is funded. Wizard ask ${(TREASURY_ASK * 100).toFixed(0)}% of MCP; on-chain accept floor ${(TREASURY_ACCEPT * 100).toFixed(0)}%.`
+            `Everything left after the LP pairs and escrow is funded. Wizard ask ${ask}% of MCP; on-chain accept floor ${(TREASURY_ACCEPT * 100).toFixed(0)}%.`
           )
         }
       />
@@ -86,8 +87,8 @@ export function PublicFundBox() {
           <strong style={{ color: "var(--tm-green)" }}>${formatMcap(L.R ?? 0)}</strong>
           {" "}· Treasury receives:{" "}
           <strong style={{ color: "var(--tm-gold)" }}>${formatMcap(L.treasury ?? 0)}</strong>
-          {" "}· Treasury ask ({(TREASURY_ASK * 100).toFixed(0)}% MCP):{" "}
-          <strong style={{ color: "var(--tm-pink)" }}>${formatMcap((L.mcp ?? 0) * TREASURY_ASK)}</strong>
+          {" "}· Treasury ask ({ask}% MCP):{" "}
+          <strong style={{ color: "var(--tm-pink)" }}>${formatMcap((L.mcp ?? 0) * (ask / 100))}</strong>
         </div>
       )}
     </div>

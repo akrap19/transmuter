@@ -44,7 +44,7 @@ export function PreviewSidebar() {
           </div>
           <div>
             <div className="preview-token-name">{name}</div>
-            <div className="preview-token-ticker">${ticker} • Reinforced</div>
+            <div className="preview-token-ticker">${ticker} • EOL</div>
           </div>
         </div>
 
@@ -73,7 +73,7 @@ export function PreviewSidebar() {
       </div>
 
       <div className="panel benefits-panel">
-        <div className="panel-title benefits-title">Reinforced token benefits</div>
+        <div className="panel-title benefits-title">EOL token benefits</div>
         <div className="benefits-list">
           ✓ Non-custodial treasury<br />
           ✓ No creator access, ever<br />

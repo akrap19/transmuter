@@ -12,7 +12,7 @@ const problems = [
   {
     index: "03",
     title: "Holders can get stuck.",
-    body: "When a project dies, the token may keep trading while treasury and liquidity remain inaccessible, with no defined path to return value to holders.",
+    body: "When a project dies, the token may keep trading, but its liquidity pools get drained within minutes, with no defined path to return value to holders.",
   },
 ];
 

@@ -27,12 +27,13 @@ export function launchSolve(input: LaunchSolveInput): LaunchSolveResult | null {
   const lpPct = input.allocLP / 100;
   const salePct = input.allocPublic / 100;
   const userRaise = input.targetRaise;
+  const treasuryAsk = Math.max(TREASURY_ASK, input.treasuryAsk ?? TREASURY_ASK);
 
   if (!supply || isNaN(supply) || salePct <= 0) return null;
 
-  const denom = 1 - (lpPct + TREASURY_ASK) / salePct;
+  const denom = 1 - (lpPct + treasuryAsk) / salePct;
   if (denom <= 0) {
-    return { feasible: false, lpPct, salePct, treasPct: TREASURY_ASK };
+    return { feasible: false, lpPct, salePct, treasPct: treasuryAsk };
   }
 
   const minRaise = escrowNeed > 0 ? escrowNeed / denom : 0;
@@ -54,7 +55,7 @@ export function launchSolve(input: LaunchSolveInput): LaunchSolveResult | null {
       lpPct,
       salePct,
       minRaise,
-      treasPct: TREASURY_ASK,
+      treasPct: treasuryAsk,
     };
   }
 
@@ -64,7 +65,7 @@ export function launchSolve(input: LaunchSolveInput): LaunchSolveResult | null {
   const treasury = R - lpCash - escrowNeed;
   const lpTokens = lpPct * supply;
   const treasPctMCP = mcp > 0 ? treasury / mcp : 0;
-  const feasible = treasPctMCP >= TREASURY_ASK - 1e-9;
+  const feasible = treasPctMCP >= treasuryAsk - 1e-9;
 
   return {
     feasible,
@@ -96,6 +97,7 @@ export function getLaunchSolveInput(state: {
   allocLP: number;
   allocPublic: number;
   targetRaise: string;
+  treasuryBackingPct?: number;
 }): LaunchSolveInput {
   const supply = parseFloat(state.tokenSupply);
   return {
@@ -107,6 +109,7 @@ export function getLaunchSolveInput(state: {
       const v = parseFloat(state.targetRaise);
       return v && !isNaN(v) ? v : null;
     })(),
+    treasuryAsk: (state.treasuryBackingPct ?? TREASURY_ASK * 100) / 100,
   };
 }
 
@@ -116,6 +119,7 @@ export function solveFromState(state: {
   allocLP: number;
   allocPublic: number;
   targetRaise: string;
+  treasuryBackingPct?: number;
 }): LaunchSolveResult | null {
   return launchSolve(getLaunchSolveInput(state));
 }

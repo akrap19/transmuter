@@ -42,6 +42,7 @@ export function TokenomicsStep() {
   return (
     <div className={`step-panel panel${state.currentStep === 2 ? " active" : ""}`}>
       <div className="panel-title"><div className="dot" />Tokenomics</div>
+      <AllocationSection total={total} />
       <div className="form-row tokenomics-grid">
         <div className="tokenomics-left">
           <SupplyFields dispatch={dispatch} />
@@ -59,7 +60,6 @@ export function TokenomicsStep() {
         {" "}&nbsp;·&nbsp; USD shown for sizing; the sale itself is denominated in your backing cToken.
       </div>
       <MidasDaoSection />
-      <AllocationSection total={total} />
       <PublicFundBox />
       <VestingBlock />
       <div className="btn-row">
@@ -94,13 +94,14 @@ function SupplyFields({ dispatch }: { dispatch: ReturnType<typeof useLaunchpad>[
           development, the whole raise then goes to backing.
         </div>
       </div>
+      <TreasuryBackingField />
       <div className="field">
         <label className="field-label raise-label">
           <span>Total Target Raise <span className="badge required">Required</span></span>
           <button
             type="button"
             className="btn-min-raise"
-            title="Overwrite the raise with the smallest amount that funds escrow, pairs the LP, and puts the treasury on its 10% ask."
+            title="Overwrite the raise with the amount that funds escrow, pairs the LP, and lands the treasury on the backing target."
             onClick={() => dispatch({ type: "USE_MINIMUM_RAISE" })}
           >
             Use minimum
@@ -114,7 +115,7 @@ function SupplyFields({ dispatch }: { dispatch: ReturnType<typeof useLaunchpad>[
         {state.saleType === "overflow" && (
           <div className="small-note overflow-floor-note">
             This is the overflow floor: it funds escrow, pairs the liquidity in full, and
-            puts the treasury on its 10% ask. If the pool raises less, the wizard will not
+            puts the treasury on its {state.treasuryBackingPct}% ask. If the pool raises less, the wizard will not
             size a launch; on-chain the sale voids only if projected treasury is below 8%
             of MCP after pairing, or combined backing is below 18%. Anything above the ask
             is surplus.
@@ -129,7 +130,7 @@ function SaleTypeFields({ note }: { note: ReactNode }) {
   const { state, setField } = useLaunchpad();
   return (
     <>
-      <div className="form-row">
+      <div className="form-row cols-2">
         <div className="field">
           <label className="field-label">Sale Window <span className="badge required">Required</span></label>
           <div className="input-wrap">
@@ -140,8 +141,7 @@ function SaleTypeFields({ note }: { note: ReactNode }) {
             </select>
           </div>
           <div className="small-note">
-            Fixed price, Dutch auction, or overflow pool. Ends on sellout, funding target, or
-            window close.
+            How long the sale stays open. It ends on sellout, the funding target, or when this window closes.
           </div>
         </div>
         <div className="field">
@@ -157,6 +157,38 @@ function SaleTypeFields({ note }: { note: ReactNode }) {
         </div>
       </div>
     </>
+  );
+}
+
+function TreasuryBackingField() {
+  const { state, dispatch } = useLaunchpad();
+  const room = state.allocPublic - state.allocLP;
+  const max = Math.max(10, Math.min(80, Math.floor(room - 1)));
+  const value = Math.min(max, Math.max(10, state.treasuryBackingPct));
+
+  return (
+    <div className="slider-section">
+      <div className="slider-header">
+        <span className="slider-label">Target treasury backing</span>
+        <span className="slider-value gold">{value}%</span>
+      </div>
+      <input
+        type="range"
+        className="gold"
+        min={10}
+        max={max}
+        step={1}
+        value={value}
+        onChange={(e) => dispatch({ type: "SET_TREASURY_BACKING", pct: parseInt(e.target.value, 10) })}
+      />
+      <div className="slider-hints">
+        <span>10% minimum</span>
+        <span>{max}% room</span>
+      </div>
+      <div className="small-note" style={{ marginTop: 8 }}>
+        Minimum 10% of market cap. Total target raise is calculated from this, the LP allocation, and escrow.
+      </div>
+    </div>
   );
 }
 

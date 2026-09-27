@@ -5,7 +5,7 @@ import { LaunchpadWizard } from "./launchpad-wizard";
 export const metadata: Metadata = {
   title: "Launchpad",
   description:
-    "Create your reinforced token on Transmuter. Treasury-backed, non-custodial, with built-in end of life protection.",
+    "Create your EOL token on Transmuter. Treasury-backed, non-custodial, with built-in end of life protection.",
 };
 
 export default function LaunchpadPage() {

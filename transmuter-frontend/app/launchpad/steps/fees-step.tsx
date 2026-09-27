@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE, feeSegmentPct } from "@/lib/launchpad/fee-calculator";
+import { CTOKEN_RESERVE_FEE, MIN_TOTAL_FEE, PROTOCOL_FEE, feeSegmentPct } from "@/lib/launchpad/fee-calculator";
 import type { FeeChangeSource } from "@/lib/launchpad/fee-calculator";
 import { ToggleRow } from "../shared-form";
 import { useLaunchpad } from "../launchpad-context";
@@ -16,9 +16,9 @@ export function FeesStep() {
       <p className="step-intro">
         Set the total transfer fee and how it splits.{" "}
         <strong style={{ color: "var(--tm-gold)" }}>
-          Protocol Revenue (0.15%) and cToken reserve contribution (0.05%) are fixed by the protocol
+          Protocol Revenue ({PROTOCOL_FEE.toFixed(2)}%) and cToken reserve contribution ({CTOKEN_RESERVE_FEE.toFixed(2)}%) are fixed by the protocol
         </strong>{" "}
-        — a combined fixed minimum of 0.20%. You control how the rest splits between LP
+        — a combined fixed minimum of {(PROTOCOL_FEE + CTOKEN_RESERVE_FEE).toFixed(2)}%. You control how the rest splits between LP
         and Treasury, each with a{" "}
         <strong style={{ color: "var(--tm-cyan)" }}>minimum of 0.10%</strong>. Redeeming
         carries a fee that tracks this transfer fee, so exiting by redemption is never
@@ -35,10 +35,10 @@ export function FeesStep() {
         label="Total TX Fee"
         value={fees.totalFee}
         max={2}
-        min={0.4}
+        min={MIN_TOTAL_FEE}
         step={0.05}
         onChange={(v) => updateFees(undefined, v)}
-        note="Max 2.00% · Min 0.40% (0.15 protocol + 0.05 cToken reserve + 0.10 LP + 0.10 treasury) · Recommended: 0.5% – 1.0%"
+        note={`Max 2.00% · Min ${MIN_TOTAL_FEE.toFixed(2)}% (${PROTOCOL_FEE.toFixed(2)} protocol + ${CTOKEN_RESERVE_FEE.toFixed(2)} cToken reserve + 0.10 LP + 0.10 treasury) · Recommended: 0.5% – 1.0%`}
       />
 
       <FixedFee
@@ -63,7 +63,7 @@ export function FeesStep() {
         }
         value={CTOKEN_RESERVE_FEE}
         green
-        note="Fixed 0.05% — swapped into the backing cToken reserve at settlement. A NonTransferable cToken has no market, so this is not a buyback."
+        note={`Fixed ${CTOKEN_RESERVE_FEE.toFixed(2)}% — swapped into the backing cToken reserve at settlement. A NonTransferable cToken has no market, so this is not a buyback.`}
       />
 
       <AdjustableFee
@@ -92,8 +92,9 @@ export function FeesStep() {
         note="Swapped into your backing cToken at settlement and held as treasury. Minimum 0.10%."
         warning={fees.feeWarning ? (
           <div id="treasuryFeeWarning" className="fee-budget-warning">
-            ⚠️ Allocations exceed the total transfer fee budget. The slider you last moved
-            was capped to fit; raise Total TX Fee to allocate more.
+            {fees.feeGap > 0
+              ? `⚠️ ${fees.feeGap.toFixed(2)}% of the total fee is not allocated. LP, treasury, and any optional fees have to use the whole total.`
+              : `⚠️ The split is ${Math.abs(fees.feeGap).toFixed(2)}% above the total fee. Lower a destination or raise Total TX Fee.`}
           </div>
         ) : null}
       />

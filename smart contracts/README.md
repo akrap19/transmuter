@@ -93,7 +93,7 @@ and runs `convertTreasury` through Raydium CPMM (`CPMDWBw…`) USDC→WSOL.
 New-token EOL/USDC and EOL/WSOL LP is seeded on Raydium CPMM on public-devnet
 (`seed_raydium_lp` after finalize; an empty `lp_signer` PDA pays Raydium's
 create-pool SOL fee). Localnet still uses the pinned mock DEX.
-Optional `SOLANA_RPC_URL` overrides the HTTP endpoint.
+Optional `SOLANA_RPC_URL` overrides the HTTP endpoint. Public-devnet values for that URL and `ANCHOR_PROVIDER_URL` are in `.env.example`.
 
 ## Token-2022 layout results (localnet)
 

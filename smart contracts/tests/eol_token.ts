@@ -100,7 +100,7 @@ describe("eol token", () => {
     units: FOUNDER.MAX_COMPUTE_UNITS,
   });
 
-  it("pins 8/10/18 floors and the 50 bps fee split", () => {
+  it("pins 8/10/18 floors and the 60 bps fee split", () => {
     expect(FOUNDER.TREASURY_ACCEPT_PCT).to.equal(8);
     expect(FOUNDER.TREASURY_MIN_PCT).to.equal(10);
     expect(FOUNDER.COMBINED_BACKING_MIN_PCT).to.equal(18);

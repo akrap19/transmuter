@@ -66,13 +66,13 @@ pub const DAO_AIRDROP_PCT_MAX: u64 = 10;
 pub const LP_SPLIT_MIN_BPS: u64 = 2_500;
 pub const LP_SPLIT_MAX_BPS: u64 = 7_500;
 
-/// Default transfer fee 0.50% = 0.15 LP / 0.15 treasury / 0.05 cToken reserve / 0.15 protocol.
-pub const TRANSFER_FEE_DEFAULT_BPS: u16 = 50;
-pub const TRANSFER_FEE_MIN_BPS: u16 = 40;
+/// Default transfer fee 0.60% = 0.15 LP / 0.20 treasury / 0.10 cToken reserve / 0.15 protocol.
+pub const TRANSFER_FEE_DEFAULT_BPS: u16 = 60;
+pub const TRANSFER_FEE_MIN_BPS: u16 = 45;
 pub const TRANSFER_FEE_MAX_BPS: u16 = 200;
 pub const FEE_LP_DEFAULT_BPS: u16 = 15;
-pub const FEE_TREASURY_DEFAULT_BPS: u16 = 15;
-pub const FEE_CTOKEN_RESERVE_BPS: u16 = 5;
+pub const FEE_TREASURY_DEFAULT_BPS: u16 = 20;
+pub const FEE_CTOKEN_RESERVE_BPS: u16 = 10;
 pub const FEE_PROTOCOL_MIN_BPS: u16 = 15;
 pub const FEE_PROTOCOL_MAX_BPS: u16 = 25;
 pub const FEE_LP_MIN_BPS: u16 = 10;
@@ -174,14 +174,14 @@ mod tests {
         assert_eq!(SH2_MAX_SLIPPAGE_BPS, 50);
         assert_eq!(SALE_PCT_MIN, 25);
         assert_eq!(LP_PCT_MIN, 10);
-        assert_eq!(TRANSFER_FEE_DEFAULT_BPS, 50);
+        assert_eq!(TRANSFER_FEE_DEFAULT_BPS, 60);
         assert_eq!(
             FEE_LP_DEFAULT_BPS + FEE_TREASURY_DEFAULT_BPS + FEE_CTOKEN_RESERVE_BPS + FEE_PROTOCOL_MIN_BPS,
             TRANSFER_FEE_DEFAULT_BPS
         );
         assert_eq!(
             REDEMPTION_TREASURY_FEE_BPS + REDEMPTION_REVENUE_FEE_BPS,
-            TRANSFER_FEE_DEFAULT_BPS
+            50
         );
         assert_eq!(
             LIQUIDATION_FEE_CTOKEN_BPS + LIQUIDATION_FEE_PROTOCOL_BPS,
