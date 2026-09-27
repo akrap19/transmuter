@@ -1,9 +1,14 @@
+import { useId } from "react";
+
 type LogoMarkProps = {
   size?: number;
   className?: string;
 };
 
 export function LogoMark({ size = 26, className }: LogoMarkProps) {
+  const rawId = useId().replace(/:/g, "");
+  const gold = `${rawId}-gold`;
+  const soft = `${rawId}-soft`;
   return (
     <svg
       width={size}
@@ -16,7 +21,7 @@ export function LogoMark({ size = 26, className }: LogoMarkProps) {
     >
       <defs>
         <linearGradient
-          id="tmLogoGold"
+          id={gold}
           x1="32"
           y1="2"
           x2="32"
@@ -28,7 +33,7 @@ export function LogoMark({ size = 26, className }: LogoMarkProps) {
           <stop offset="1" stopColor="#8A6420" />
         </linearGradient>
         <linearGradient
-          id="tmLogoGoldSoft"
+          id={soft}
           x1="32"
           y1="14"
           x2="32"
@@ -42,7 +47,7 @@ export function LogoMark({ size = 26, className }: LogoMarkProps) {
       <path
         d="M32 3 L57 17.5 V46.5 L32 61 L7 46.5 V17.5 Z"
         fill="#0A0C11"
-        stroke="url(#tmLogoGold)"
+        stroke={`url(#${gold})`}
         strokeWidth="3.5"
         strokeLinejoin="round"
       />
@@ -51,7 +56,7 @@ export function LogoMark({ size = 26, className }: LogoMarkProps) {
         y1="10"
         x2="32"
         y2="19"
-        stroke="url(#tmLogoGoldSoft)"
+        stroke={`url(#${soft})`}
         strokeWidth="2"
         strokeLinecap="round"
         opacity="0.85"
@@ -61,7 +66,7 @@ export function LogoMark({ size = 26, className }: LogoMarkProps) {
         y1="45"
         x2="32"
         y2="54"
-        stroke="url(#tmLogoGoldSoft)"
+        stroke={`url(#${soft})`}
         strokeWidth="2"
         strokeLinecap="round"
         opacity="0.85"
@@ -70,10 +75,10 @@ export function LogoMark({ size = 26, className }: LogoMarkProps) {
         cx="32"
         cy="32"
         r="12"
-        stroke="url(#tmLogoGoldSoft)"
+        stroke={`url(#${soft})`}
         strokeWidth="3.5"
       />
-      <circle cx="32" cy="32" r="4.5" fill="url(#tmLogoGoldSoft)" />
+      <circle cx="32" cy="32" r="4.5" fill={`url(#${soft})`} />
     </svg>
   );
 }

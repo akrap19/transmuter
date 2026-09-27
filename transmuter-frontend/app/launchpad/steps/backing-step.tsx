@@ -12,9 +12,7 @@ export function BackingStep() {
       <div className="panel-title"><div className="dot" />cToken Backing</div>
       <p className="step-intro">
         Select the cToken that backs your treasury. cTokens are deflationary wrappers of
-        blue-chip assets: every trade burns supply, so backing per token only grows, and
-        each holds its own isolated gold reserve as a last resort. Your token inherits
-        that full chain.
+        blue-chip assets: every trade burns supply, so backing per token only grows.
       </p>
 
       <div className="ctoken-grid">
@@ -28,19 +26,8 @@ export function BackingStep() {
             <div className="ctoken-icon">{c.icon}</div>
             <div className="ctoken-name">{c.name}</div>
             <div className="ctoken-base">{c.base}</div>
-            <div className="ctoken-eol">→ isolated gold reserve</div>
           </button>
         ))}
-      </div>
-
-      <div className="eol-box">
-        <div className="eol-icon">🏆</div>
-        <div className="eol-box-text">
-          Every trade strengthens the chain beneath you: a fee portion market-buys and burns{" "}
-          <strong>{selectedCToken.name}</strong>, whose own isolated{" "}
-          <strong style={{ color: "var(--tm-gold)" }}>tokenized gold reserve</strong> grows
-          with every transaction. Your holders inherit this protection at no extra cost.
-        </div>
       </div>
 
       <hr className="section-divider" />

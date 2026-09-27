@@ -40,7 +40,7 @@ export const footerColumns: { title: string; links: SiteLink[] }[] = [
     title: "More",
     links: [
       { label: "Launch platforms", href: routes.integrate },
-      { label: "Early access", href: routes.access },
+      { label: "Beta testing", href: routes.access },
       { label: "Contact", href: routes.contact },
     ],
   },

@@ -54,7 +54,6 @@ export function ReviewStep() {
         </ReviewBlock>
         <ReviewBlock title="Backing">
           <ReviewRow label="Backing cToken" value={state.selectedCToken.name} gold />
-          <ReviewRow label="Last Resort" value={`Isolated gold reserve (${state.selectedCToken.name})`} green />
           <ReviewRow label="Reserve Mint Band" value={`open <${state.autoMintTrigger}% / close ${state.autoMintDeactivate}% (6h continuous)`} gold />
           <ReviewRow label="Gov. Vote Window" value={`${state.voteWindow}h`} />
           <ReviewRow label="Sale Window" value={state.saleWindow} />

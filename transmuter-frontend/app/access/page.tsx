@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { BetaForm } from "@/app/access/beta-form";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { marketingPageGraph } from "@/lib/seo/json-ld";
 import { marketingPageMetadata } from "@/lib/seo/page-metadata";
 
-const accessTitle = "Get early access to Transmuter";
+const accessTitle = "Join the Transmuter beta";
 const accessDescription =
-  "Tell us what you are launching and we will come back with what your token's structure would look like on Transmuter.";
+  "Transmuter is opening a closed beta. Tell us who you are and we will reach out when a spot opens.";
 
 export const metadata: Metadata = marketingPageMetadata({
   path: "/access",
@@ -24,49 +25,21 @@ export default function AccessPage() {
           description: accessDescription,
           breadcrumbs: [
             { name: "Transmuter", path: "/" },
-            { name: "Early access", path: "/access" },
+            { name: "Beta testing", path: "/access" },
           ],
         })}
       />
       <section className="subhero access-hero section-shell">
-        <p className="eyebrow">EARLY ACCESS</p>
-        <h1>Get early access.</h1>
+        <p className="eyebrow">BETA TESTING</p>
+        <h1>Join the beta.</h1>
         <p>
-          Tell us what you are launching. We will come back with what your token&apos;s structure would look like on
-          Transmuter.
+          This is a working beta for people who want to test the launchpad before it opens. Spots are limited. Tell us
+          a little about you and we will reach out when yours opens.
         </p>
       </section>
 
       <section className="access-section section-shell">
-        <form
-          action="mailto:info@transmuter.net"
-          className="access-form"
-          method="post"
-          encType="text/plain"
-        >
-          <label>
-            <span>Name</span>
-            <input autoComplete="name" name="name" required />
-          </label>
-          <label>
-            <span>Email</span>
-            <input autoComplete="email" name="email" required type="email" />
-          </label>
-          <label>
-            <span>Project</span>
-            <input name="project" required />
-          </label>
-          <label className="wide">
-            <span>What are you launching?</span>
-            <textarea name="launch" required rows={6}></textarea>
-          </label>
-          <button className="button button-primary" type="submit">
-            Get early access
-          </button>
-        </form>
-        <p className="access-note">
-          This preview opens your email application to send the form. It is not connected to a web submission service.
-        </p>
+        <BetaForm />
       </section>
     </main>
   );

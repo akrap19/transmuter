@@ -59,7 +59,7 @@ export function SiteHeader() {
           );
         })}
         <Link className="nav-cta" href={routes.access} onClick={() => setOpen(false)}>
-          Get early access
+          Beta testing
         </Link>
         <WalletButton className="nav-wallet" variant="nav" />
       </nav>

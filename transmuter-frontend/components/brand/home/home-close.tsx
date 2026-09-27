@@ -68,12 +68,12 @@ export function HomeClose() {
         <span />
       </div>
       <div className="closing-content reveal">
-        <p className="eyebrow">EARLY ACCESS</p>
+        <p className="eyebrow">BETA TESTING</p>
         <h2>Launch with the ending already written.</h2>
-        <p>Early access is open.</p>
+        <p>Beta testing is open.</p>
         <div className="hero-actions closing-actions">
           <Link className="button button-primary" href={routes.access}>
-            Get early access
+            Beta testing
           </Link>
         </div>
       </div>

@@ -26,7 +26,7 @@ export function StatusSection() {
         </li>
       </ul>
       <p>Nothing ships unreviewed.</p>
-      <p>Questions, integrations, early access: info@transmuter.net</p>
+      <p>Questions, integrations, beta testing: info@transmuter.net</p>
     </section>
   );
 }

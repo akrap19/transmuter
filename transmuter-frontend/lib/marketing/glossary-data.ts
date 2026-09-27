@@ -38,7 +38,7 @@ export const glossaryTerms: GlossaryTerm[] = [
   {
     "id": "recovery",
     "title": "Recovery",
-    "body": "The end-of-life procedure: a gate on when a proposal can open, a governance vote, and then contract-defined consolidation, burns and pro rata distribution. The accounting steps run without a team signature after approval."
+    "body": "The end-of-life procedure: a gate on when a proposal can open, a governance vote, and then consolidation, burns and pro rata distribution defined in the contract. The accounting steps run without a team signature after approval."
   },
   {
     "id": "pro-rata-distribution",
