@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { getAllocationTotal } from "@/lib/launchpad/allocation-sync";
 import { formatMcap } from "@/lib/launchpad/launch-solver";
 import { VESTING_PRESETS } from "@/lib/launchpad/types";
@@ -43,6 +43,7 @@ export function TokenomicsStep() {
     <div className={`step-panel panel${state.currentStep === 2 ? " active" : ""}`}>
       <div className="panel-title"><div className="dot" />Tokenomics</div>
       <AllocationSection total={total} />
+      <MidasDaoSection />
       <div className="form-row tokenomics-grid">
         <div className="tokenomics-left">
           <SupplyFields dispatch={dispatch} />
@@ -59,7 +60,6 @@ export function TokenomicsStep() {
         <strong style={{ color: "var(--tm-cyan)" }}>{mcap ? `$${formatMcap(mcap)}` : "-"}</strong>
         {" "}&nbsp;·&nbsp; USD shown for sizing; the sale itself is denominated in your backing cToken.
       </div>
-      <MidasDaoSection />
       <PublicFundBox />
       <VestingBlock />
       <div className="btn-row">
@@ -81,6 +81,10 @@ function SupplyFields({ dispatch }: { dispatch: ReturnType<typeof useLaunchpad>[
             onChange={(e) => dispatch({ type: "ON_ESCROW_INPUT", tokenSupply: e.target.value })} />
           <span className="input-suffix">tokens</span>
         </div>
+        <div className="small-note">
+          Fixed for every launch, so a token&apos;s price and market cap come only from its raise
+          and how much of the supply is sold.
+        </div>
       </div>
       <div className="field">
         <label className="field-label">Target Escrow Raise</label>
@@ -91,7 +95,11 @@ function SupplyFields({ dispatch }: { dispatch: ReturnType<typeof useLaunchpad>[
         </div>
         <div className="small-note">
           What the team needs to build. Set <strong>0</strong> if you are not raising for
-          development, the whole raise then goes to backing.
+          development, the whole raise then goes to backing. Held in USDC and released in
+          tranches on a schedule you fix now, which nobody can rewrite later. Holders can
+          pause releases if a team acts in bad faith, unpause them once it is resolved, and
+          vote to advance the next tranche. Anything unspent is paid to holders in USDC if
+          the project ends.
         </div>
       </div>
       <TreasuryBackingField />
@@ -164,29 +172,44 @@ function TreasuryBackingField() {
   const { state, dispatch } = useLaunchpad();
   const room = state.allocPublic - state.allocLP;
   const max = Math.max(10, Math.min(80, Math.floor(room - 1)));
-  const value = Math.min(max, Math.max(10, state.treasuryBackingPct));
+  const committed = Math.min(max, Math.max(10, state.treasuryBackingPct));
+  const [draft, setDraft] = useState<string | null>(null);
+
+  function commit(raw: string) {
+    const parsed = parseInt(raw, 10);
+    const pct = Number.isNaN(parsed) ? 10 : Math.min(max, Math.max(10, parsed));
+    dispatch({ type: "SET_TREASURY_BACKING", pct });
+    setDraft(null);
+  }
 
   return (
-    <div className="slider-section">
-      <div className="slider-header">
-        <span className="slider-label">Target treasury backing</span>
-        <span className="slider-value gold">{value}%</span>
+    <div className="field">
+      <label className="field-label">
+        Target treasury backing <span className="badge">Min 10%</span>
+      </label>
+      <div className="input-wrap suffix-wide">
+        <input
+          type="number"
+          min={10}
+          max={max}
+          step={1}
+          value={draft ?? String(committed)}
+          onChange={(e) => {
+            const raw = e.target.value;
+            setDraft(raw);
+            const parsed = parseInt(raw, 10);
+            if (!Number.isNaN(parsed) && parsed >= 10) {
+              dispatch({ type: "SET_TREASURY_BACKING", pct: Math.min(max, parsed) });
+            }
+          }}
+          onBlur={(e) => commit(e.target.value)}
+        />
+        <span className="input-suffix">% of MCP</span>
       </div>
-      <input
-        type="range"
-        className="gold"
-        min={10}
-        max={max}
-        step={1}
-        value={value}
-        onChange={(e) => dispatch({ type: "SET_TREASURY_BACKING", pct: parseInt(e.target.value, 10) })}
-      />
-      <div className="slider-hints">
-        <span>10% minimum</span>
-        <span>{max}% room</span>
-      </div>
-      <div className="small-note" style={{ marginTop: 8 }}>
-        Minimum 10% of market cap. Total target raise is calculated from this, the LP allocation, and escrow.
+      <div className="small-note">
+        How much of the market cap the treasury holds at launch. The total target raise
+        below is calculated from this. Anything under {room.toFixed(1)}% works with this
+        split; above that the public sale cannot fund the liquidity pool and this ask together.
       </div>
     </div>
   );

@@ -14,7 +14,6 @@ export function MidasDaoSection() {
 
   return (
     <>
-      <hr className="section-divider" />
       <div className="panel-title" style={{ marginBottom: 14 }}>
         <div className="dot" style={{ background: "var(--tm-gold)", boxShadow: "0 0 8px var(--tm-gold)" }} />
         MIDAS DAO Integration
