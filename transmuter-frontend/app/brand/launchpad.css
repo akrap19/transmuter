@@ -213,6 +213,10 @@
 	padding: 14px 16px;
 }
 
+.launch-page .input-wrap.suffix-wide input[type="number"] {
+	padding-right: 88px;
+}
+
 .launch-page input[type="text"]:focus,
 .launch-page input[type="number"]:focus,
 .launch-page textarea:focus {
