@@ -9,6 +9,8 @@ const networkByName = {
 
 type NetworkName = keyof typeof networkByName
 
+export type SolanaCluster = NetworkName
+
 export const DEVNET_RPC = 'https://api.devnet.solana.com'
 
 /** Circle devnet USDC. Factory on devnet was initialized with this mint. */
@@ -54,7 +56,14 @@ export function shortenAddress(address: string, chars = 4) {
 	return `${address.slice(0, chars)}…${address.slice(-chars)}`
 }
 
+function explorerClusterQuery(networkName: NetworkName): string {
+	return networkName === 'mainnet-beta' ? '' : `?cluster=${networkName}`
+}
+
 export function explorerAddressUrl(address: string, networkName: NetworkName = solanaNetworkName) {
-	const cluster = networkName === 'mainnet-beta' ? '' : `?cluster=${networkName}`
-	return `https://explorer.solana.com/address/${address}${cluster}`
+	return `https://explorer.solana.com/address/${address}${explorerClusterQuery(networkName)}`
+}
+
+export function explorerTxUrl(signature: string, networkName: NetworkName = solanaNetworkName) {
+	return `https://explorer.solana.com/tx/${signature}${explorerClusterQuery(networkName)}`
 }

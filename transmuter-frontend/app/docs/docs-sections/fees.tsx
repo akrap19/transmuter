@@ -32,7 +32,7 @@ export function FeesSection() {
             </tr>
             <tr>
               <td>cToken reserve</td>
-              <td>fixed 0.10%</td>
+              <td>fixed 0.05%</td>
               <td>
                 Added to the cToken&apos;s reserve: its base asset for a pure cToken, or its gold
                 for one with a gold contingency.

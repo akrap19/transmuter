@@ -1,7 +1,7 @@
 import { CoinProgress } from "@/app/coins/[mint]/coin-progress";
 import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { formatAmount, formatBps, formatStatus, formatUnix } from "@/lib/catalog/format";
-import { holderOutcome, voteTally } from "@/lib/catalog/governance";
+import { holderOutcome, DAO_SHIM_QUORUM_MET, voteTally } from "@/lib/catalog/governance";
 import type { CoinVote } from "@/lib/catalog/types";
 import type { ReactNode } from "react";
 
@@ -15,7 +15,7 @@ export function VoteCard({
   children?: ReactNode;
 }) {
   const tally = voteTally(vote);
-  const outcome = holderOutcome(tally, false);
+  const outcome = holderOutcome(tally, DAO_SHIM_QUORUM_MET);
   const yesWidth = Math.min(100, tally.yesBps / 100);
   const quorumWidth = Math.min(100, (tally.reachedQuorumBps / Math.max(vote.quorumBps, 1)) * 100);
   const title = vote.kind === "reserve_mint" ? "Reserve mint Path B" : formatStatus(vote.kind);

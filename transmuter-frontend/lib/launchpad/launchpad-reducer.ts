@@ -1,4 +1,5 @@
 import { syncAllocation } from "./allocation-sync";
+import type { PendingWire } from "./mint-secret";
 import { calculateFees, type FeeChangeSource } from "./fee-calculator";
 import { solveFromState } from "./launch-solver";
 import {
@@ -26,6 +27,7 @@ export type LaunchpadAction =
   | { type: "LAUNCH_STATUS"; status: Exclude<LaunchStatus, "idle" | "success" | "error"> }
   | { type: "LAUNCH_ERROR"; error: string }
   | { type: "LAUNCH_SUCCESS"; mint: string; signature: string; launchId: number; metadataUri: string }
+  | { type: "RESUME_WIRE"; pending: PendingWire }
   | { type: "RESET" };
 
 export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction): LaunchpadState {
@@ -148,6 +150,18 @@ export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction)
         launchSignature: action.signature,
         launchId: action.launchId,
         metadataUri: action.metadataUri,
+      };
+    case "RESUME_WIRE":
+      return {
+        ...state,
+        launched: true,
+        launchStatus: "success",
+        launchError: null,
+        launchId: action.pending.launchId,
+        launchedMint: action.pending.mint,
+        tokenName: action.pending.tokenName,
+        tokenTicker: action.pending.tokenTicker,
+        selectedCToken: { ...state.selectedCToken, name: action.pending.backingName },
       };
     case "RESET":
       return initialLaunchpadState;

@@ -9,7 +9,7 @@ import { explorerAddressUrl } from "@/lib/solana/config";
 import { routes } from "@/lib/routes";
 import type { CoinDetail } from "@/lib/catalog/types";
 
-export function OverviewPanel({ coin }: { coin: CoinDetail }) {
+export function OverviewPanel({ coin, treasury = "shown" }: { coin: CoinDetail; treasury?: "shown" | "pending" }) {
   return (
     <section className="subhero section-shell coin-hero">
       <Link href={routes.coins} className="coin-back">
@@ -39,8 +39,8 @@ export function OverviewPanel({ coin }: { coin: CoinDetail }) {
       <CoinMeta
         items={[
           { label: "Status", value: <CoinStatus status={coin.status} /> },
-          { label: "Treasury (incl. USDC)", value: formatUsd(coin.treasury.backingValueUsd) },
-          { label: "Unconverted USDC", value: formatUsd(coin.treasury.unconvertedUsdc) },
+          { label: "Treasury (incl. USDC)", value: treasury === "pending" ? "—" : formatUsd(coin.treasury.backingValueUsd) },
+          { label: "Unconverted USDC", value: treasury === "pending" ? "—" : formatUsd(coin.treasury.unconvertedUsdc) },
           { label: "Holders", value: coin.holderCount },
           {
             label: "Mint",

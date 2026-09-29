@@ -1,18 +1,14 @@
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { CoinTable } from "@/components/catalog/coin-table";
 import { formatAmount } from "@/lib/catalog/format";
-import { listCreated, listHeld } from "@/lib/catalog/client";
-import type { TokenAccountBalance } from "@/lib/catalog/types";
+import type { CoinListItem, HeldCoin } from "@/lib/catalog/types";
 
 type MyCoinsListsProps = {
-  wallet: string;
-  accounts?: TokenAccountBalance[];
+  created: CoinListItem[];
+  held: HeldCoin[];
 };
 
-export function MyCoinsLists({ wallet, accounts }: MyCoinsListsProps) {
-  const created = listCreated(wallet);
-  const held = listHeld(wallet, accounts);
-
+export function MyCoinsLists({ created, held }: MyCoinsListsProps) {
   return (
     <>
       <section className="coin-section">

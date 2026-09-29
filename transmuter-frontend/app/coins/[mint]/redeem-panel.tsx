@@ -3,10 +3,19 @@ import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { RedeemActions } from "@/app/coins/[mint]/redeem-actions";
 import { formatAmount, formatUsd } from "@/lib/catalog/format";
 import { quoteRedeem } from "@/lib/catalog/redeem";
+import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import type { CoinDetail } from "@/lib/catalog/types";
 
-export function RedeemPanel({ coin }: { coin: CoinDetail }) {
-  if (!coin.redeem) return null;
+export function RedeemPanel({
+  coin,
+  chain,
+  onConfirmed,
+}: {
+  coin: CoinDetail;
+  chain: HolderSubmit | null;
+  onConfirmed: () => void;
+}) {
+  if (!coin.redeem || !chain) return null;
 
   const { redeem } = coin;
   const unit = quoteRedeem(redeem, 1);
@@ -26,7 +35,7 @@ export function RedeemPanel({ coin }: { coin: CoinDetail }) {
           { label: "Returned escrow", value: formatUsd(redeem.escrowUsdc) },
         ]}
       />
-      <RedeemActions mint={coin.mint} status={coin.status} />
+      <RedeemActions status={coin.status} redeem={redeem} chain={chain} onConfirmed={onConfirmed} />
     </CoinSection>
   );
 }

@@ -7,5 +7,7 @@ export const PROGRAM_IDS = {
 	runwayEscrow: 'Dy1ddZeaR7GL2QPxWnogrFmdYio4eE5Hrm613SS2PbdK',
 	staking: '729ofbpZHYSodUi5ZKXibCFeYCHy9bQ7ojuWrYXLBcZZ',
 	registry: 'gA8y6oPQebWC2cNFgwKbJX9ivtWYpb6bf4pSJxkejfV',
-	dao: '6obevHvyADNmvyysyj8QBfgUQUbbhZU4CvMtghbRHw3W'
+	dao: '6obevHvyADNmvyysyj8QBfgUQUbbhZU4CvMtghbRHw3W',
+	/** Factory `wire_pool_*` CPIs `Program<MockDex>`. Devnet LP seed can still use Raydium later. */
+	mockDex: 'B1Wxrd67VBAmBKKvwx41YZjgpJDfJWmJHyXfHCBfrqdV'
 } as const

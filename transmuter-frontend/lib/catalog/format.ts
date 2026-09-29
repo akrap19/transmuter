@@ -25,3 +25,15 @@ export function formatAmount(value: number): string {
 export function formatUnix(seconds: number): string {
   return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(seconds * 1000));
 }
+
+export function formatRemaining(closesAt: number, now: number): string {
+  const left = Math.floor(closesAt - now);
+  if (left <= 0) return "Closed";
+  const days = Math.floor(left / 86_400);
+  const hours = Math.floor((left % 86_400) / 3_600);
+  const minutes = Math.floor((left % 3_600) / 60);
+  const seconds = left % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m ${seconds}s`;
+}

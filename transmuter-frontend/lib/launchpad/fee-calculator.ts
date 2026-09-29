@@ -1,7 +1,8 @@
 import type { FeeState, ToggleStates } from "./types";
 
 const PROTOCOL_FEE = 0.15;
-const CTOKEN_RESERVE_FEE = 0.1;
+/** 5 bps. The Factory deployed on devnet rejects 10 bps (`fee_ctoken_bps` at createLaunch). */
+const CTOKEN_RESERVE_FEE = 0.05;
 const MIN_LP = 0.10;
 const MIN_TREASURY = 0.10;
 const MAX_CREATOR = 0.5;

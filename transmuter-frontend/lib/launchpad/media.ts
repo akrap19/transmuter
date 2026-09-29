@@ -9,7 +9,11 @@ export type UploadMediaOptions = {
   fetchFn?: typeof fetch;
 };
 
-export function resolveMediaEndpoint(env: Record<string, string | undefined> = process.env): string {
+export function resolveMediaEndpoint(
+  env: Record<string, string | undefined> = {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  },
+): string {
   const base = (env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
   return base ? `${base}/media` : "/api/media";
 }

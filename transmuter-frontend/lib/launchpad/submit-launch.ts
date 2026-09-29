@@ -43,6 +43,7 @@ export type SubmitCreateLaunchResult = {
   signature: string;
   launchId: number;
   mint: string;
+  mintSecretKey: Uint8Array;
   metadataUri: string;
 };
 
@@ -119,6 +120,7 @@ export async function submitCreateLaunch(
     signature,
     launchId,
     mint: mint.publicKey.toBase58(),
+    mintSecretKey: Uint8Array.from(mint.secretKey),
     metadataUri,
   };
 }

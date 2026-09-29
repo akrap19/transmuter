@@ -4,15 +4,25 @@ import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { EscrowActions } from "@/app/coins/[mint]/escrow-actions";
 import { formatStatus, formatUsd, formatUnix } from "@/lib/catalog/format";
 import { releasedToDate } from "@/lib/catalog/escrow";
-import { CATALOG_NOW } from "@/lib/catalog/mock";
+import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import { scheduleLabel } from "@/lib/catalog/schedule";
 import type { CoinDetail } from "@/lib/catalog/types";
 
-export function EscrowPanel({ coin }: { coin: CoinDetail }) {
-  if (!coin.escrow) return null;
+export function EscrowPanel({
+  coin,
+  chain,
+  now,
+  onConfirmed,
+}: {
+  coin: CoinDetail;
+  chain: HolderSubmit | null;
+  now: number;
+  onConfirmed: () => void;
+}) {
+  if (!coin.escrow || !chain) return null;
 
   const { escrow } = coin;
-  const released = releasedToDate(escrow, CATALOG_NOW);
+  const released = releasedToDate(escrow, now);
   const width = escrow.fundedPrincipal <= 0 ? 0 : Math.min(100, (released / escrow.fundedPrincipal) * 100);
 
   return (
@@ -40,7 +50,7 @@ export function EscrowPanel({ coin }: { coin: CoinDetail }) {
         {escrow.startTime === 0 ? ". Start time is not stamped." : ` since ${formatUnix(escrow.startTime)}.`}
         {escrow.advanceUnlocked > 0 ? ` Advance unlocked ${formatUsd(escrow.advanceUnlocked)}.` : null}
       </p>
-      <EscrowActions mint={coin.mint} />
+      <EscrowActions escrow={escrow} chain={chain} onConfirmed={onConfirmed} />
     </CoinSection>
   );
 }

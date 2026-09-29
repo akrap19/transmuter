@@ -2,6 +2,9 @@ import type { CoinStake, CoinVote, OpenVoteKind } from "./types";
 
 export const VOTER_LOCK_SECS = 7 * 24 * 3600;
 
+/** Registry and DAO stay shims. A community-vote read reports quorum not met. */
+export const DAO_SHIM_QUORUM_MET = false as const;
+
 export type VoteTally = {
   cast: number;
   yesBps: number;

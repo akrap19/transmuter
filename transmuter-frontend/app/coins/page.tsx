@@ -4,7 +4,7 @@ import { CatalogBanner } from "@/components/catalog/catalog-banner";
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { CoinGrid } from "@/components/catalog/coin-grid";
 import { ExploreToolbar } from "@/components/catalog/explore-toolbar";
-import { listCoins } from "@/lib/catalog/client";
+import { loadCoinList } from "@/lib/catalog/load-catalog";
 import { parseCoinSearchParams, searchParamsFromRecord } from "@/lib/catalog/search-params";
 
 export const metadata: Metadata = {
@@ -16,9 +16,11 @@ type ExplorePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const query = parseCoinSearchParams(searchParamsFromRecord(await searchParams));
-  const result = listCoins(query);
+  const { result, source } = await loadCoinList(query);
 
   return (
     <main className="explore-page">
@@ -28,7 +30,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         <p>Every Factory-registered launch, including VOIDED. Search, sort, and filter the index.</p>
       </section>
       <section className="explore-section section-shell">
-        <CatalogBanner />
+        {source === "sample" ? <CatalogBanner /> : null}
         <ExploreToolbar query={query} />
         <p className="explore-count">
           {result.total} launch{result.total === 1 ? "" : "es"}

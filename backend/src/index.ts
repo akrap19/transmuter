@@ -11,6 +11,7 @@ import { createIndexer } from "./indexer/ingest.ts";
 import { createMemoryCursor, createMemoryWrites } from "./indexer/memory.ts";
 import { createPrismaCursor, createPrismaWrites } from "./indexer/prisma.ts";
 import { createRpcLogSource, fetchChainTx, getMultipleAccounts, type RpcFetch } from "./indexer/rpc.ts";
+import { syncFactoryLaunches } from "./indexer/sync-launches.ts";
 import { startIndexerWorker } from "./indexer/worker.ts";
 import { createFileMediaStore } from "./media/files.ts";
 
@@ -105,6 +106,16 @@ const worker = await startIndexerWorker({
   programIds,
   resolveTx: config.solanaRpcUrl
     ? async (stub) => (await fetchChainTx(rpcFetch, config.solanaRpcUrl as string, stub.signature)) ?? stub
+    : undefined,
+  syncLaunches: config.solanaRpcUrl
+    ? () =>
+        syncFactoryLaunches({
+          fetch: rpcFetch,
+          rpcUrl: config.solanaRpcUrl as string,
+          programId: config.factoryProgramId,
+          writes,
+          backingMints,
+        })
     : undefined,
 });
 stopWorker = worker.stop;

@@ -38,7 +38,7 @@ pnpm test
 pnpm typecheck
 ```
 
-Point the Launchpad at this API with `NEXT_PUBLIC_API_URL=http://localhost:3001` so logo uploads go to `POST /media`.
+Point the Launchpad at this API with `NEXT_PUBLIC_API_URL` (this machine: `http://localhost:3010`, because `:3001` is taken) so logo uploads go to `POST /media`. CORS allows `FRONTEND_ORIGIN` (this machine: `http://localhost:3003`).
 
 ## Indexer
 

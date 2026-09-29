@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useSubmitHolder } from "@/app/coins/[mint]/use-submit-holder";
 import { WalletGate } from "@/components/catalog/wallet-gate";
-import { getCoinDetail } from "@/lib/catalog/client";
-import { formatAmount } from "@/lib/catalog/format";
-import { CATALOG_NOTICE } from "@/lib/catalog/mock";
+import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import { evaluateVestingClaim } from "@/lib/catalog/vesting";
 import type { CoinVesting } from "@/lib/catalog/types";
 
@@ -14,51 +13,54 @@ const REASONS: Record<string, string> = {
   zero: "Nothing is claimable yet.",
 };
 
-export function VestingActions({ mint }: { mint: string }) {
-  const [message, setMessage] = useState<string | null>(null);
+export function VestingActions({
+  vesting,
+  chain,
+  onConfirmed,
+}: {
+  vesting: CoinVesting;
+  chain: HolderSubmit;
+  onConfirmed: () => void;
+}) {
+  const [notice, setNotice] = useState<string | null>(null);
+  const tx = useSubmitHolder(onConfirmed);
 
   return (
     <WalletGate
       title="Connect to claim vested tokens"
       body="Vesting claims are signed by the recipient wallet. There is no login."
     >
-      {(wallet) => {
-        const vesting = getCoinDetail(mint, wallet)?.vesting;
-        if (!vesting) return null;
-        return <VestingClaim vesting={vesting} wallet={wallet} message={message} onMessage={setMessage} />;
-      }}
+      {(wallet) => (
+        <div className="coin-actions">
+          <div className="coin-buttons">
+            <button
+              type="button"
+              className="button button-primary"
+              disabled={tx.busy || !chain.vesting}
+              onClick={() => {
+                const result = evaluateVestingClaim(vesting, wallet, Math.floor(Date.now() / 1000));
+                if (!result.ok) {
+                  setNotice(REASONS[result.reason] ?? result.reason);
+                  return;
+                }
+                setNotice(null);
+                void tx.run("vestingClaim", chain);
+              }}
+            >
+              {tx.busy ? "Signing…" : "Claim vested"}
+            </button>
+          </div>
+          {!chain.vesting ? <p className="coin-note">This wallet has no vesting entry on the launch.</p> : null}
+          {tx.error ?? notice ? <p className="coin-note">{tx.error ?? notice}</p> : null}
+          {tx.explorerUrl && !notice ? (
+            <p className="coin-note">
+              <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
+                View transaction
+              </a>
+            </p>
+          ) : null}
+        </div>
+      )}
     </WalletGate>
-  );
-}
-
-function VestingClaim({
-  vesting,
-  wallet,
-  message,
-  onMessage,
-}: {
-  vesting: CoinVesting;
-  wallet: string;
-  message: string | null;
-  onMessage: (value: string) => void;
-}) {
-  function run() {
-    const result = evaluateVestingClaim(vesting, wallet, Math.floor(Date.now() / 1000));
-    if (!result.ok) {
-      onMessage(REASONS[result.reason] ?? result.reason);
-      return;
-    }
-    onMessage(`Ready to sign a claim of ${formatAmount(result.amount)}. ${CATALOG_NOTICE}`);
-  }
-
-  return (
-    <>
-      <div className="coin-buttons">
-        <button type="button" className="button button-primary" onClick={run}>
-          Claim vested
-        </button>
-      </div>
-      {message ? <p className="coin-note">{message}</p> : null}
-    </>
   );
 }
