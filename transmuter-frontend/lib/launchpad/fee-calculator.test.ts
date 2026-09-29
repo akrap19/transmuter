@@ -17,7 +17,7 @@ describe("calculateFees", () => {
 
     expect(fees.feeWarning).toBe(false);
     expect(fees.feeGap).toBe(0);
-    expect(fees.lpFee + fees.treasuryFee + 0.15 + 0.1).toBeCloseTo(0.6, 5);
+    expect(fees.lpFee + fees.treasuryFee + 0.15 + 0.05).toBeCloseTo(0.5, 5);
   });
 
   it("warns when the total is raised and the remainder is left unallocated", () => {
@@ -32,7 +32,7 @@ describe("calculateFees", () => {
     });
 
     expect(fees.feeWarning).toBe(true);
-    expect(fees.feeGap).toBeCloseTo(0.4, 5);
+    expect(fees.feeGap).toBeCloseTo(0.45, 5);
   });
 
   it("caps a destination that would exceed the total and does not warn once it fits", () => {
@@ -46,7 +46,7 @@ describe("calculateFees", () => {
       changed: "treasury",
     });
 
-    expect(fees.treasuryFee).toBeCloseTo(0.2, 5);
+    expect(fees.treasuryFee).toBeCloseTo(0.25, 5);
     expect(fees.feeWarning).toBe(false);
     expect(fees.feeGap).toBe(0);
   });

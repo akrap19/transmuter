@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useReducer, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
+import { browserSession, loadPendingWire } from "@/lib/launchpad/mint-secret";
 import { syncAllocation } from "@/lib/launchpad/allocation-sync";
 import { type FeeChangeSource } from "@/lib/launchpad/fee-calculator";
 import { solveFromState } from "@/lib/launchpad/launch-solver";
@@ -31,6 +32,13 @@ const LaunchpadContext = createContext<LaunchpadContextValue | null>(null);
 
 export function LaunchpadProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(launchpadReducer, initialLaunchpadState);
+
+  useEffect(() => {
+    const storage = browserSession();
+    if (!storage) return;
+    const pending = loadPendingWire(storage);
+    if (pending) dispatch({ type: "RESUME_WIRE", pending });
+  }, []);
 
   const setField = useCallback(<K extends keyof LaunchpadState>(field: K, value: LaunchpadState[K]) => {
     dispatch({ type: "SET_FIELD", field, value });

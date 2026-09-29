@@ -36,4 +36,24 @@ describe("launchpadReducer launch status", () => {
     expect(success.launchId).toBe(3);
     expect(success.metadataUri).toBe("https://cdn.example/aero.json");
   });
+
+  it("restores a pending wire after refresh without marking the sale open", () => {
+    const resumed = launchpadReducer(initialLaunchpadState, {
+      type: "RESUME_WIRE",
+      pending: {
+        launchId: 4,
+        mint: "Mint111111111111111111111111111111111111111",
+        tokenName: "Aero",
+        tokenTicker: "AERO",
+        backingName: "cSOL",
+      },
+    });
+
+    expect(resumed.launched).toBe(true);
+    expect(resumed.launchId).toBe(4);
+    expect(resumed.launchedMint).toBe("Mint111111111111111111111111111111111111111");
+    expect(resumed.tokenName).toBe("Aero");
+    expect(resumed.tokenTicker).toBe("AERO");
+    expect(resumed.selectedCToken.name).toBe("cSOL");
+  });
 });

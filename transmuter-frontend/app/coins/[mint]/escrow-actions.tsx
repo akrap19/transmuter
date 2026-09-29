@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useSubmitHolder } from "@/app/coins/[mint]/use-submit-holder";
 import { WalletGate } from "@/components/catalog/wallet-gate";
-import { getCoinDetail } from "@/lib/catalog/client";
 import { evaluateEscrowDraw } from "@/lib/catalog/escrow";
-import { formatUsd } from "@/lib/catalog/format";
-import { CATALOG_NOTICE } from "@/lib/catalog/mock";
+import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import type { CoinEscrow } from "@/lib/catalog/types";
 
 const REASONS: Record<string, string> = {
@@ -16,51 +15,53 @@ const REASONS: Record<string, string> = {
   zero: "Nothing is drawable yet.",
 };
 
-export function EscrowActions({ mint }: { mint: string }) {
-  const [message, setMessage] = useState<string | null>(null);
+export function EscrowActions({
+  escrow,
+  chain,
+  onConfirmed,
+}: {
+  escrow: CoinEscrow;
+  chain: HolderSubmit;
+  onConfirmed: () => void;
+}) {
+  const [notice, setNotice] = useState<string | null>(null);
+  const tx = useSubmitHolder(onConfirmed);
 
   return (
     <WalletGate
       title="Connect to draw runway"
       body="Draw is signed by the team recipient. Halt, resume, and advance stay in Governance."
     >
-      {(wallet) => {
-        const escrow = getCoinDetail(mint, wallet)?.escrow;
-        if (!escrow) return null;
-        return <EscrowDraw escrow={escrow} wallet={wallet} message={message} onMessage={setMessage} />;
-      }}
+      {(wallet) => (
+        <div className="coin-actions">
+          <div className="coin-buttons">
+            <button
+              type="button"
+              className="button button-primary"
+              disabled={tx.busy || !chain.escrow}
+              onClick={() => {
+                const result = evaluateEscrowDraw(escrow, wallet, Math.floor(Date.now() / 1000));
+                if (!result.ok) {
+                  setNotice(REASONS[result.reason] ?? result.reason);
+                  return;
+                }
+                setNotice(null);
+                void tx.run("escrowDraw", chain);
+              }}
+            >
+              {tx.busy ? "Signing…" : "Draw"}
+            </button>
+          </div>
+          {tx.error ?? notice ? <p className="coin-note">{tx.error ?? notice}</p> : null}
+          {tx.explorerUrl && !notice ? (
+            <p className="coin-note">
+              <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
+                View transaction
+              </a>
+            </p>
+          ) : null}
+        </div>
+      )}
     </WalletGate>
-  );
-}
-
-function EscrowDraw({
-  escrow,
-  wallet,
-  message,
-  onMessage,
-}: {
-  escrow: CoinEscrow;
-  wallet: string;
-  message: string | null;
-  onMessage: (value: string) => void;
-}) {
-  function run() {
-    const result = evaluateEscrowDraw(escrow, wallet, Math.floor(Date.now() / 1000));
-    if (!result.ok) {
-      onMessage(REASONS[result.reason] ?? result.reason);
-      return;
-    }
-    onMessage(`Ready to sign a draw of ${formatUsd(result.amount)}. ${CATALOG_NOTICE}`);
-  }
-
-  return (
-    <>
-      <div className="coin-buttons">
-        <button type="button" className="button button-primary" onClick={run}>
-          Draw
-        </button>
-      </div>
-      {message ? <p className="coin-note">{message}</p> : null}
-    </>
   );
 }

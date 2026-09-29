@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { DEVNET_USDC_MINT, explorerAddressUrl, resolveSolanaConfig, resolveUsdcMint } from '@/lib/solana/config'
+import {
+	DEVNET_USDC_MINT,
+	explorerAddressUrl,
+	explorerTxUrl,
+	resolveSolanaConfig,
+	resolveUsdcMint
+} from '@/lib/solana/config'
 
 const DEVNET_RPC = 'https://api.devnet.solana.com'
 
@@ -42,5 +48,12 @@ describe('explorerAddressUrl', () => {
 		expect(explorerAddressUrl('So11111111111111111111111111111111111111112', 'devnet')).toBe(
 			'https://explorer.solana.com/address/So11111111111111111111111111111111111111112?cluster=devnet'
 		)
+	})
+})
+
+describe('explorerTxUrl', () => {
+	it('points at the transaction on the given cluster', () => {
+		expect(explorerTxUrl('sig', 'devnet')).toBe('https://explorer.solana.com/tx/sig?cluster=devnet')
+		expect(explorerTxUrl('sig', 'mainnet-beta')).toBe('https://explorer.solana.com/tx/sig')
 	})
 })

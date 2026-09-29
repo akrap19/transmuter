@@ -2,10 +2,19 @@ import { CoinSection } from "@/app/coins/[mint]/coin-section";
 import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { StakeActions } from "@/app/coins/[mint]/stake-actions";
 import { stakingAvailable } from "@/lib/catalog/stake";
+import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import type { CoinDetail } from "@/lib/catalog/types";
 
-export function StakePanel({ coin }: { coin: CoinDetail }) {
-  if (!stakingAvailable(coin.status) || !coin.stake) return null;
+export function StakePanel({
+  coin,
+  chain,
+  onConfirmed,
+}: {
+  coin: CoinDetail;
+  chain: HolderSubmit | null;
+  onConfirmed: () => void;
+}) {
+  if (!stakingAvailable(coin.status) || !coin.stake || !chain?.stakeVault) return null;
 
   return (
     <CoinSection
@@ -25,7 +34,7 @@ export function StakePanel({ coin }: { coin: CoinDetail }) {
           ? "After liquidation, stake is off and unstake stays on."
           : "Casting a vote sets voter-lock. Latest expiry wins."}
       </p>
-      <StakeActions mint={coin.mint} status={coin.status} />
+      <StakeActions status={coin.status} stake={coin.stake} chain={chain} onConfirmed={onConfirmed} />
     </CoinSection>
   );
 }

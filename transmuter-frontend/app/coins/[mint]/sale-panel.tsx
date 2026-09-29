@@ -2,10 +2,11 @@ import { CoinProgress } from "@/app/coins/[mint]/coin-progress";
 import { CoinSection } from "@/app/coins/[mint]/coin-section";
 import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { SaleActions } from "@/app/coins/[mint]/sale-actions";
+import { SaleRemaining } from "@/app/coins/[mint]/sale-remaining";
 import { formatBps, formatUsd, formatUnix } from "@/lib/catalog/format";
 import type { CoinDetail } from "@/lib/catalog/types";
 
-export function SalePanel({ coin }: { coin: CoinDetail }) {
+export function SalePanel({ coin, onSaleChange }: { coin: CoinDetail; onSaleChange: () => void }) {
   if (coin.status !== "sale" || !coin.sale) return null;
 
   const { sale } = coin;
@@ -21,7 +22,9 @@ export function SalePanel({ coin }: { coin: CoinDetail }) {
           { label: "Raised", value: formatUsd(sale.raisedUsdc) },
           { label: "Cap", value: formatUsd(sale.capUsdc) },
           { label: "Remaining", value: formatUsd(sale.remainingUsdc) },
+          { label: "Time left", value: <SaleRemaining closesAt={sale.closesAt} /> },
           { label: "Closes", value: formatUnix(sale.closesAt) },
+          { label: "Your deposit", value: formatUsd(sale.myDepositUsdc) },
         ]}
       />
       <CoinProgress value={width} label="Sale progress" />
@@ -29,7 +32,7 @@ export function SalePanel({ coin }: { coin: CoinDetail }) {
         {formatBps(coin.saleProgressBps)} filled at {formatUsd(sale.priceUsd)} / token.
         {sale.depositsOpen ? " Deposits open." : " Deposits closed; withdrawals stay open until close."}
       </p>
-      <SaleActions mint={coin.mint} status={coin.status} />
+      <SaleActions mint={coin.mint} sale={sale} status={coin.status} onConfirmed={onSaleChange} />
     </CoinSection>
   );
 }

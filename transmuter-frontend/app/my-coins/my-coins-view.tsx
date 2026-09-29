@@ -1,11 +1,14 @@
 "use client";
 
 import { CatalogBanner } from "@/components/catalog/catalog-banner";
+import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { WalletGate } from "@/components/catalog/wallet-gate";
+import { listCreated, listHeld } from "@/lib/catalog/client";
 import { MOCK_PREVIEW_WALLET } from "@/lib/catalog/mock";
 import { routes } from "@/lib/routes";
 import { useOwnedBalances } from "@/components/catalog/use-owned-balances";
 import { MyCoinsLists } from "./my-coins-lists";
+import { useMyCoins } from "./use-my-coins";
 
 type MyCoinsViewProps = {
   preview: boolean;
@@ -16,7 +19,7 @@ export function MyCoinsView({ preview }: MyCoinsViewProps) {
     return (
       <>
         <CatalogBanner />
-        <MyCoinsLists wallet={MOCK_PREVIEW_WALLET} />
+        <MyCoinsLists created={listCreated(MOCK_PREVIEW_WALLET)} held={listHeld(MOCK_PREVIEW_WALLET)} />
       </>
     );
   }
@@ -34,10 +37,17 @@ export function MyCoinsView({ preview }: MyCoinsViewProps) {
 
 function ConnectedCoins({ wallet }: { wallet: string }) {
   const accounts = useOwnedBalances(wallet);
-  return (
-    <>
-      <CatalogBanner />
-      <MyCoinsLists wallet={wallet} accounts={accounts ?? []} />
-    </>
-  );
+  const mine = useMyCoins(wallet, accounts);
+
+  if (mine.loading) return <p className="coin-lede">Loading launches and token accounts…</p>;
+  if (mine.error) {
+    return (
+      <CatalogEmpty
+        title="Index unavailable"
+        body="Created launches come from the catalog API. Holdings still use this wallet's token accounts once the index responds."
+      />
+    );
+  }
+
+  return <MyCoinsLists created={mine.created} held={mine.held} />;
 }

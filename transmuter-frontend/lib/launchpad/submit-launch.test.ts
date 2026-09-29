@@ -104,6 +104,7 @@ describe("submitCreateLaunch", () => {
     expect(launchId.toString()).toBe("3");
     const accountArg = factory.accounts.mock.calls[0][0] as { mint: PublicKey; creator: PublicKey };
     expect(accountArg.mint.equals(MINT.publicKey)).toBe(true);
+    expect(Keypair.fromSecretKey(result.mintSecretKey).publicKey.equals(MINT.publicKey)).toBe(true);
     expect(accountArg.creator.toBase58()).toBe(TEAM);
     expect(factory.rpc).toHaveBeenCalledOnce();
   });

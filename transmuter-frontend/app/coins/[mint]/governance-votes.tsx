@@ -3,32 +3,34 @@
 import { VoteCard } from "@/app/coins/[mint]/vote-card";
 import { VoteActions } from "@/app/coins/[mint]/vote-actions";
 import { WalletGate } from "@/components/catalog/wallet-gate";
-import { getCoinDetail } from "@/lib/catalog/client";
-import type { CoinVote } from "@/lib/catalog/types";
+import type { HolderSubmit } from "@/lib/catalog/submit-holder";
+import type { CoinStake, CoinVote } from "@/lib/catalog/types";
 
 export function GovernanceVotes({
-  mint,
   votes,
+  stake,
   governedPct,
+  chain,
+  onConfirmed,
 }: {
-  mint: string;
   votes: CoinVote[];
+  stake: CoinStake | null;
   governedPct: number;
+  chain: HolderSubmit;
+  onConfirmed: () => void;
 }) {
   return (
     <div className="coin-votes">
       {votes.map((vote) => (
         <VoteCard key={vote.kind} vote={vote} governedPct={governedPct}>
-          <WalletGate
-            title="Connect to vote"
-            body="Casting a vote snapshots weight and sets voter-lock. Wallet address is identity."
-          >
-            {(wallet) => {
-              const stake = getCoinDetail(mint, wallet)?.stake;
-              if (!stake) return null;
-              return <VoteActions vote={vote} stake={stake} />;
-            }}
-          </WalletGate>
+          {vote.kind === "liquidation" && stake ? (
+            <WalletGate
+              title="Connect to vote"
+              body="Casting a vote uses your staked weight and sets voter-lock. The DAO shim reports quorum not met, so holders decide."
+            >
+              {() => <VoteActions vote={vote} stake={stake} chain={chain} onConfirmed={onConfirmed} />}
+            </WalletGate>
+          ) : null}
         </VoteCard>
       ))}
     </div>

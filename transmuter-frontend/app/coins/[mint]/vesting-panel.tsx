@@ -2,16 +2,26 @@ import { CoinSection } from "@/app/coins/[mint]/coin-section";
 import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { VestingActions } from "@/app/coins/[mint]/vesting-actions";
 import { formatAmount, formatStatus, formatUnix } from "@/lib/catalog/format";
-import { CATALOG_NOW } from "@/lib/catalog/mock";
 import { scheduleLabel } from "@/lib/catalog/schedule";
+import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import { vestedForEntry } from "@/lib/catalog/vesting";
 import type { CoinDetail } from "@/lib/catalog/types";
 
-export function VestingPanel({ coin }: { coin: CoinDetail }) {
-  if (!coin.vesting) return null;
+export function VestingPanel({
+  coin,
+  chain,
+  now,
+  onConfirmed,
+}: {
+  coin: CoinDetail;
+  chain: HolderSubmit | null;
+  now: number;
+  onConfirmed: () => void;
+}) {
+  if (!coin.vesting || !chain) return null;
 
   const { vesting } = coin;
-  const vested = vestedForEntry(vesting, CATALOG_NOW);
+  const vested = vestedForEntry(vesting, now);
   const remaining = Math.max(0, vesting.totalAllocation - vesting.alreadyClaimed);
 
   return (
@@ -34,7 +44,7 @@ export function VestingPanel({ coin }: { coin: CoinDetail }) {
           : `Started ${formatUnix(vesting.startTime)}. ${formatAmount(remaining)} still in the ${vesting.kind} pot.`}
         {vesting.liquidationTimestamp !== 0 ? " Team write-down is stamped." : null}
       </p>
-      <VestingActions mint={coin.mint} />
+      <VestingActions vesting={vesting} chain={chain} onConfirmed={onConfirmed} />
     </CoinSection>
   );
 }

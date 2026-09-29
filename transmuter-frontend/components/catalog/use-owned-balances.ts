@@ -7,7 +7,7 @@ import { tokenBalancesFromParsedAccounts } from "@/lib/catalog/token-accounts";
 import type { TokenAccountBalance } from "@/lib/catalog/types";
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@/lib/solana/spl-token";
 
-export function useOwnedBalances(wallet: string | null) {
+export function useOwnedBalances(wallet: string | null, revision = 0) {
   const { connection } = useConnection();
   const [accounts, setAccounts] = useState<TokenAccountBalance[] | null>(null);
 
@@ -43,7 +43,7 @@ export function useOwnedBalances(wallet: string | null) {
     return () => {
       cancelled = true;
     };
-  }, [connection, wallet]);
+  }, [connection, revision, wallet]);
 
   return accounts;
 }

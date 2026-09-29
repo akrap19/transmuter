@@ -6,6 +6,7 @@ import { Keypair } from "@solana/web3.js";
 import { useCallback } from "react";
 import { resolveCtokens } from "@/lib/launchpad/ctokens";
 import { resolveMediaEndpoint, uploadMedia } from "@/lib/launchpad/media";
+import { browserSession, saveMintSecret, savePendingWire } from "@/lib/launchpad/mint-secret";
 import { submitCreateLaunch, type FactoryCreateLaunchClient } from "@/lib/launchpad/submit-launch";
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { PROGRAM_IDS } from "@/lib/solana/program-ids";
@@ -39,6 +40,17 @@ export function useSubmitLaunch() {
         upload: (file) => uploadMedia(file, { endpoint: resolveMediaEndpoint() }),
         onStatus: (status) => dispatch({ type: "LAUNCH_STATUS", status }),
       });
+      const storage = browserSession();
+      if (storage) {
+        saveMintSecret(storage, result.launchId, result.mintSecretKey);
+        savePendingWire(storage, {
+          launchId: result.launchId,
+          mint: result.mint,
+          tokenName: state.tokenName.trim(),
+          tokenTicker: state.tokenTicker.trim().toUpperCase(),
+          backingName: state.selectedCToken.name,
+        });
+      }
       dispatch({
         type: "LAUNCH_SUCCESS",
         mint: result.mint,

@@ -25,6 +25,10 @@ export function eolDepositPda(config: PublicKey, depositor: PublicKey): PublicKe
 	return findPda(EOL_TOKEN_PROGRAM_ID, Buffer.from('deposit'), config.toBuffer(), depositor.toBuffer())
 }
 
+export function eolLpSignerPda(mint: PublicKey): PublicKey {
+	return findPda(EOL_TOKEN_PROGRAM_ID, Buffer.from('lp_signer'), mint.toBuffer())
+}
+
 export function eolRedeemPda(config: PublicKey, user: PublicKey): PublicKey {
 	return findPda(EOL_TOKEN_PROGRAM_ID, Buffer.from('redeem'), config.toBuffer(), user.toBuffer())
 }

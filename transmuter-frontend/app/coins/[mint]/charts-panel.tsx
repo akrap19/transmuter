@@ -9,7 +9,7 @@ const PAD = 16;
 
 export function ChartsPanel({ points }: { points: ChartPoint[] }) {
   return (
-    <CoinSection title="Charts" lede="Price and volume from the indexer price_history series. Sample points until the backend is live.">
+    <CoinSection title="Charts" lede="Price and volume from the indexer price history.">
       {points.length === 0 ? (
         <CatalogEmpty title="No price history" body="Charts fill after the first indexed trades or sale prints." />
       ) : (

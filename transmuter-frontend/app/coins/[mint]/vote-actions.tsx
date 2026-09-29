@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useSubmitHolder } from "@/app/coins/[mint]/use-submit-holder";
 import { formatAmount, formatUnix } from "@/lib/catalog/format";
-import { evaluateCastVote } from "@/lib/catalog/governance";
-import { CATALOG_NOTICE } from "@/lib/catalog/mock";
+import { VOTER_LOCK_SECS, evaluateCastVote } from "@/lib/catalog/governance";
+import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import type { CoinStake, CoinVote } from "@/lib/catalog/types";
 
 const REASONS: Record<string, string> = {
@@ -11,31 +12,49 @@ const REASONS: Record<string, string> = {
   weight: "Snapshot weight is zero. Stake before the vote opens.",
 };
 
-export function VoteActions({ vote, stake }: { vote: CoinVote; stake: CoinStake }) {
-  const [message, setMessage] = useState<string | null>(null);
+export function VoteActions({
+  vote,
+  stake,
+  chain,
+  onConfirmed,
+}: {
+  vote: CoinVote;
+  stake: CoinStake;
+  chain: HolderSubmit;
+  onConfirmed: () => void;
+}) {
+  const [notice, setNotice] = useState<string | null>(null);
+  const tx = useSubmitHolder(onConfirmed);
 
   function run(yes: boolean) {
     const result = evaluateCastVote(vote, stake, Math.floor(Date.now() / 1000), yes);
     if (!result.ok) {
-      setMessage(REASONS[result.reason] ?? result.reason);
+      setNotice(REASONS[result.reason] ?? result.reason);
       return;
     }
-    setMessage(
-      `Ready to sign ${result.yes ? "YES" : "NO"} with weight ${formatAmount(result.weight)}. Voter-lock until ${formatUnix(result.lockUntil)}. ${CATALOG_NOTICE}`,
-    );
+    setNotice(null);
+    void tx.run("castLiquidationVote", chain, { yes });
   }
 
   return (
     <>
       <div className="coin-buttons">
-        <button type="button" className="button button-primary" onClick={() => run(true)}>
-          Vote yes
+        <button type="button" className="button button-primary" disabled={tx.busy} onClick={() => run(true)}>
+          {tx.busy ? "Signing…" : "Vote yes"}
         </button>
-        <button type="button" className="button button-ghost" onClick={() => run(false)}>
+        <button type="button" className="button button-ghost" disabled={tx.busy} onClick={() => run(false)}>
           Vote no
         </button>
       </div>
-      {message ? <p className="coin-note">{message}</p> : null}
+      {tx.error ?? notice ? <p className="coin-note">{tx.error ?? notice}</p> : null}
+      {tx.explorerUrl && !notice ? (
+        <p className="coin-note">
+          Cast with weight {formatAmount(stake.weight)}. Voter-lock until {formatUnix(vote.closesAt + VOTER_LOCK_SECS)}.{" "}
+          <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
+            View transaction
+          </a>
+        </p>
+      ) : null}
     </>
   );
 }

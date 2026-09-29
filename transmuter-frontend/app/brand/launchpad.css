@@ -517,6 +517,58 @@
 	line-height: 1.7;
 }
 
+.launch-page .wire-checklist {
+	display: grid;
+	gap: 8px;
+	margin: 28px 0;
+	padding: 0;
+	list-style: none;
+}
+
+.launch-page .wire-step {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 8px 16px;
+	padding: 12px 14px;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 12px;
+	color: #8d877d;
+	font-size: 14px;
+}
+
+.launch-page .wire-step-done,
+.launch-page .wire-step-next {
+	color: var(--text);
+}
+
+.launch-page .wire-step-next {
+	border-color: rgba(229, 182, 84, 0.45);
+}
+
+.launch-page .wire-step-failed {
+	border-color: rgba(255, 140, 140, 0.45);
+	color: #f0b4b4;
+}
+
+.launch-page .wire-step-error,
+.launch-page .wire-banner {
+	grid-column: 1 / -1;
+	color: #f0b4b4;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.launch-page .wire-status {
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.launch-page .launch-success-actions .btn:disabled {
+	opacity: 0.55;
+	cursor: progress;
+}
+
 .launch-page input[type="range"] {
 	height: 6px;
 	border-radius: 999px;

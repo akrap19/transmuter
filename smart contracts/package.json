@@ -8,6 +8,7 @@
     "build": "anchor build",
     "keeper": "ts-node scripts/keeper.ts",
     "lifecycle": "ts-node scripts/lifecycle.ts",
+    "devnet-sale": "ts-node scripts/devnet-sale.ts",
     "measure-cu": "ts-node scripts/measure-cu.ts"
   },
   "dependencies": {

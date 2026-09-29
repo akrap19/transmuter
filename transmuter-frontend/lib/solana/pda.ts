@@ -5,7 +5,7 @@ export function findPda(programId: PublicKey, ...seeds: Array<Buffer | Uint8Arra
 }
 
 export function u64LeBytes(n: number | bigint): Buffer {
-	const buf = Buffer.alloc(8)
-	buf.writeBigUInt64LE(BigInt(n))
-	return buf
+	const bytes = new Uint8Array(8)
+	new DataView(bytes.buffer).setBigUint64(0, BigInt(n), true)
+	return Buffer.from(bytes)
 }

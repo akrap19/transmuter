@@ -1,6 +1,11 @@
 /**
  * Permissionless crank runner (spec S9).
  *
+ * Devnet:
+ *   ANCHOR_PROVIDER_URL=https://api.devnet.solana.com ANCHOR_WALLET=~/.config/solana/id.json yarn keeper
+ *
+ * The script cranks mock_pyth set_price when that owner's price feed exists.
+ * EOL snapshot_oracle is the permissionless follow-up once the print is fresh.
  * Defaults to localnet. `anchor test` tears the validator down unless you
  * pass `--detach`. No feed account is a skip, not a crash.
  *
