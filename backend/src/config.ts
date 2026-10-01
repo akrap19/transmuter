@@ -4,7 +4,7 @@ export type AppConfig = {
   host: string;
   port: number;
   publicUrl: string;
-  frontendOrigin: string;
+  frontendOrigin: string | string[];
   databaseUrl: string | null;
   redisUrl: string | null;
   mediaDir: string;
@@ -24,6 +24,15 @@ function optional(value: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
+function frontendOrigins(value: string | null): string | string[] {
+  const origins = (value ?? "http://localhost:3000")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  if (origins.length === 0) return "http://localhost:3000";
+  return origins.length === 1 ? origins[0] : origins;
+}
+
 export function resolveConfig(env: Record<string, string | undefined> = process.env): AppConfig {
   const port = Number.parseInt(env.PORT ?? "3001", 10);
   const publicUrl = optional(env.PUBLIC_URL) ?? `http://localhost:${Number.isFinite(port) ? port : 3001}`;
@@ -35,7 +44,7 @@ export function resolveConfig(env: Record<string, string | undefined> = process.
     host: optional(env.HOST) ?? "0.0.0.0",
     port: Number.isFinite(port) ? port : 3001,
     publicUrl,
-    frontendOrigin: optional(env.FRONTEND_ORIGIN) ?? "http://localhost:3000",
+    frontendOrigin: frontendOrigins(optional(env.FRONTEND_ORIGIN)),
     databaseUrl: optional(env.DATABASE_URL),
     redisUrl: optional(env.REDIS_URL),
     mediaDir: optional(env.MEDIA_DIR) ?? ".data/media",

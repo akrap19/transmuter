@@ -32,6 +32,15 @@ describe("resolveConfig", () => {
     expect(config.csolMint).toBe("Csol1111111111111111111111111111111111111");
     expect(config.indexerFromSlot).toBe(99n);
     expect(config.port).toBe(4000);
+    expect(config.frontendOrigin).toBe("http://localhost:3000");
+  });
+
+  it("allows every comma-separated frontend origin", () => {
+    const config = resolveConfig({
+      FRONTEND_ORIGIN: "http://localhost:3003, http://localhost:3006",
+    });
+
+    expect(config.frontendOrigin).toEqual(["http://localhost:3003", "http://localhost:3006"]);
   });
 
   it("defaults to local API settings when optional env is omitted", () => {

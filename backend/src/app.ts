@@ -17,7 +17,7 @@ export type AppDeps = {
   cache: CacheStore;
   cacheTtlSeconds: number;
   publicUrl: string;
-  frontendOrigin?: string;
+  frontendOrigin?: string | string[];
   media?: MediaStore;
   indexer?: Indexer;
   webhookSecret?: string;
