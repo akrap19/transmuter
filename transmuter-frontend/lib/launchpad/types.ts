@@ -150,9 +150,9 @@ export const STEP_LABELS = [
 ] as const;
 
 export const initialFeeState: FeeState = {
-  totalFee: 0.5,
-  lpFee: 0.15,
-  treasuryFee: 0.15,
+  totalFee: 0.6,
+  lpFee: 0.2,
+  treasuryFee: 0.2,
   burnFee: 0,
   creatorFee: 0,
   feeWarning: false,

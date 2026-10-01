@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useSubmitHolder } from "@/app/coins/[mint]/use-submit-holder";
 import { WalletGate } from "@/components/catalog/wallet-gate";
 import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import { evaluateVestingClaim } from "@/lib/catalog/vesting";
 import type { CoinVesting } from "@/lib/catalog/types";
+import { toastError } from "@/lib/toast";
 
 const REASONS: Record<string, string> = {
   recipient: "Only the vesting recipient can claim this pot.",
@@ -22,7 +22,6 @@ export function VestingActions({
   chain: HolderSubmit;
   onConfirmed: () => void;
 }) {
-  const [notice, setNotice] = useState<string | null>(null);
   const tx = useSubmitHolder(onConfirmed);
 
   return (
@@ -40,10 +39,9 @@ export function VestingActions({
               onClick={() => {
                 const result = evaluateVestingClaim(vesting, wallet, Math.floor(Date.now() / 1000));
                 if (!result.ok) {
-                  setNotice(REASONS[result.reason] ?? result.reason);
+                  toastError(REASONS[result.reason] ?? result.reason);
                   return;
                 }
-                setNotice(null);
                 void tx.run("vestingClaim", chain);
               }}
             >
@@ -51,8 +49,7 @@ export function VestingActions({
             </button>
           </div>
           {!chain.vesting ? <p className="coin-note">This wallet has no vesting entry on the launch.</p> : null}
-          {tx.error ?? notice ? <p className="coin-note">{tx.error ?? notice}</p> : null}
-          {tx.explorerUrl && !notice ? (
+          {tx.explorerUrl ? (
             <p className="coin-note">
               <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
                 View transaction

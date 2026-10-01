@@ -9,13 +9,36 @@ export type UploadMediaOptions = {
   fetchFn?: typeof fetch;
 };
 
+const DEFAULT_MEDIA_PATH = "/api/media";
+
+function browserOrigin(explicit?: string | null): string | null {
+  if (explicit !== undefined) return explicit;
+  if (typeof window === "undefined") return null;
+  return window.location.origin;
+}
+
+/** Browser uploads use same-origin `/api/media` when the read API is on another host (avoids CORS in local dev). */
 export function resolveMediaEndpoint(
   env: Record<string, string | undefined> = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
+  locationOrigin?: string | null,
 ): string {
   const base = (env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-  return base ? `${base}/media` : "/api/media";
+  if (!base) return DEFAULT_MEDIA_PATH;
+
+  const origin = browserOrigin(locationOrigin);
+  if (origin) {
+    try {
+      if (new URL(base).origin !== origin) {
+        return DEFAULT_MEDIA_PATH;
+      }
+    } catch {
+      return DEFAULT_MEDIA_PATH;
+    }
+  }
+
+  return `${base}/media`;
 }
 
 export async function uploadMedia(

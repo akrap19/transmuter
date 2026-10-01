@@ -7,6 +7,7 @@ import type { PostSaleKind } from "@/lib/catalog/post-sale";
 import { submitPostSale, type EolPostSaleClient, type PostSaleChain } from "@/lib/catalog/submit-post-sale";
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { ChainTransactionError } from "@/lib/solana/tx";
+import { toastError, toastSuccess } from "@/lib/toast";
 
 export function useSubmitPostSale(onConfirmed: () => void) {
   const wallet = useAnchorWallet();
@@ -18,7 +19,9 @@ export function useSubmitPostSale(onConfirmed: () => void) {
   const run = useCallback(
     async (kind: PostSaleKind, chain: PostSaleChain) => {
       if (!wallet) {
-        setError("Connect a wallet to sign.");
+        const message = "Connect a wallet to sign.";
+        toastError(message);
+        setError(message);
         return;
       }
       setBusy(true);
@@ -35,9 +38,12 @@ export function useSubmitPostSale(onConfirmed: () => void) {
           signer: wallet,
         });
         setExplorerUrl(confirmed.explorerUrl);
+        toastSuccess("Transaction confirmed");
         onConfirmed();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "The transaction failed.");
+        const message = err instanceof Error ? err.message : "The transaction failed.";
+        toastError(message);
+        setError(message);
         setExplorerUrl(err instanceof ChainTransactionError ? (err.explorerUrl ?? null) : null);
       } finally {
         setBusy(false);

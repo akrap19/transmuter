@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 import { submitHolder, type HolderClients, type HolderKind, type HolderSubmit } from "@/lib/catalog/submit-holder";
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { ChainTransactionError } from "@/lib/solana/tx";
+import { toastError, toastSuccess } from "@/lib/toast";
 
 export function useSubmitHolder(onConfirmed: () => void) {
   const wallet = useAnchorWallet();
@@ -17,7 +18,9 @@ export function useSubmitHolder(onConfirmed: () => void) {
   const run = useCallback(
     async (kind: HolderKind, chain: HolderSubmit, extra?: { amount?: string; yes?: boolean }) => {
       if (!wallet) {
-        setError("Connect a wallet to sign.");
+        const message = "Connect a wallet to sign.";
+        toastError(message);
+        setError(message);
         return;
       }
       setBusy(true);
@@ -41,9 +44,12 @@ export function useSubmitHolder(onConfirmed: () => void) {
           signer: wallet,
         });
         setExplorerUrl(confirmed.explorerUrl);
+        toastSuccess("Transaction confirmed");
         onConfirmed();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "The transaction failed.");
+        const message = err instanceof Error ? err.message : "The transaction failed.";
+        toastError(message);
+        setError(message);
         setExplorerUrl(err instanceof ChainTransactionError ? (err.explorerUrl ?? null) : null);
       } finally {
         setBusy(false);

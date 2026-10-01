@@ -17,11 +17,11 @@ const problems = [
 ];
 
 const constraints = [
-  ["Move the treasury", "No", "No", "Protocol-defined recovery"],
+  ["Move the treasury", "No", "No", "Protocol-defined end of life"],
   ["Pull scheduled escrow at will", "No", "No", "Rules and governance"],
   ["Release the next team tranche", "No unilateral early release", "No", "Schedule or holder vote"],
   ["Force a holder payout amount", "No", "No", "On-chain ratio"],
-  ["Wind down a token unilaterally", "No", "No", "Holder vote and safeguards"],
+  ["Trigger end of life unilaterally", "No", "No", "Holder vote and safeguards"],
   ["Rewrite the escrow schedule", "No", "No", "Fixed at launch"],
 ];
 
@@ -78,8 +78,8 @@ function ConstraintTable() {
             ))}
           </div>
           <p className="constraint-note">
-            The founder safeguard can cancel a malicious recovery proposal. It cannot initiate a payout or redirect
-            reserves. The boundaries of other emergency governance powers are pending publication.
+            The current design is described in the docs and is being revised. A liquidation halt can stop an end of
+            life, and cannot force one. It cannot move a treasury, mint a token, alter a balance, or block a redemption.
           </p>
         </div>
       </details>

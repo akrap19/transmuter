@@ -10,6 +10,7 @@ import { browserSession, saveMintSecret, savePendingWire } from "@/lib/launchpad
 import { submitCreateLaunch, type FactoryCreateLaunchClient } from "@/lib/launchpad/submit-launch";
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { PROGRAM_IDS } from "@/lib/solana/program-ids";
+import { toastError, toastSuccess } from "@/lib/toast";
 import { useLaunchpad } from "./launchpad-context";
 
 export function useSubmitLaunch() {
@@ -21,7 +22,9 @@ export function useSubmitLaunch() {
 
   const submit = useCallback(async () => {
     if (!wallet || !publicKey) {
-      dispatch({ type: "LAUNCH_ERROR", error: "Connect a wallet to launch." });
+      const message = "Connect a wallet to launch.";
+      toastError(message);
+      dispatch({ type: "LAUNCH_ERROR", error: message });
       return;
     }
 
@@ -58,11 +61,11 @@ export function useSubmitLaunch() {
         launchId: result.launchId,
         metadataUri: result.metadataUri,
       });
+      toastSuccess("Launch created. Continue with wiring.");
     } catch (error) {
-      dispatch({
-        type: "LAUNCH_ERROR",
-        error: error instanceof Error ? error.message : "Launch failed",
-      });
+      const message = error instanceof Error ? error.message : "Launch failed";
+      toastError(message);
+      dispatch({ type: "LAUNCH_ERROR", error: message });
     }
   }, [connection, dispatch, publicKey, state, wallet]);
 

@@ -17,7 +17,7 @@ describe("calculateFees", () => {
 
     expect(fees.feeWarning).toBe(false);
     expect(fees.feeGap).toBe(0);
-    expect(fees.lpFee + fees.treasuryFee + 0.15 + 0.05).toBeCloseTo(0.5, 5);
+    expect(fees.lpFee + fees.treasuryFee + 0.15 + 0.05).toBeCloseTo(0.6, 5);
   });
 
   it("warns when the total is raised and the remainder is left unallocated", () => {

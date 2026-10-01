@@ -4,8 +4,9 @@ export function GovernanceSection() {
       <section id="for-launch-platforms">
         <h2>For Launch Platforms</h2>
         <p>
-          Transmuter is infrastructure, not only a launchpad. Other platforms can run their launches
-          on it and give their tokens the same reserves, escrow and end of life procedure.
+          Transmuter is infrastructure first; the launchpad is one way to use it. Other platforms
+          can run their launches on it and give their tokens the same reserves, escrow and end of
+          life.
         </p>
         <p>
           A platform keeps its own users and its own launches, and can add its own fee on top.
@@ -20,6 +21,7 @@ export function GovernanceSection() {
 
       <section id="governance">
         <h2>Governance</h2>
+        <p>The current design is described in the docs and is being revised.</p>
         <p>
           Transmuter runs on <strong>Mutually Assured Alignment</strong>. Harming the protocol
           harms whoever tries it first, so acting in its interest becomes the same as acting in your

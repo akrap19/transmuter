@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useSubmitHolder } from "@/app/coins/[mint]/use-submit-holder";
 import { formatAmount, formatUnix } from "@/lib/catalog/format";
 import { VOTER_LOCK_SECS, evaluateCastVote } from "@/lib/catalog/governance";
 import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import type { CoinStake, CoinVote } from "@/lib/catalog/types";
+import { toastError } from "@/lib/toast";
 
 const REASONS: Record<string, string> = {
   closed: "This vote window has closed.",
@@ -23,16 +23,14 @@ export function VoteActions({
   chain: HolderSubmit;
   onConfirmed: () => void;
 }) {
-  const [notice, setNotice] = useState<string | null>(null);
   const tx = useSubmitHolder(onConfirmed);
 
   function run(yes: boolean) {
     const result = evaluateCastVote(vote, stake, Math.floor(Date.now() / 1000), yes);
     if (!result.ok) {
-      setNotice(REASONS[result.reason] ?? result.reason);
+      toastError(REASONS[result.reason] ?? result.reason);
       return;
     }
-    setNotice(null);
     void tx.run("castLiquidationVote", chain, { yes });
   }
 
@@ -46,8 +44,7 @@ export function VoteActions({
           Vote no
         </button>
       </div>
-      {tx.error ?? notice ? <p className="coin-note">{tx.error ?? notice}</p> : null}
-      {tx.explorerUrl && !notice ? (
+      {tx.explorerUrl ? (
         <p className="coin-note">
           Cast with weight {formatAmount(stake.weight)}. Voter-lock until {formatUnix(vote.closesAt + VOTER_LOCK_SECS)}.{" "}
           <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">

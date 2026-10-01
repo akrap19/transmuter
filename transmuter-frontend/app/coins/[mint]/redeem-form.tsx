@@ -8,7 +8,6 @@ export function RedeemForm({
   redeem,
   amount,
   busy,
-  notice,
   explorerUrl,
   onAmount,
   onRedeem,
@@ -16,7 +15,6 @@ export function RedeemForm({
   redeem: CoinRedeem;
   amount: string;
   busy: boolean;
-  notice: string | null;
   explorerUrl: string | null;
   onAmount: (value: string) => void;
   onRedeem: () => void;
@@ -37,7 +35,6 @@ export function RedeemForm({
         <p className="coin-note">
           Outstanding cSOL and USDC legs are paid inside this redeem. The program has no separate retry.
         </p>
-        {notice ? <p className="coin-note">{notice}</p> : null}
         {explorerUrl ? (
           <p className="coin-note">
             <a href={explorerUrl} target="_blank" rel="noopener noreferrer">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { WalletReadyState } from '@solana/wallet-adapter-base'
 import { useWallet, type Wallet } from '@solana/wallet-adapter-react'
 import { ChevronDown, Wallet as WalletIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -51,6 +52,9 @@ export function WalletButton({ className, variant = 'default' }: WalletButtonPro
 		})()
 	}
 
+	const hasDetectedWallet = wallets.some(
+		item => item.readyState === WalletReadyState.Installed || item.readyState === WalletReadyState.Loadable
+	)
 	const label = connecting ? 'Connecting…' : isConnected && address ? shortenAddress(address) : 'Connect Wallet'
 
 	return (
@@ -77,7 +81,10 @@ export function WalletButton({ className, variant = 'default' }: WalletButtonPro
 				<ChevronDown size={14} aria-hidden className={cn('wallet-chevron', menuOpen && 'is-open')} />
 			</button>
 			<div className='wallet-user-menu' role='menu'>
-				<div className='wallet-menu-label'>{isConnected ? 'Account' : 'Select wallet'}</div>
+				<div className={cn('wallet-menu-label', isConnected && 'wallet-menu-label-row')}>
+					<span>{isConnected ? 'Account' : hasDetectedWallet ? 'Select wallet' : 'Not installed'}</span>
+					{isConnected ? <span className='wallet-menu-network'>{solanaNetworkName}</span> : null}
+				</div>
 				{isConnected && address ? (
 					<WalletUserMenu address={address} />
 				) : (

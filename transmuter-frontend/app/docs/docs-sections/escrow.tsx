@@ -27,7 +27,9 @@ export function EscrowSection() {
             <tr>
               <td>Release</td>
               <td>
-                In tranches over a schedule the creator fixes at launch, by time or by milestone.
+                Milestone tranches release on their schedule. If the work defined in a milestone is
+                not delivered, holders can pause the escrow. Teams choosing milestones are expected
+                to show proof of development.
               </td>
             </tr>
             <tr>
@@ -47,8 +49,8 @@ export function EscrowSection() {
             <tr>
               <td>If the project ends</td>
               <td>
-                Unspent escrow is <strong>paid to holders pro rata, in USDC</strong>, alongside
-                their share of the treasury. It is not converted and not taxed.
+                Unspent escrow converts into the reserve asset, joins the treasury, and is redeemed
+                with it.
               </td>
             </tr>
           </tbody>
@@ -60,8 +62,9 @@ export function EscrowSection() {
         is not delivering without paying anyone to cause it.
       </p>
       <p>
-        <strong>Why it matters:</strong> accepting the escrow is itself the signal. Serious builders
-        take it, and teams who will not are exactly the ones holders need filtered out.
+        <strong>Why it matters:</strong> a team that raises money for development and refuses to
+        hold it in escrow is the case this filter exists for. A team that needs no runway launches
+        without one.
       </p>
     </section>
   );

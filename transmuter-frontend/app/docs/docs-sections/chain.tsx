@@ -12,7 +12,8 @@ export function ChainSection() {
         cTokens, and a holder who redeems receives the base asset those cTokens represent.
       </p>
       <p>
-        The cToken&apos;s backing per token <strong>never falls</strong>. Every operation that
+        The cToken&apos;s backing per token, counted in the base asset, <strong>never falls</strong>.
+        Every operation that
         touches it either raises backing per token or leaves it unchanged:
       </p>
       <ul>

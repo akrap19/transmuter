@@ -28,7 +28,7 @@ export function VestingPanel({
     <CoinSection
       id="vesting"
       title="Vesting"
-      lede="Two custody pots, no cross-transfer. Team unvested burns at liquidation and totalAllocation is rewritten down. Recipients claim vested tokens from their own pot."
+      lede="Two custody pots, no cross-transfer. Team unvested burns at end of life and totalAllocation is rewritten down. Recipients claim vested tokens from their own pot."
     >
       <CoinStats
         items={[

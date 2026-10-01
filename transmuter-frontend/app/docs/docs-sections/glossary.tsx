@@ -23,8 +23,9 @@ export function GlossarySection() {
               <strong>cToken</strong>
             </td>
             <td>
-              The reserve asset an EOL token&apos;s treasury is held in, such as cSOL. A system
-              token: nobody buys, trades or holds one directly.
+              The shared reserve asset beneath EOL tokens. A project&apos;s treasury holds cTokens.
+              Each cToken represents an amount of the base asset that grows as the ecosystem uses
+              it. Redemption pays out the base asset, not the cToken.
             </td>
           </tr>
           <tr>
@@ -40,8 +41,8 @@ export function GlossarySection() {
               <strong>Reserves</strong>
             </td>
             <td>
-              Everything standing behind a token: its treasury, its contract-owned liquidity and
-              any unspent escrow.
+              The token&apos;s treasury while it is live. At end of life, contract-owned liquidity
+              and unspent escrow join it.
             </td>
           </tr>
           <tr>
@@ -58,8 +59,8 @@ export function GlossarySection() {
               <strong>Escrow</strong>
             </td>
             <td>
-              The team&apos;s runway, held in USDC and released in tranches. Unspent escrow is
-              paid to holders if the project ends.
+              The team&apos;s runway, held in USDC and released in tranches. Unspent escrow converts
+              into the reserve asset, joins the treasury, and is redeemed with it.
             </td>
           </tr>
           <tr>

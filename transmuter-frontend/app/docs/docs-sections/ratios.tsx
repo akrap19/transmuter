@@ -23,9 +23,9 @@ export function RatiosSection() {
               </td>
               <td>Quantity</td>
               <td>
-                cTokens in the treasury divided by circulating supply. Example: 100,000 cSOL in the
-                treasury and 1,000,000 tokens circulating means each token claims 0.1 cSOL, paid out
-                as the SOL behind it.
+                Backing per token is a quantity of the base asset, not a dollar amount. Example:
+                100,000 cSOL in the treasury and 1,000,000 tokens circulating means each token claims
+                0.1 cSOL, paid out as the SOL behind it.
               </td>
               <td>What a redeemer receives.</td>
             </tr>

@@ -9,7 +9,7 @@ export function WaterfallVisual() {
       <Stage number="01" stage="launch" kicker="LAUNCH" label="Token starts live" />
       <Stage number="02" stage="build" kicker="BUILD" label="Scheduled tranches release" />
       <Stage number="03" stage="trade" kicker="TRADE" label="Backing grows with activity" />
-      <Stage number="04" stage="recover" kicker="RECOVER" label="Defined ending" />
+      <Stage number="04" stage="recover" kicker="END OF LIFE" label="Defined ending" />
       <div className="wf-launch-branches">
         <div className="wf-branch branch-treasury"><small>RESERVE</small><strong>Isolated treasury</strong></div>
         <div className="wf-branch branch-liquidity"><small>MARKET DEPTH</small><strong>Contract-owned liquidity</strong></div>
@@ -26,12 +26,12 @@ export function WaterfallVisual() {
       </div>
       <div className="wf-trade-streams">
         <div className="wf-trade-pill pill-a">Transactions feed reserves</div>
-        <div className="wf-trade-pill pill-b">Minting adds backing directly</div>
+        <div className="wf-trade-pill pill-b">Mint to Scale adds backing</div>
       </div>
       <div className="wf-underlayer">
         <div className="wf-underlayer-item"><small>RESERVE ASSET</small><strong>cSOL / cBTC</strong></div>
         <div className="wf-underlayer-link">→</div>
-        <div className="wf-underlayer-item"><small>FINAL FALLBACK</small><strong>Tokenized gold contingency</strong></div>
+        <div className="wf-underlayer-item"><small>OPTIONAL</small><strong>Gold variant</strong></div>
       </div>
       <div className="wf-recovery-payout">
         <div className="wf-recovery-sources">
@@ -44,7 +44,7 @@ export function WaterfallVisual() {
           <i />
           <i />
           <i />
-          <b>Pro rata to holders</b>
+          <b>Holders redeem pro rata</b>
         </div>
       </div>
     </div>

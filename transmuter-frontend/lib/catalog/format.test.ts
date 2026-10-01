@@ -8,6 +8,7 @@ describe("catalog formatters", () => {
     expect(formatBps(1800)).toBe("18%");
     expect(formatBps(null)).toBe("—");
     expect(formatStatus("voided")).toBe("VOIDED");
+    expect(formatStatus("liquidating")).toBe("END OF LIFE");
   });
 
   it("renders time left until the sale closes", () => {

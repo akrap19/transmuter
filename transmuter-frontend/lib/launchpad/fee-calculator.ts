@@ -8,6 +8,8 @@ const MIN_TREASURY = 0.10;
 const MAX_CREATOR = 0.5;
 const FIXED = PROTOCOL_FEE + CTOKEN_RESERVE_FEE;
 const MIN_TOTAL_FEE = parseFloat((FIXED + MIN_LP + MIN_TREASURY).toFixed(2));
+/** Published transfer-fee floor. Component floors sum lower; the creator allocates the rest. */
+const PUBLISHED_MIN_TOTAL_FEE = 0.5;
 
 export type FeeChangeSource = "lp" | "treasury" | "burn" | "creator" | "total";
 
@@ -98,4 +100,4 @@ export function feeSegmentPct(value: number, totalFee: number): number {
   return totalFee > 0 ? (value / totalFee) * 100 : 0;
 }
 
-export { PROTOCOL_FEE, CTOKEN_RESERVE_FEE, MIN_TOTAL_FEE };
+export { PROTOCOL_FEE, CTOKEN_RESERVE_FEE, MIN_TOTAL_FEE, PUBLISHED_MIN_TOTAL_FEE };

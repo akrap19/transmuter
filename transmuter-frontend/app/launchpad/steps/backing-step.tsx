@@ -11,8 +11,7 @@ export function BackingStep() {
     <div className={`step-panel panel${state.currentStep === 3 ? " active" : ""}`}>
       <div className="panel-title"><div className="dot" />cToken Backing</div>
       <p className="step-intro">
-        Select the cToken that backs your treasury. cTokens are deflationary wrappers of
-        blue-chip assets: every trade burns supply, so backing per token only grows.
+        Select the cToken that backs your treasury. Backing per token, counted in the base asset, only grows.
       </p>
 
       <div className="ctoken-grid">
@@ -31,11 +30,11 @@ export function BackingStep() {
       </div>
 
       <hr className="section-divider" />
-      <div className="panel-title reserve-title"><div className="dot dot-gold" />Reserve Mint</div>
+      <div className="panel-title reserve-title"><div className="dot dot-gold" />Mint to Scale</div>
 
       <p className="step-intro reserve-intro">
         If the value of your treasury falls below the activate threshold you set here,
-        continuously for 6 hours, a reserve mint event opens <em>automatically</em>: up to{" "}
+        continuously for 6 hours, a Mint to Scale event opens <em>automatically</em>: up to{" "}
         <strong style={{ color: "var(--tm-gold)" }}>15% of supply</strong> becomes mintable
         at market price plus a descending premium (opening near 20%, easing toward 3%),
         refilling the treasury above market. No vote required, no creator involvement,
@@ -43,7 +42,7 @@ export function BackingStep() {
       </p>
 
       <SliderBlock
-        label="Reserve Mint Activate Threshold (% backing)"
+        label="Mint to Scale activate threshold (% backing)"
         value={autoMintTrigger}
         display={`${autoMintTrigger}%`}
         min={5}
@@ -54,7 +53,7 @@ export function BackingStep() {
         hints={["5% - Opens later", "17% - Opens sooner"]}
       />
       <SliderBlock
-        label="Reserve Mint Deactivate Threshold (% backing)"
+        label="Mint to Scale deactivate threshold (% backing)"
         value={autoMintDeactivate}
         display={`${autoMintDeactivate}%`}
         min={20}
@@ -69,7 +68,7 @@ export function BackingStep() {
         <strong style={{ color: "var(--tm-gold)" }}>
           Hysteresis band {autoMintTrigger}% / {autoMintDeactivate}%:
         </strong>{" "}
-        a reserve mint event opens automatically if backing stays below {autoMintTrigger}%
+        a Mint to Scale event opens automatically if backing stays below {autoMintTrigger}%
         of market cap continuously for 6 hours, and closes once backing recovers to{" "}
         {autoMintDeactivate}%. The two thresholds stay at least 10 points apart so the
         event cannot flicker open and closed. While open, up to 15% of supply (snapshotted

@@ -4,9 +4,9 @@ import { glossaryTerms } from "@/lib/marketing/glossary-data";
 import { glossaryPageGraph } from "@/lib/seo/json-ld";
 import { marketingPageMetadata } from "@/lib/seo/page-metadata";
 
-const glossaryTitle = "Transmuter glossary: EOL token, cToken, escrow, recovery";
+const glossaryTitle = "Transmuter glossary: EOL token, cToken, escrow, end of life";
 const glossaryDescription =
-  "Definitions of the terms used across Transmuter: EOL token, cToken, escrow, contract-owned liquidity, Mint to Scale, recovery and the contingency layer.";
+  "Definitions of the terms used across Transmuter: EOL token, cToken, escrow, contract-owned liquidity, Mint to Scale, end of life and the contingency layer.";
 
 export const metadata: Metadata = marketingPageMetadata({
   path: "/glossary",

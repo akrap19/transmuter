@@ -42,7 +42,7 @@ export function SaleSection() {
             </tr>
             <tr>
               <td>Distribution</td>
-              <td>Tokens distribute only at finalisation, by claim.</td>
+              <td>Tokens are claimable only at finalisation.</td>
             </tr>
             <tr>
               <td>Undersubscription</td>

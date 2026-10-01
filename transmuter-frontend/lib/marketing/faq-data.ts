@@ -17,43 +17,42 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "What is Transmuter?",
         "answers": [
-          "Transmuter is value recovery infrastructure for tokens on Solana. An isolated treasury and contract-owned liquidity sit beneath each token, with recovery rules defined before trading.",
+          "Transmuter is value recovery infrastructure for tokens on Solana. An isolated treasury and contract-owned liquidity sit beneath each token, with end of life rules defined before trading.",
           "Escrow is optional. If used, its schedule is fixed before trading."
         ]
       },
       {
         "question": "Is Transmuter a launchpad?",
         "answers": [
-          "No. Transmuter is infrastructure. There is a native launcher because it is the simplest way for a project to deploy with the full stack already configured, including reserves, governed escrow, contract-owned liquidity and recovery.",
-          "The launcher is one access point to the protocol, not the category we are building."
+          "Transmuter is infrastructure first. It includes a launchpad so the infrastructure can be proven on real launches and reach founders directly. Other launch platforms can integrate the same infrastructure."
         ]
       },
       {
         "question": "What backs a token launched on Transmuter?",
         "answers": [
           "Each token has an isolated treasury holding the reserve asset configured at launch.",
-          "If the reserve uses a cToken, contingent gold sits beneath its base asset. That gold is not part of an ordinary project closure payout; it is the fallback if the base asset fails."
+          "Where the project chooses the gold variant, contingent gold sits beneath the cToken's base asset. That gold is not part of an ordinary project closure payout; it is the fallback if the base asset fails."
         ]
       },
       {
         "question": "Can Transmuter access project funds or critical financial functions?",
         "answers": [
-          "No. We cannot move a project's treasury, take its reserves, mint its token, alter holder balances, block redemptions or force a recovery.",
-          "At the financial governance layer, the founder safeguard is cancel-only: it can stop a malicious recovery proposal, but it cannot create or accelerate one. The system is deliberately designed so that intervention cannot become a route into user funds."
+          "No. We cannot move a project's treasury, take its reserves, mint its token, alter holder balances, block redemptions or force an end of life.",
+          "At the financial governance layer, the founder safeguard is cancel-only: it can stop an end of life, but it cannot create or accelerate one. The system is deliberately designed so that intervention cannot become a route into user funds."
         ]
       },
       {
         "question": "Can someone buy the vote and take the treasury?",
         "answers": [
-          "A recovery vote does not transfer reserves to the people voting. Approved recovery distributes the available reserves pro rata to holders.",
-          "Influence in the vote does not confer a larger per-token payout. The protocol also uses governance safeguards whose exact boundaries and thresholds are awaiting publication."
+          "An end of life vote does not transfer reserves to the people voting. Each holder redeems their pro rata share.",
+          "Influence in the vote does not confer a larger per-token payout. The vote thresholds are in /docs."
         ]
       },
       {
         "question": "Can a team take the money and disappear?",
         "answers": [
-          "A team cannot withdraw its project’s treasury at will. If configured, escrow unlocks automatically on the schedule fixed before launch, without requiring a vote for each payment.",
-          "Holders can vote to pause, resume or advance the next tranche, without rewriting the schedule. Paused escrow stays in escrow until it is released or enters the treasury at recovery."
+          "A team cannot withdraw its project’s treasury at will. If configured, escrow unlocks on the schedule fixed before launch, by time or by milestone, without a vote for each payment.",
+          "If the work defined in a milestone is not delivered, holders can pause the escrow. Holders can also resume it or advance the next tranche, without rewriting the schedule. Paused escrow stays in escrow until it is released or joins the treasury at end of life."
         ]
       },
       {
@@ -98,22 +97,22 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "What is an EOL token?",
         "answers": [
-          "An EOL token is a token configured to use Transmuter’s treasury and recovery rules.",
+          "An EOL token is a token configured to use Transmuter’s treasury and end of life rules.",
           "A project may configure escrow or set it to zero. The venue does not screen or approve the team."
         ]
       },
       {
         "question": "What is a cToken?",
         "answers": [
-          "A cToken is a reserve layer that sits beneath an EOL token. It is not bought or traded directly by holders.",
-          "Projects retain isolated treasuries while shared ecosystem activity can strengthen the cToken layer underneath them."
+          "cToken: the shared reserve asset beneath EOL tokens. A project's treasury holds cTokens. Each cToken represents an amount of the base asset that grows as the ecosystem uses it. Redemption pays out the base asset, not the cToken.",
+          "Gold sits beneath the base asset where the project chooses the gold variant."
         ]
       },
       {
         "question": "What is Mint to Scale?",
         "answers": [
-          "Mint to Scale is an automatic exchange that accepts a minter’s payment and issues tokens when backing is below the activation threshold.",
-          "It is not an unconditional source of income, and the exact trigger duration is awaiting contract verification."
+          "Mint to Scale is an automatic exchange that accepts a minter’s payment and issues tokens when backing is below the activation threshold. Minting happens only inside these events.",
+          "It is not an unconditional source of income. Currently 6 hours. Testing may adjust it before launch."
         ]
       },
       {
@@ -126,28 +125,28 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "Where does the money go when someone mints?",
         "answers": [
-          "A minter pays in and receives newly issued EOL tokens. The payment is deposited through the reserve layer into that token’s isolated treasury, rather than being donated into a shared project pot."
+          "SOL paid in during a Mint to Scale event goes into cSOL's reserves, the cSOL contract mints cSOL into the token's treasury, and the payer receives newly minted EOL tokens."
         ]
       },
       {
         "question": "What happens to my team's own allocation?",
         "answers": [
           "The team’s token allocation is separate from any escrow schedule, which can be set to zero at launch.",
-          "At recovery, unsold allocation and unvested team tokens burn under the predefined rules."
+          "At end of life, unsold allocation and unvested team tokens burn under the predefined rules."
         ]
       },
       {
         "question": "Is my project's treasury exposed to other projects on the protocol?",
         "answers": [
           "No. Each token has its own isolated treasury. Other project treasuries are not pooled with it.",
-          "The cToken reserve layer underneath can respond to activity across multiple projects using it."
+          "The cToken beneath it can respond to activity across multiple projects using it."
         ]
       },
       {
         "question": "Can a token launch without escrow?",
         "answers": [
           "Yes. A project can choose no escrow at launch.",
-          "If a team configures escrow, its schedule is fixed before trading. Holders can pause, unpause or advance a tranche but cannot rewrite that schedule."
+          "A team that needs no runway launches without one. If a team configures escrow, its schedule is fixed before trading. Holders can pause, unpause or advance a tranche but cannot rewrite that schedule."
         ]
       },
       {
@@ -164,17 +163,17 @@ export const faqGroups: FaqGroup[] = [
     "title": "Governance",
     "items": [
       {
-        "question": "Can Transmuter block a legitimate recovery vote?",
+        "question": "Can Transmuter block a legitimate end of life vote?",
         "answers": [
-          "The founder safeguard is cancel-only: it can halt a recovery proposal, but it cannot initiate recovery or move project reserves.",
-          "The boundary of other emergency powers and the applicable governance thresholds are not yet published. The protocol should not be described as beyond human intervention."
+          "The current design is described in the docs and is being revised. A liquidation halt can stop an end of life, and cannot force one. It cannot move a treasury, mint a token, alter a balance, or block a redemption.",
+          "What the halt can and cannot do, and the vote thresholds, are in /docs."
         ]
       },
       {
         "question": "How decentralized is Transmuter?",
         "answers": [
-          "The architecture uses on-chain rules and governance while retaining a narrow cancel-only founder safeguard.",
-          "The full boundary between the founders, any elected council and holder governance remains to be published. No single party is described as fully powerless until that boundary is defined."
+          "The current design is described in the docs and is being revised.",
+          "Holders govern their own token. The protocol DAO and its council are guardians with a narrow override, and the founder halt is cancel-only. The boundary is in /docs."
         ]
       }
     ]
@@ -187,28 +186,28 @@ export const faqGroups: FaqGroup[] = [
         "question": "What happens if a team abandons the project?",
         "answers": [
           "Abandonment does not give the team the right to withdraw the isolated treasury.",
-          "If escrow was configured, holders can pause or unpause it. Unreleased escrow enters the treasury only if recovery is approved, after which available reserves are distributed pro rata."
+          "If escrow was configured, holders can pause or unpause it. Unreleased escrow joins the treasury only if end of life is approved, after which each holder redeems their pro rata share."
         ]
       },
       {
-        "question": "When can a recovery be proposed?",
+        "question": "When can an end of life be proposed?",
         "answers": [
-          "A recovery proposal is subject to the protocol’s end-of-life gate and then a governance vote.",
-          "Only after recovery is approved do the mechanical reserve-consolidation and token-burn steps run."
+          "An end of life proposal is subject to the protocol’s end of life gate and then a governance vote.",
+          "Only after end of life is approved do the mechanical reserve-consolidation and token-burn steps run. The gate is described in /docs."
         ]
       },
       {
-        "question": "How long does recovery take?",
+        "question": "How long does end of life take?",
         "answers": [
-          "Recovery requires an end-of-life gate and governance approval before distribution defined in the contract.",
-          "The actual duration depends on the governance process. Exact voting thresholds and an authoritative timeline have not yet been published."
+          "About two months from vote to payout, after a 14-day vote needing a 67% supermajority and a 10% quorum.",
+          "The timeline and thresholds are in /docs."
         ]
       },
       {
         "question": "What happens to unspent escrow if a project ends?",
         "answers": [
-          "If escrow was configured, its unreleased balance enters the token treasury at recovery.",
-          "A holder pause alone does not send funds to the treasury or to the voters. The funds remain in escrow until released or recovered."
+          "If escrow was configured, its unreleased balance converts into the reserve asset, joins the treasury at end of life, and is redeemed with it.",
+          "A holder pause alone does not send funds to the treasury or to the voters. The funds remain in escrow until released or they join the treasury at end of life."
         ]
       }
     ]
@@ -221,14 +220,14 @@ export const faqGroups: FaqGroup[] = [
         "question": "What do holders get?",
         "answers": [
           "Holders can see the terms a team set at launch and participate in governance over a configured escrow schedule.",
-          "Reserves remain isolated in the project treasury. If recovery is approved, available funds are distributed according to the predefined rules; the protocol does not prevent investment losses."
+          "Reserves remain isolated in the project treasury. If end of life is approved, each holder redeems their share under the predefined rules; the protocol does not prevent investment losses."
         ]
       },
       {
         "question": "What does a holder actually receive?",
         "answers": [
-          "Recovery pays each EOL token’s defined share of the available reserve asset after governance approval. It is a quantity of an asset, not a promised fiat amount.",
-          "Contingency gold beneath a cToken stays at the reserve layer at an ordinary project closure. It is intended as a fallback if the cToken’s base asset fails."
+          "End of life pays each EOL token’s defined share of the available base asset after the vote. It is a quantity of that asset, counted in the base asset, not a dollar amount. Each holder redeems when they choose.",
+          "Where the project chooses the gold variant, contingency gold stays at the cToken on an ordinary project closure. It is a fallback if the cToken’s base asset fails."
         ]
       }
     ]

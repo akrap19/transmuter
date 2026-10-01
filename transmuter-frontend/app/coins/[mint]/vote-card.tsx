@@ -18,7 +18,8 @@ export function VoteCard({
   const outcome = holderOutcome(tally, DAO_SHIM_QUORUM_MET);
   const yesWidth = Math.min(100, tally.yesBps / 100);
   const quorumWidth = Math.min(100, (tally.reachedQuorumBps / Math.max(vote.quorumBps, 1)) * 100);
-  const title = vote.kind === "reserve_mint" ? "Reserve mint Path B" : formatStatus(vote.kind);
+  const title =
+    vote.kind === "reserve_mint" ? "Mint to Scale" : vote.kind === "liquidation" ? "End of life" : formatStatus(vote.kind);
 
   return (
     <article className="coin-vote">

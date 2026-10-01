@@ -37,7 +37,6 @@ export function LaunchWiring() {
       {state.launchedMint && <p className="launch-success-meta">Mint {state.launchedMint}</p>}
       {wire.loading && wire.steps.length === 0 ? <p className="launch-success-meta">Reading the launch from chain…</p> : null}
       {wire.steps.length > 0 ? <WireChecklist steps={wire.steps} /> : null}
-      {wire.error ? <p className="wire-banner">{wire.error}</p> : null}
       {wire.explorerUrl ? (
         <p className="launch-success-meta">
           <a href={wire.explorerUrl} target="_blank" rel="noreferrer">

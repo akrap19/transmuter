@@ -11,7 +11,6 @@ export function SaleForm({
   sale,
   amount,
   busy,
-  notice,
   explorerUrl,
   onAmount,
   onDeposit,
@@ -22,7 +21,6 @@ export function SaleForm({
   sale: SaleSnapshot;
   amount: string;
   busy: boolean;
-  notice: string | null;
   explorerUrl: string | null;
   onAmount: (value: string) => void;
   onDeposit: () => void;
@@ -45,7 +43,6 @@ export function SaleForm({
           Withdraw {formatUsd(sale.myDepositUsdc)}
         </button>
       </div>
-      {notice ? <p className="coin-note">{notice}</p> : null}
       {explorerUrl ? (
         <p className="coin-note">
           <a href={explorerUrl} target="_blank" rel="noopener noreferrer">

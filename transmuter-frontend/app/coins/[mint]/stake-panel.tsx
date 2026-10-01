@@ -31,7 +31,7 @@ export function StakePanel({
       />
       <p className="coin-note">
         {coin.stake.liquidated
-          ? "After liquidation, stake is off and unstake stays on."
+          ? "After end of life, stake is off and unstake stays on."
           : "Casting a vote sets voter-lock. Latest expiry wins."}
       </p>
       <StakeActions status={coin.status} stake={coin.stake} chain={chain} onConfirmed={onConfirmed} />

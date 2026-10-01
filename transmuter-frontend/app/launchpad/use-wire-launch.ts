@@ -17,6 +17,7 @@ import {
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { factoryPda, launchPda } from "@/lib/solana/programs/factory";
 import { ChainTransactionError } from "@/lib/solana/tx";
+import { toastError, toastSuccess } from "@/lib/toast";
 import { useLaunchpad } from "./launchpad-context";
 
 type LaunchAccount = {
@@ -54,7 +55,9 @@ export function useWireLaunch() {
     async (failed: WireFailure | null) => {
       if (state.launchId == null || !state.launchedMint) {
         setLoading(false);
-        setError("This launch has no id yet.");
+        const message = "This launch has no id yet.";
+        toastError(message);
+        setError(message);
         return;
       }
       try {
@@ -81,7 +84,9 @@ export function useWireLaunch() {
         );
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not read the launch.");
+        const message = err instanceof Error ? err.message : "Could not read the launch.";
+        toastError(message);
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -96,7 +101,9 @@ export function useWireLaunch() {
   const runNext = useCallback(async () => {
     const signer = walletRef.current;
     if (!signer || !publicKey || state.launchId == null) {
-      setError("Connect a wallet to sign the next wiring transaction.");
+      const message = "Connect a wallet to sign the next wiring transaction.";
+      toastError(message);
+      setError(message);
       return;
     }
     const next = nextWireStep(steps);
@@ -124,8 +131,10 @@ export function useWireLaunch() {
       setExplorerUrl(confirmed.explorerUrl);
       setFailure(null);
       await load(null);
+      toastSuccess(`${next.label} confirmed`);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Wiring failed";
+      toastError(message);
       setExplorerUrl(err instanceof ChainTransactionError ? (err.explorerUrl ?? null) : null);
       setFailure({ step: next.id, message });
     } finally {

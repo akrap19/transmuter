@@ -14,8 +14,12 @@ export function formatBps(bps: number | null): string {
   return `${Number.isInteger(pct) ? String(pct) : pct.toFixed(2)}%`;
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  liquidating: "END OF LIFE",
+};
+
 export function formatStatus(status: string): string {
-  return status.replace(/_/g, " ").toUpperCase();
+  return STATUS_LABELS[status] ?? status.replace(/_/g, " ").toUpperCase();
 }
 
 export function formatAmount(value: number): string {

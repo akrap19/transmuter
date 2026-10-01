@@ -1,5 +1,32 @@
 import { describe, expect, it, vi } from "vitest";
-import { dataUrlToUpload, uploadMedia } from "./media";
+import { dataUrlToUpload, resolveMediaEndpoint, uploadMedia } from "./media";
+
+describe("resolveMediaEndpoint", () => {
+  it("uses the read API when there is no browser origin (SSR)", () => {
+    expect(resolveMediaEndpoint({ NEXT_PUBLIC_API_URL: "http://localhost:3010" }, null)).toBe(
+      "http://localhost:3010/media",
+    );
+  });
+
+  it("falls back to same-origin uploads when the API host differs from the page", () => {
+    expect(
+      resolveMediaEndpoint({ NEXT_PUBLIC_API_URL: "http://localhost:3010" }, "http://localhost:3000"),
+    ).toBe("/api/media");
+    expect(
+      resolveMediaEndpoint({ NEXT_PUBLIC_API_URL: "http://localhost:3010" }, "http://127.0.0.1:3003"),
+    ).toBe("/api/media");
+  });
+
+  it("keeps the API media route when origins match", () => {
+    expect(
+      resolveMediaEndpoint({ NEXT_PUBLIC_API_URL: "http://localhost:3010" }, "http://localhost:3010"),
+    ).toBe("http://localhost:3010/media");
+  });
+
+  it("defaults to /api/media when NEXT_PUBLIC_API_URL is unset", () => {
+    expect(resolveMediaEndpoint({}, null)).toBe("/api/media");
+  });
+});
 
 describe("uploadMedia", () => {
   it("POSTs bytes to the media endpoint and returns the stored url", async () => {

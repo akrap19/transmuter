@@ -7,7 +7,7 @@ export function HomeWaterfall() {
       <div className="how-overview-head">
         <p className="eyebrow">THE FLOW</p>
         <h2 id="lifecycle-title">Scroll through the token lifecycle.</h2>
-        <p>Scroll from launch to recovery and see what changes at each stage.</p>
+        <p>Scroll from launch to end of life and see what changes at each stage.</p>
       </div>
       <div className="waterfall-story" data-waterfall-story="">
         <div className="waterfall-sticky">

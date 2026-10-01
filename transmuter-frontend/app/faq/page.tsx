@@ -5,9 +5,9 @@ import { faqGroups } from "@/lib/marketing/faq-data";
 import { faqPageGraph, marketingPageGraph } from "@/lib/seo/json-ld";
 import { marketingPageMetadata } from "@/lib/seo/page-metadata";
 
-const faqTitle = "Transmuter FAQ: reserves, escrow, governance and recovery";
+const faqTitle = "Transmuter FAQ: reserves, escrow, governance and end of life";
 const faqDescription =
-  "How tokens launched on Transmuter are backed, who can move funds, how escrow and governance work, what recovery pays, and where the system stops.";
+  "How tokens launched on Transmuter are backed, who can move funds, how escrow and governance work, what end of life pays, and where the system stops.";
 
 export const metadata: Metadata = marketingPageMetadata({
   path: "/faq",
@@ -34,7 +34,8 @@ export default function FaqPage() {
       <section className="subhero section-shell">
         <p className="eyebrow">FAQ</p>
         <h1>Questions, answered directly.</h1>
-        <p>Mechanics, control, cost, governance and recovery.</p>
+        <p>Mechanics, control, cost, governance and end of life.</p>
+        <p>All figures describe the current design and may change before launch.</p>
       </section>
       <section className="faq-section section-shell full-faq">
         {faqGroups.map((group) => (

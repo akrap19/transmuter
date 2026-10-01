@@ -12,7 +12,7 @@ export const themeColor = "#06060a";
 export const defaultOgImagePath = "/opengraph-image";
 
 export const organizationDescription =
-  "Transmuter is value recovery infrastructure for tokens on Solana. Tokens launch with an isolated treasury, contract-owned liquidity and recovery rules defined before trading.";
+  "Transmuter is value recovery infrastructure for tokens on Solana. Tokens launch with an isolated treasury, contract-owned liquidity and end of life rules defined before trading.";
 
 export function absoluteUrl(path: string): string {
   if (path === "/") return `${siteUrl}/`;

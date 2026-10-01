@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CTOKEN_RESERVE_FEE, MIN_TOTAL_FEE, PROTOCOL_FEE, feeSegmentPct } from "@/lib/launchpad/fee-calculator";
+import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE, PUBLISHED_MIN_TOTAL_FEE, feeSegmentPct } from "@/lib/launchpad/fee-calculator";
 import type { FeeChangeSource } from "@/lib/launchpad/fee-calculator";
 import { ToggleRow } from "../shared-form";
 import { useLaunchpad } from "../launchpad-context";
@@ -35,10 +35,10 @@ export function FeesStep() {
         label="Total TX Fee"
         value={fees.totalFee}
         max={2}
-        min={MIN_TOTAL_FEE}
+        min={PUBLISHED_MIN_TOTAL_FEE}
         step={0.05}
         onChange={(v) => updateFees(undefined, v)}
-        note={`Max 2.00% · Min ${MIN_TOTAL_FEE.toFixed(2)}% (${PROTOCOL_FEE.toFixed(2)} protocol + ${CTOKEN_RESERVE_FEE.toFixed(2)} cToken reserve + 0.10 LP + 0.10 treasury) · Recommended: 0.5% – 1.0%`}
+        note={`0.50% to 2.00%. 0.60% is the recommended default. Protocol ${PROTOCOL_FEE.toFixed(2)}% and cToken reserve ${CTOKEN_RESERVE_FEE.toFixed(2)}% are fixed. LP and treasury are at least 0.10% each.`}
       />
 
       <FixedFee

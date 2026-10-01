@@ -26,7 +26,7 @@ const layers = [
     sub: "TOKENIZED",
     kicker: "03 · CONTINGENCY LAYER",
     title: "Tokenized gold",
-    body: "A reserve outside the project's own crypto risk, and the final fallback if the base asset itself were to fail.",
+    body: "Optional, where the project chooses the gold variant: a secondary contingency if the base asset itself fails.",
     flow: null,
   },
 ];
@@ -44,8 +44,8 @@ export function ReserveStack() {
         ))}
       </div>
       <p className="core-message">
-        Each project keeps its own treasury. Beneath it, the cToken layer adds a shared reserve asset with gold as
-        contingency for base-asset failure.
+        Each project keeps its own treasury. Beneath it, the cToken layer adds a shared reserve asset. Projects can
+        choose a variant with gold as a secondary contingency for base-asset failure.
       </p>
     </section>
   );

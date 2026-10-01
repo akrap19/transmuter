@@ -202,7 +202,9 @@ nav:has(.nav-in) .nav-links a.btn-gold {
 	color: var(--tm-gold);
 	cursor: pointer;
 	flex-shrink: 0;
-	transition: background 0.2s, border-color 0.2s;
+	transition:
+		background 0.2s,
+		border-color 0.2s;
 }
 
 .nav-toggle:hover {
@@ -219,7 +221,9 @@ nav:has(.nav-in) .nav-links a.btn-gold {
 	background: rgba(0, 0, 0, 0.55);
 	opacity: 0;
 	visibility: hidden;
-	transition: opacity 0.25s, visibility 0.25s;
+	transition:
+		opacity 0.25s,
+		visibility 0.25s;
 	cursor: pointer;
 }
 
@@ -1262,7 +1266,7 @@ textarea.inp {
 	font-size: 12px;
 	color: #e07070;
 	margin-top: 14px;
-	text-align: center;
+	text-align: left;
 }
 
 #success {
@@ -1522,7 +1526,9 @@ nav.top .btn {
 	color: var(--tm-gold);
 	cursor: pointer;
 	box-shadow: 0 0 0 1px rgba(6, 7, 10, 0.9);
-	transition: background 0.2s, border-color 0.2s;
+	transition:
+		background 0.2s,
+		border-color 0.2s;
 }
 
 .docs-nav-toggle:hover,
@@ -4729,4 +4735,63 @@ nav.launchpad-nav .nav-links a:hover {
 	.catalog-sale-actions {
 		grid-template-columns: 1fr;
 	}
+}
+
+/* Sonner toasts */
+[data-sonner-toaster][data-theme='dark'] {
+	--normal-bg: var(--tm-panel);
+	--normal-border: var(--tm-border-gold);
+	--normal-text: var(--tm-white);
+	--success-bg: rgba(20, 83, 45, 0.94);
+	--success-border: rgba(34, 197, 94, 0.65);
+	--success-text: #86efac;
+	--error-bg: rgba(127, 29, 29, 0.94);
+	--error-border: rgba(239, 68, 68, 0.65);
+	--error-text: #fca5a5;
+}
+
+.tm-toast {
+	font-family: var(--tm-font-body);
+	font-size: 13px;
+	border-radius: 12px;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.tm-toast-title {
+	font-weight: 600;
+}
+
+.tm-toast-success {
+	background: rgba(20, 83, 45, 0.94) !important;
+	border-color: #22c55e !important;
+	color: #86efac !important;
+}
+
+.tm-toast-success .tm-toast-title,
+.tm-toast-success [data-title] {
+	color: #bbf7d0 !important;
+}
+
+.tm-toast-success [data-icon] svg {
+	color: #4ade80 !important;
+}
+
+.tm-toast-error {
+	background: rgba(127, 29, 29, 0.94) !important;
+	border-color: #ef4444 !important;
+	color: #fca5a5 !important;
+}
+
+.tm-toast-error .tm-toast-title,
+.tm-toast-error [data-title] {
+	color: #fecaca !important;
+}
+
+.tm-toast-error [data-icon] svg {
+	color: #f87171 !important;
+}
+
+.tm-toast-close {
+	border-color: var(--tm-border);
+	color: var(--tm-muted);
 }

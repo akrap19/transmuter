@@ -4,8 +4,10 @@ export function FeesSection() {
       <h2>Fees</h2>
       <h3 id="the-transfer-fee">The transfer fee</h3>
       <p>
-        Every trade pays a transfer fee, set by the creator between <strong>0.45% and 2%</strong>.
-        Going above 1% is not recommended; the upper range exists for experimental products.
+        Every trade pays a transfer fee, set by the creator between <strong>0.5% and 2%</strong>.
+        Going above 1% is not recommended; the upper range exists for experimental products. The
+        total cannot be set below 0.5%. Amounts above the fixed and minimum portions are split by
+        the creator between liquidity and the treasury. 0.60% is the recommended default.
       </p>
       <div className="tw">
         <table>
@@ -52,7 +54,7 @@ export function FeesSection() {
         <strong>creator fee</strong> (0, up to 0.5%). Both are shown before launch.
       </p>
       <p>
-        <strong>The full fee a holder pays is the creator-set total, 0.45% to 2%.</strong> The 0.15%
+        <strong>The full fee a holder pays is the creator-set total, 0.5% to 2%.</strong> The 0.15%
         is Transmuter&apos;s share inside it.
       </p>
       <h3 id="what-transmuter-earns">What Transmuter earns</h3>

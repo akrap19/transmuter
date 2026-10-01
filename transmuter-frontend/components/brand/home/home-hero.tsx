@@ -22,7 +22,7 @@ export function HomeHero() {
           <span className="hero-title-line hero-title-second">backed from the first block.</span>
         </h1>
         <p className="hero-lede">
-          Launch with reserves beneath the token, optional escrow for project runway, and recovery rules defined
+          Launch with reserves beneath the token, optional escrow for project runway, and end of life rules defined
           before trading. Backing can grow while the token is active.
         </p>
         <div className="hero-actions">

@@ -3,6 +3,7 @@ import { Inter, Manrope } from "next/font/google";
 import { BrandMotion } from "@/components/brand/brand-motion";
 import { SiteFooter } from "@/components/brand/site-footer";
 import { SiteHeader } from "@/components/brand/site-header";
+import { AppToaster } from "@/components/system/app-toaster";
 import { SolanaProvider } from "@/components/solana/solana-provider";
 import { assetUrl, defaultOgImagePath, siteName, siteUrl, themeColor } from "@/lib/seo/constants";
 import { siteAllowsIndexing } from "@/lib/seo/indexing";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s · Transmuter",
   },
   description:
-    "Launch a Solana token with an isolated treasury, contract-owned liquidity and recovery rules fixed before trading, so buyers can check the contract.",
+    "Launch a Solana token with an isolated treasury, contract-owned liquidity and end of life rules fixed before trading, so buyers can check the contract.",
   themeColor,
   ...(siteAllowsIndexing() ? {} : { robots: { index: false, follow: false } }),
   icons: {
@@ -55,6 +56,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${manrope.variable}`}>
         <BrandMotion />
         <SolanaProvider>
+          <AppToaster />
           <SiteHeader />
           {children}
           <SiteFooter />

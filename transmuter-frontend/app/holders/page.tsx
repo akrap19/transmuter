@@ -7,7 +7,7 @@ import { routes } from "@/lib/routes";
 
 const holdersTitle = "For holders: what stands behind an EOL token | Transmuter";
 const holdersDescription =
-  "What stands behind an EOL token, what triggers recovery, what recovery pays per token held, and what the protocol does not do.";
+  "What stands behind an EOL token, what triggers end of life, what redemption pays per token held, and what the protocol does not do.";
 
 export const metadata: Metadata = marketingPageMetadata({
   path: "/holders",
@@ -34,7 +34,7 @@ export default function HoldersPage() {
         <p className="eyebrow">FOR HOLDERS</p>
         <h1>What stands behind the token you hold.</h1>
         <p>
-          EOL tokens have an isolated treasury and defined recovery rules. Some teams set an escrow schedule; others
+          EOL tokens have an isolated treasury and defined end of life rules. Some teams set an escrow schedule; others
           launch with no escrow. The contract terms, rather than a venue endorsement, tell you what was configured.
         </p>
       </section>
@@ -50,23 +50,22 @@ export default function HoldersPage() {
         <p className="eyebrow">WHAT YOU RECEIVE</p>
         <h2>A quantity, not a value.</h2>
         <p>
-          Recovery distributes a defined quantity of the reserve asset per token held, based on the available treasury
-          and token supply. That quantity changes if reserves or supply change. A dollar-equivalent return is not
-          promised, and contingency gold stays beneath the cToken on an ordinary project closure.
+          End of life lets each holder redeem a defined quantity of the base asset per token held, based on the
+          available treasury and token supply. That quantity changes if reserves or supply change. It is counted in
+          the base asset, and contingency gold stays beneath the cToken on an ordinary closure where the project
+          chooses the gold variant.
         </p>
       </section>
       <section className="content-section section-shell">
-        <p className="eyebrow">WHAT TRIGGERS RECOVERY</p>
-        <h2>A vote, followed by recovery defined in the contract.</h2>
+        <p className="eyebrow">WHAT TRIGGERS END OF LIFE</p>
+        <h2>A vote, followed by end of life defined in the contract.</h2>
         <p>
-          The end-of-life gate precedes the governance vote. Once recovery is approved, the contract unwinds
-          contract-owned liquidity, moves any unspent escrow into the treasury, burns unsold allocation and unvested
-          team tokens, then distributes available reserves pro rata. These accounting steps do not depend on the
-          team’s cooperation.
+          The end of life gate precedes the governance vote. Once end of life is approved, the contract unwinds
+          contract-owned liquidity, moves any unspent escrow into the treasury, and burns unsold allocation and
+          unvested team tokens. These accounting steps do not depend on the team’s cooperation.
         </p>
         <p>
-          Distribution is pro rata, so a large holder and a small one are treated identically. There is no threshold
-          to clear and no claim to file.
+          No threshold to clear and no approval to wait for. Each holder redeems their share when they choose.
         </p>
       </section>
       <section className="content-section section-shell">
@@ -75,7 +74,7 @@ export default function HoldersPage() {
         <div className="limit-lines">
           <p>The reserves are worth what is in them. There is no central bank behind this.</p>
           <p>
-            Recovery depends on the available reserves and the amount of the token you hold. The protocol makes no
+            What you can redeem depends on the available reserves and the amount of the token you hold. The protocol makes no
             prediction about token price or investment returns.
           </p>
           <p>Reserve growth depends on trading volume and slows in a downturn.</p>

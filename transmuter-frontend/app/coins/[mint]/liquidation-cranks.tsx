@@ -19,7 +19,7 @@ export function LiquidationCranks({
   return (
     <WalletGate
       title="Connect to crank the vote"
-      body="Opening and executing a liquidation vote are permissionless. The creator is not required."
+      body="Opening and executing an end of life vote are permissionless. The creator is not required."
     >
       {() => (
         <div className="coin-actions">
@@ -31,7 +31,7 @@ export function LiquidationCranks({
                 disabled={tx.busy}
                 onClick={() => void tx.run("openLiquidationVote", chain)}
               >
-                {tx.busy ? "Signing…" : "Open liquidation vote"}
+                {tx.busy ? "Signing…" : "Open end of life vote"}
               </button>
             ) : null}
             {offers.executeVote ? (
@@ -41,11 +41,10 @@ export function LiquidationCranks({
                 disabled={tx.busy}
                 onClick={() => void tx.run("executeLiquidation", chain)}
               >
-                {tx.busy ? "Signing…" : "Execute liquidation"}
+                {tx.busy ? "Signing…" : "Execute end of life"}
               </button>
             ) : null}
           </div>
-          {tx.error ? <p className="coin-note">{tx.error}</p> : null}
           {tx.explorerUrl ? (
             <p className="coin-note">
               <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">

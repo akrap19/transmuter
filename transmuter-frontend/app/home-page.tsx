@@ -12,7 +12,7 @@ import { marketingPageMetadata } from "@/lib/seo/page-metadata";
 
 const homeTitle = "Transmuter: Value recovery infrastructure for tokens";
 const homeDescription =
-  "Launch a Solana token with an isolated treasury, contract-owned liquidity and recovery rules fixed before trading, so buyers can check the contract.";
+  "Launch a Solana token with an isolated treasury, contract-owned liquidity and end of life rules fixed before trading, so buyers can check the contract.";
 
 export const metadata: Metadata = marketingPageMetadata({
   path: "/",

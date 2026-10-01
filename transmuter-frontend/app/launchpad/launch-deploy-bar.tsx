@@ -5,14 +5,12 @@ import type { LaunchStatus } from "@/lib/launchpad/types";
 export function LaunchDeployBar({
   busy,
   connected,
-  error,
   status,
   onBack,
   onLaunch,
 }: {
   busy: boolean;
   connected: boolean;
-  error: string | null;
   status: LaunchStatus;
   onBack: () => void;
   onLaunch: () => void;
@@ -23,11 +21,6 @@ export function LaunchDeployBar({
         ← Back
       </button>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-        {error && (
-          <div className="small-note" style={{ color: "var(--tm-pink)", textAlign: "right" }}>
-            {error}
-          </div>
-        )}
         {!connected && (
           <div className="small-note">Connect a wallet to sign the Factory createLaunch transaction.</div>
         )}

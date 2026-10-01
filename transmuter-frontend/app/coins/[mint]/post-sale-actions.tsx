@@ -44,7 +44,6 @@ export function PostSaleActions({
               </button>
             ))}
           </div>
-          {tx.error ? <p className="coin-note">{tx.error}</p> : null}
           {tx.explorerUrl ? (
             <p className="coin-note">
               <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">

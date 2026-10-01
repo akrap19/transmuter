@@ -139,7 +139,7 @@ body::before {
 .site-nav a {
 	position: relative;
 }
-.site-nav a:not(.nav-cta)::after {
+.site-nav a:not(.nav-cta):not(.wallet-install)::after {
 	content: '';
 	position: absolute;
 	left: 0;
@@ -149,7 +149,7 @@ body::before {
 	background: var(--signal);
 	transition: right 0.25s ease;
 }
-.site-nav a:not(.nav-cta):hover::after {
+.site-nav a:not(.nav-cta):not(.wallet-install):hover::after {
 	right: 0;
 }
 .site-nav .nav-cta {

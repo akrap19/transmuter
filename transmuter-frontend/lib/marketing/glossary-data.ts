@@ -8,46 +8,46 @@ export const glossaryTerms: GlossaryTerm[] = [
   {
     "id": "eol-token",
     "title": "EOL token",
-    "body": "The token a project launches on Transmuter, also called a reinforced token. It trades and behaves like an ordinary token, and it carries reserves underneath it from the first block plus a defined procedure for what happens if the project is finished."
+    "body": "The token a project launches on Transmuter, also called a reinforced token. It trades and behaves like an ordinary token, and it carries reserves underneath it from the first block plus a defined end of life."
   },
   {
     "id": "ctoken",
     "title": "cToken",
-    "body": "The reserve layer a project's reserves are held in, either cSOL or cBTC. Nobody holds one. It is not bought, traded or redeemed directly, and what a person holds is the EOL token above it. It exists so that everything standing behind a token, including the gold beneath it, reads as one figure."
+    "body": "The shared reserve asset beneath EOL tokens. A project's treasury holds cTokens. Each cToken represents an amount of the base asset that grows as the ecosystem uses it. Redemption pays out the base asset, not the cToken. Gold sits beneath the base asset where the project chooses the gold variant."
   },
   {
     "id": "escrow",
     "title": "Escrow",
-    "body": "An optional, non-custodial team runway. A project can launch with no escrow. If an escrow schedule is set, it cannot be rewritten; holders may pause, unpause or advance a tranche. Unspent escrow enters the treasury only at recovery."
+    "body": "An optional, non-custodial team runway. A project can launch with no escrow. If an escrow schedule is set, it cannot be rewritten; holders may pause, unpause or advance a tranche. Unspent escrow converts into the reserve asset, joins the treasury at end of life, and is redeemed with it."
   },
   {
     "id": "contract-owned-liquidity",
     "title": "Contract-owned liquidity",
-    "body": "The token's core liquidity position, owned by the contract rather than by the team, built from the same transaction flow that feeds the reserves."
+    "body": "The token's core liquidity position, owned by the contract rather than by the team, built from the same transaction flow that feeds the reserves. At end of life it joins the treasury."
   },
   {
     "id": "mint-to-scale",
     "title": "Mint to Scale",
-    "body": "An exchange that opens automatically when backing stays below the threshold. A minter pays in above market, the proceeds enter the reserve, and tokens are issued back to them, so it adds more backing than it adds claims. It does not open above healthy backing."
+    "body": "The only time minting happens. An exchange that opens automatically when backing stays below the threshold. SOL paid in during a Mint to Scale event goes into cSOL's reserves, the cSOL contract mints cSOL into the token's treasury, and the payer receives newly minted EOL tokens. It adds more backing than it adds claims, and it does not open above healthy backing."
   },
   {
-    "id": "minting",
-    "title": "Minting",
-    "body": "Paying into a token's reserve and receiving tokens in return. The payment enters the cSOL treasury, cSOL is minted into that EOL token's own reserve, and the tokens go to the minter. It is the one input to the reserve that is a purchase rather than an accrual."
+    "id": "end-of-life",
+    "title": "End of life",
+    "body": "The trigger that ends a project: a gate on when a proposal can open, a governance vote, and then consolidation and burns defined in the contract. The accounting steps run without a team signature after approval. Holders then redeem."
   },
   {
     "id": "recovery",
     "title": "Recovery",
-    "body": "The end-of-life procedure: a gate on when a proposal can open, a governance vote, and then consolidation, burns and pro rata distribution defined in the contract. The accounting steps run without a team signature after approval."
+    "body": "An outcome of end of life. Each holder redeems their pro rata share of the base asset. It is a quantity of that asset, and it is not the name of the trigger."
   },
   {
-    "id": "pro-rata-distribution",
-    "title": "Pro rata distribution",
-    "body": "Every holder receives the same share of reserves per token held, with no threshold to clear and no claim to file."
+    "id": "pro-rata-redemption",
+    "title": "Pro rata redemption",
+    "body": "No threshold to clear and no approval to wait for. Each holder redeems their share when they choose."
   },
   {
     "id": "contingency-layer",
     "title": "Contingency layer",
-    "body": "Gold held as a contingency beneath a cToken base asset. It stays at the cToken layer when an ordinary project closes and is a fallback if the base asset itself fails. A gold primary reserve has different redemption rights."
+    "body": "Optional: gold held as a secondary contingency measure beneath a cToken's base asset, for projects that choose the gold variant."
   }
 ]

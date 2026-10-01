@@ -19,7 +19,8 @@ export function EolSection() {
             pools unwind, their cash is converted into the treasury, and their tokens burn.
           </li>
           <li>
-            <strong>Your share of any unspent escrow</strong>, paid separately in USDC.
+            <strong>Your share of any unspent escrow</strong>, converted into the reserve asset,
+            joined to the treasury, and redeemed with it.
           </li>
         </ul>
         <h3 id="why-the-figure-is-higher-than-the-treasury-alone">
@@ -81,7 +82,7 @@ export function EolSection() {
         </p>
         <h3 id="what-price-you-are-paid-at">What price you are paid at</h3>
         <p>
-          A wind-down does not happen at whatever the market price was when the vote passed. Once
+          An end of life does not happen at whatever the market price was when the vote passed. Once
           redemption opens, anyone can buy below it and redeem for a profit, or sell above it. The
           market price converges on the redemption value, and every holder is paid from there. Where
           the price sits when the vote passes changes how far it travels, not where it lands.
@@ -93,7 +94,7 @@ export function EolSection() {
         </p>
         <h3 id="what-this-does-not-do">What this does not do</h3>
         <p>
-          Recovery returns what the reserves hold at the end. It is not reimbursement of what anyone
+          End of life returns what the reserves hold at the end. It is not reimbursement of what anyone
           paid for the token.
         </p>
       </section>
@@ -127,7 +128,7 @@ export function EolSection() {
           The holder outcome stands unless <strong>both</strong> DAO bodies, each independently at
           67%, land against it. One body is never enough. This is what answers a hostile takeover:
           if someone buys enough supply to hold a token hostage, the two bodies together can still
-          wind it down. Because an end of life only ever distributes pro rata, even an override pays
+          end it. Because holders redeem pro rata, even an override pays
           every holder their fair share and seizes nothing.
         </p>
         <p>

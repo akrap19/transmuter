@@ -1,6 +1,7 @@
 "use client";
 
 import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE } from "@/lib/launchpad/fee-calculator";
+import { toastError } from "@/lib/toast";
 import { formatMcap, formatNum, formatPrice } from "@/lib/launchpad/launch-solver";
 import { useLaunchpad } from "../launchpad-context";
 import { LaunchDeployBar } from "../launch-deploy-bar";
@@ -14,7 +15,7 @@ export function ReviewStep() {
 
   async function handleLaunch() {
     if (!state.tokenName || !state.tokenTicker) {
-      alert("Please fill in Token Name and Ticker before launching.");
+      toastError("Please fill in token name and ticker before launching.");
       goToStep(1);
       return;
     }
@@ -29,12 +30,12 @@ export function ReviewStep() {
     <div className={`step-panel panel${state.currentStep === 5 ? " active" : ""}`}>
       <div className="panel-title"><div className="dot" />Review & Launch</div>
       <div className="launch-warning">
-        <strong>⚠️ Before you launch:</strong> Deploying opens your sale, it does not distribute
-        tokens. Deposits stay withdrawable until the sale concludes; if the raise can&apos;t fund
+        <strong>⚠️ Before you launch:</strong> Deploying opens your sale. Buyers claim tokens only
+        after it concludes. Deposits stay withdrawable until the sale concludes; if the raise can&apos;t fund
         the backing minimums (treasury {state.treasuryBackingPct}% ask in this wizard; on-chain accept 8% of MCP
         after conversion, combined 18%), the launch voids and
         every deposit is reclaimable. Once finalized, the treasury is fully non-custodial: no
-        human, including you, can access it. End of life liquidation requires a community vote.
+        human, including you, can access it. End of life requires a community vote.
       </div>
 
       <div className="review-grid">
@@ -54,7 +55,7 @@ export function ReviewStep() {
         </ReviewBlock>
         <ReviewBlock title="Backing">
           <ReviewRow label="Backing cToken" value={state.selectedCToken.name} gold />
-          <ReviewRow label="Reserve Mint Band" value={`open <${state.autoMintTrigger}% / close ${state.autoMintDeactivate}% (6h continuous)`} gold />
+          <ReviewRow label="Mint to Scale band" value={`open <${state.autoMintTrigger}% / close ${state.autoMintDeactivate}% (6h continuous)`} gold />
           <ReviewRow label="Gov. Vote Window" value={`${state.voteWindow}h`} />
           <ReviewRow label="Sale Window" value={state.saleWindow} />
         </ReviewBlock>
@@ -72,7 +73,6 @@ export function ReviewStep() {
       <LaunchDeployBar
         busy={busy}
         connected={connected}
-        error={state.launchError}
         status={state.launchStatus}
         onBack={() => goToStep(4)}
         onLaunch={handleLaunch}

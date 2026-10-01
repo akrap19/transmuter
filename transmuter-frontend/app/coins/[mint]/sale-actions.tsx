@@ -6,6 +6,7 @@ import { evaluateSaleAction } from "@/lib/catalog/sale";
 import { usdcToAtoms } from "@/lib/catalog/sale-accounts";
 import type { CoinDetail, SaleSnapshot } from "@/lib/catalog/types";
 import { SaleForm } from "./sale-form";
+import { toastError } from "@/lib/toast";
 import { useSubmitSale } from "./use-submit-sale";
 
 const REASONS: Record<string, string> = {
@@ -28,7 +29,6 @@ export function SaleActions({
   onConfirmed: () => void;
 }) {
   const [amount, setAmount] = useState("250");
-  const [notice, setNotice] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => {
     setRevision((value) => value + 1);
@@ -39,7 +39,7 @@ export function SaleActions({
   function run(kind: "deposit" | "withdraw") {
     const atoms = kind === "deposit" ? usdcToAtoms(amount) : null;
     if (kind === "deposit" && atoms == null) {
-      setNotice(REASONS.amount);
+      toastError(REASONS.amount);
       return;
     }
     const now = Math.floor(Date.now() / 1000);
@@ -50,10 +50,9 @@ export function SaleActions({
       kind === "deposit" ? { kind, amountUsdc: Number(atoms) / 1_000_000 } : { kind: "withdraw" },
     );
     if (!result.ok) {
-      setNotice(REASONS[result.reason] ?? result.reason);
+      toastError(REASONS[result.reason] ?? result.reason);
       return;
     }
-    setNotice(null);
     void saleTx.run(kind, kind === "deposit" ? amount : undefined);
   }
 
@@ -69,8 +68,7 @@ export function SaleActions({
           amount={amount}
           busy={saleTx.busy}
           sale={sale}
-          notice={saleTx.error ?? notice}
-          explorerUrl={notice ? null : saleTx.explorerUrl}
+          explorerUrl={saleTx.explorerUrl}
           onAmount={setAmount}
           onDeposit={() => run("deposit")}
           onWithdraw={() => run("withdraw")}

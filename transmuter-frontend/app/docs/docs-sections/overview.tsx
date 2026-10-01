@@ -4,7 +4,7 @@ export function OverviewSection() {
       <h2>Overview</h2>
       <p>
         Most tokens leave holders with nothing when they end. Transmuter writes the reserves, the
-        governed runway and the recovery rules into the contract before launch, so what stands
+        governed runway and the end of life rules into the contract before launch, so what stands
         behind a token can be read on-chain at any moment and returned to holders if the project is
         finished.
       </p>

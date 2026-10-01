@@ -41,7 +41,7 @@ export function MidasDaoSection() {
               <span className="input-suffix">%</span>
             </div>
             <div className="small-note">
-              Deposited to the DAO pool and distributed proportionally to MIDAS token stakers. This value carries over
+              Deposited to the DAO pool and paid proportionally to MIDAS token stakers. This value carries over
               automatically to your supply allocation.
             </div>
           </div>

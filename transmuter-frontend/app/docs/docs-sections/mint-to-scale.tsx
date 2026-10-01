@@ -15,11 +15,10 @@ export function MintToScaleSection() {
       </p>
       <h3 id="why-it-raises-backing">Why it raises backing</h3>
       <p>
-        A mint raises backing per token whenever the sale price is above the backing per token,
-        which on any token worth minting it is by a wide margin. Take a token trading at $1 with
-        $0.10 of backing per token. Every new token sold brings in $1, but takes only an equal share
-        of the reserve, the same as every other token. So each sale lifts backing per token for
-        everyone, holders and new buyers alike.
+        A mint raises backing per token, counted in the base asset, whenever the sale brings in
+        more of that asset than the quantity already behind each token. Every new token sold takes
+        only an equal share of the reserve, the same as every other token. So each sale lifts
+        backing per token for everyone, holders and new buyers alike.
       </p>
       <p>
         This does not happen in one go. Backing climbs with every sale through an event, and keeps

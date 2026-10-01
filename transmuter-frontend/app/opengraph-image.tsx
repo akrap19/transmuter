@@ -52,7 +52,7 @@ export default function OpenGraphImage() {
             maxWidth: 880,
           }}
         >
-          Isolated treasury, contract-owned liquidity and recovery rules fixed before trading on Solana.
+          Isolated treasury, contract-owned liquidity and end of life rules fixed before trading on Solana.
         </div>
       </div>
     ),

@@ -76,9 +76,9 @@ export function PreviewSidebar() {
         <div className="panel-title benefits-title">EOL token benefits</div>
         <div className="benefits-list">
           ✓ Non-custodial treasury<br />
-          ✓ No creator access, ever<br />
+          ✓ Treasury closed to the creator. Runway paid through escrow.<br />
           ✓ Treasury grows with every TX<br />
-          ✓ Backing per token only grows<br />
+          ✓ Backing per token, counted in the base asset, only grows<br />
           ✓ Built-in end of life plan<br />
           ✓ Community governance<br />
           ✓ Anti-rug architecture

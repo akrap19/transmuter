@@ -8,7 +8,6 @@ export function StakeForm({
   stake,
   amount,
   busy,
-  notice,
   explorerUrl,
   onAmount,
   onStake,
@@ -17,7 +16,6 @@ export function StakeForm({
   stake: CoinStake;
   amount: string;
   busy: boolean;
-  notice: string | null;
   explorerUrl: string | null;
   onAmount: (value: string) => void;
   onStake: () => void;
@@ -46,7 +44,6 @@ export function StakeForm({
             {busy ? "Signing…" : "Unstake"}
           </button>
         </div>
-        {notice ? <p className="coin-note">{notice}</p> : null}
         {explorerUrl ? (
           <p className="coin-note">
             <a href={explorerUrl} target="_blank" rel="noopener noreferrer">

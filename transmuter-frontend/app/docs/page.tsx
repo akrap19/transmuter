@@ -17,8 +17,8 @@ export default function DocsPage() {
         <p className="eyebrow">DOCUMENTATION</p>
         <h1>How Transmuter works</h1>
         <p className="lede">
-          Everything below is enforced by contract, not promised. Short on words, precise on
-          numbers.
+          Everything below will be enforced by contract, not promised. All figures describe the
+          current design and may change before launch. Short on words, precise on numbers.
         </p>
       </section>
 

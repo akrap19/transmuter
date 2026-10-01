@@ -7,6 +7,7 @@ import { useCallback, useState } from "react";
 import { submitSale, type EolSaleClient } from "@/lib/catalog/submit-sale";
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { ChainTransactionError } from "@/lib/solana/tx";
+import { toastError, toastSuccess } from "@/lib/toast";
 
 export function useSubmitSale(mint: string, onConfirmed: () => void) {
   const wallet = useAnchorWallet();
@@ -18,7 +19,9 @@ export function useSubmitSale(mint: string, onConfirmed: () => void) {
   const run = useCallback(
     async (kind: "deposit" | "withdraw", amount?: string) => {
       if (!wallet) {
-        setError("Connect a wallet to sign.");
+        const message = "Connect a wallet to sign.";
+        toastError(message);
+        setError(message);
         return;
       }
       setBusy(true);
@@ -37,9 +40,12 @@ export function useSubmitSale(mint: string, onConfirmed: () => void) {
           signer: wallet,
         });
         setExplorerUrl(confirmed.explorerUrl);
+        toastSuccess(kind === "deposit" ? "Deposit confirmed" : "Withdrawal confirmed");
         onConfirmed();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "The transaction failed.");
+        const message = err instanceof Error ? err.message : "The transaction failed.";
+        toastError(message);
+        setError(message);
         setExplorerUrl(err instanceof ChainTransactionError ? (err.explorerUrl ?? null) : null);
       } finally {
         setBusy(false);

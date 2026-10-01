@@ -16,8 +16,8 @@ export function LifecycleChart() {
 				<svg aria-labelledby="chart-title chart-desc" className="hero-chart hero-chart-v2" role="img" viewBox="0 0 590 280">
 					<title id="chart-title">Market value and recoverable value across a token lifecycle</title>
 					<desc id="chart-desc">
-						Market value rises and falls. Recoverable value climbs in steps as fees and reserve mints add to it, and
-						never falls, ending close to market value when recovery is ready.
+						The recoverable amount per token, counted in the base asset, climbs in steps as fees and reserve mints add
+						to it, and never falls.
 					</desc>
 					<defs>
 						<linearGradient id="goldFade" x1="0" x2="0" y1="0" y2="1">
@@ -40,7 +40,7 @@ export function LifecycleChart() {
 					<g className="eol-marker">
 						<line x1="543.7" x2="543.7" y1="27.4" y2="276.3" />
 						<text textAnchor="end" x="539.5" y="17.4">
-							RECOVERY READY
+							END OF LIFE
 						</text>
 					</g>
 					<g aria-hidden className="mint-events">
@@ -53,7 +53,7 @@ export function LifecycleChart() {
 							y="214.7"
 							ruleTop="169.5"
 							radius="4.4"
-							label="RESERVE MINT"
+							label="MINT TO SCALE"
 						/>
 						<MintEvent delayRule="0.91s" delayDot="1.16s" x="404.2" y="167.4" ruleTop="163.7" radius="4.4" />
 					</g>
@@ -85,11 +85,12 @@ export function LifecycleChart() {
 					<span>Launch</span>
 					<span>Build</span>
 					<span>Trade</span>
-					<span>Recover</span>
+					<span>End of life</span>
 				</div>
 			</div>
 			<p className="chart-explainer">
-				Market value moves freely. The reserve line changes only when backing or supply changes. Escrow is optional.
+				The recoverable amount per token, counted in the base asset, climbs in steps as fees and reserve mints add to
+				it, and never falls.
 			</p>
 			<div className="hero-scroll chart-scroll">
 				<span>SCROLL THROUGH THE LIFECYCLE</span>

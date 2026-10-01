@@ -16,7 +16,6 @@ export function WireChecklist({ steps }: { steps: WireChecklistItem[] }) {
         <li key={step.id} className={`wire-step wire-step-${step.state}`}>
           <span>{step.label}</span>
           <span className="wire-status">{STATE_LABEL[step.state]}</span>
-          {step.error ? <span className="wire-step-error">{step.error}</span> : null}
         </li>
       ))}
     </ol>

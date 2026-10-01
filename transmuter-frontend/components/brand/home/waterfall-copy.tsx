@@ -15,13 +15,13 @@ const steps = [
     index: "03",
     eyebrow: "TRADE",
     title: "Activity leaves something behind.",
-    body: "Transactions and minting add backing while the token is active. A minter pays into the reserve and receives tokens in return.",
+    body: "Transactions and Mint to Scale add backing while the token is active. A minter pays into the reserve and receives tokens in return.",
   },
   {
     index: "04",
-    eyebrow: "RECOVER",
+    eyebrow: "END OF LIFE",
     title: "The ending is already written.",
-    body: "After governance approves recovery, liquidity and unspent escrow consolidate into the treasury, unsold and unvested tokens burn, and reserves distribute pro rata to holders.",
+    body: "After governance approves end of life, liquidity and unspent escrow consolidate into the treasury, unsold and unvested tokens burn, and holders redeem their pro rata share.",
   },
 ];
 

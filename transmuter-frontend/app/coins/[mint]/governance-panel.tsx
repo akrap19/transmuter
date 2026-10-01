@@ -30,7 +30,7 @@ export function GovernancePanel({
     >
       {chain ? <LiquidationCranks chain={chain} offers={offers} onConfirmed={onConfirmed} /> : null}
       {coin.votes.length === 0 || !chain ? (
-        <CatalogEmpty title="No open votes" body="Open a liquidation vote once the trouble gate is on. Any wallet can crank it." />
+        <CatalogEmpty title="No open votes" body="Open an end of life vote once the trouble gate is on. Any wallet can crank it." />
       ) : (
         <GovernanceVotes
           votes={coin.votes}

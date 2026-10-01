@@ -18,7 +18,7 @@ export function StatusSection() {
           both redemption figures for any token, including before you buy it.
         </li>
         <li>
-          <strong>Recovery calculator:</strong> in development.
+          <strong>End of life calculator:</strong> in development.
         </li>
         <li>
           <strong>Other chains:</strong> an EVM specification exists, for expansion once the Solana

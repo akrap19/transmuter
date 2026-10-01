@@ -3,7 +3,7 @@ import { FaqList } from "@/components/brand/faq-list";
 import { homeFaqs } from "@/lib/marketing/home-faq";
 import { routes } from "@/lib/routes";
 
-const rails = ["Reserves", "Governed escrow", "Contract-owned liquidity", "Recovery"];
+const rails = ["Reserves", "Governed escrow", "Contract-owned liquidity", "End of life"];
 
 export function HomeEntry() {
   return (
@@ -28,7 +28,7 @@ export function HomeEntry() {
       </div>
       <div className="protocol-bar">
         <strong>TRANSMUTER PROTOCOL</strong>
-        <span>RESERVES · ESCROW · LIQUIDITY · RECOVERY</span>
+        <span>RESERVES · ESCROW · LIQUIDITY · END OF LIFE</span>
         <div>
           {rails.map((rail) => (
             <i key={rail}>{rail}</i>
