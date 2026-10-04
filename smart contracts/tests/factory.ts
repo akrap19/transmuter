@@ -97,6 +97,7 @@ describe("factory", () => {
     return {
       name: "Alpha",
       symbol: "ALP",
+      metadataUri: "",
       decimals: DECIMALS,
       saleType: 0,
       salePrice: new anchor.BN(SALE_PRICE),

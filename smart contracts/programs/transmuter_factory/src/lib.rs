@@ -39,6 +39,9 @@ const FACTORY_RENT_BUFFER: u64 = 5_000_000_000;
 pub struct CreateLaunchParams {
     pub name: String,
     pub symbol: String,
+    /// Off-chain Metaplex metadata JSON URI (holds name/symbol/image/socials).
+    /// Empty string = no metadata. Bounded to `METADATA_URI_MAX_LEN`.
+    pub metadata_uri: String,
     pub decimals: u8,
     pub sale_type: u8,
     pub sale_price: u64,
@@ -257,6 +260,7 @@ pub mod transmuter_factory {
             vesting_schedule: params.vesting_schedule,
             name: params.name,
             symbol: params.symbol,
+            metadata_uri: params.metadata_uri,
             bump: ctx.bumps.launch,
         });
         ctx.accounts.factory.total_launches = ctx
@@ -277,6 +281,9 @@ pub mod transmuter_factory {
         require!(launch.status == STATUS_CREATED, FactoryError::BadStatus);
 
         let params = EolParams {
+            name: launch.name.clone(),
+            symbol: launch.symbol.clone(),
+            metadata_uri: launch.metadata_uri.clone(),
             decimals: launch.decimals,
             sale_price: launch.sale_price,
             total_supply: launch.total_supply,
@@ -582,7 +589,11 @@ pub mod transmuter_factory {
 
 fn validate_params(params: &CreateLaunchParams, factory: &FactoryConfig) -> Result<()> {
     require!(!params.name.is_empty() && !params.symbol.is_empty(), FactoryError::Name);
-    require!(params.name.len() <= 32 && params.symbol.len() <= 12, FactoryError::Name);
+    require!(
+        params.name.len() <= TOKEN_NAME_MAX_LEN && params.symbol.len() <= TOKEN_SYMBOL_MAX_LEN,
+        FactoryError::Name
+    );
+    require!(params.metadata_uri.len() <= METADATA_URI_MAX_LEN, FactoryError::MetadataUri);
     require!(params.decimals > 0 && params.total_supply > 0, FactoryError::BadParams);
     require!(params.sale_type == SALE_TYPE_FIXED, FactoryError::SaleType);
     require!(params.sale_price > 0, FactoryError::BadParams);
@@ -762,6 +773,8 @@ pub struct Launch {
     pub name: String,
     #[max_len(12)]
     pub symbol: String,
+    #[max_len(200)]
+    pub metadata_uri: String,
     pub bump: u8,
 }
 
@@ -1155,6 +1168,8 @@ pub enum FactoryError {
     LaunchId,
     #[msg("name/symbol empty or too long")]
     Name,
+    #[msg("metadata uri too long")]
+    MetadataUri,
     #[msg("bad launch params")]
     BadParams,
     #[msg("only FIXED sales are in MVP scope")]

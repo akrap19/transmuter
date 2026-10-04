@@ -7,6 +7,7 @@ import {
   createAssociatedTokenAccountInstruction,
   createMint,
   getAccount,
+  getTokenMetadata,
   getAssociatedTokenAddressSync,
   getMint,
   getTransferFeeConfig,
@@ -65,6 +66,9 @@ async function waitUntilUnix(ts: number) {
 function launchParams(overrides: Record<string, unknown> = {}) {
   const now = Math.floor(Date.now() / 1000);
   return {
+    name: "Test Coin",
+    symbol: "TST",
+    metadataUri: "https://example.com/meta.json",
     decimals: DECIMALS,
     salePrice: new anchor.BN(SALE_PRICE),
     totalSupply: new anchor.BN(SUPPLY.toString()),
@@ -257,7 +261,14 @@ describe("eol token", () => {
       .rpc();
 
     const rawMint = await connection.getAccountInfo(mint);
-    expect(rawMint!.data.length).to.equal(FOUNDER.TRANSFER_FEE_MINT_SPACE);
+    // Mint now carries TransferFeeConfig + MetadataPointer + TokenMetadata, so
+    // it is larger than a bare TransferFeeConfig mint and holds on-chain name/
+    // symbol/uri readable by any wallet or explorer.
+    expect(rawMint!.data.length).to.be.greaterThan(FOUNDER.TRANSFER_FEE_MINT_SPACE);
+    const md = await getTokenMetadata(connection, mint);
+    expect(md?.name).to.equal("Test Coin");
+    expect(md?.symbol).to.equal("TST");
+    expect(md?.uri).to.equal("https://example.com/meta.json");
 
     let eolRecord = Keypair.generate().publicKey;
     if (withCtoken) {

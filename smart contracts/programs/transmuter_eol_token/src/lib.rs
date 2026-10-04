@@ -1,8 +1,12 @@
 use anchor_lang::prelude::*;
-use anchor_lang::system_program::{self, CreateAccount};
+use anchor_lang::system_program::{self, CreateAccount, Transfer as SysTransfer};
+use anchor_spl::token_2022::spl_token_2022::extension::ExtensionType;
+use anchor_spl::token_2022::spl_token_2022::state::Mint as MintState;
 use anchor_spl::token_2022::Token2022;
 use anchor_spl::token_2022_extensions::{
-    transfer_fee_initialize, transfer_fee_set, TransferFeeInitialize, TransferFeeSetTransferFee,
+    metadata_pointer_initialize, token_metadata_initialize, transfer_fee_initialize,
+    transfer_fee_set, MetadataPointerInitialize, TokenMetadataInitialize, TransferFeeInitialize,
+    TransferFeeSetTransferFee,
 };
 use anchor_spl::token_interface::{
     burn, initialize_mint2, mint_to, set_authority, Burn, InitializeMint2, Mint, MintTo,
@@ -33,6 +37,13 @@ pub const STATUS_LIQUIDATING: u8 = 3;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct LaunchParams {
+    /// On-chain token name written to the mint's Token-2022 metadata.
+    pub name: String,
+    /// On-chain token symbol written to the mint's Token-2022 metadata.
+    pub symbol: String,
+    /// Off-chain Metaplex-style metadata JSON URI (image/socials). Written to
+    /// the mint's Token-2022 metadata `uri`. Empty string = none.
+    pub metadata_uri: String,
     pub decimals: u8,
     pub sale_price: u64,
     pub total_supply: u64,
@@ -91,8 +102,29 @@ pub mod transmuter_eol_token {
             EolError::ReserveGap
         );
 
-        let space = TRANSFER_FEE_MINT_SPACE as u64;
-        let lamports = Rent::get()?.minimum_balance(TRANSFER_FEE_MINT_SPACE);
+        require!(
+            !params.name.is_empty() && params.name.len() <= TOKEN_NAME_MAX_LEN,
+            EolError::Metadata
+        );
+        require!(
+            !params.symbol.is_empty() && params.symbol.len() <= TOKEN_SYMBOL_MAX_LEN,
+            EolError::Metadata
+        );
+        require!(
+            params.metadata_uri.len() <= METADATA_URI_MAX_LEN,
+            EolError::Metadata
+        );
+
+        // The mint carries two fixed-length extensions that must be initialized
+        // before `initialize_mint2`: TransferFeeConfig and MetadataPointer
+        // (pointing at the mint itself). The variable-length TokenMetadata is
+        // written afterwards; the token program reallocs the mint to fit it.
+        let base_space = ExtensionType::try_calculate_account_len::<MintState>(&[
+            ExtensionType::TransferFeeConfig,
+            ExtensionType::MetadataPointer,
+        ])
+        .map_err(|_| error!(EolError::Metadata))?;
+        let rent = Rent::get()?;
         system_program::create_account(
             CpiContext::new(
                 ctx.accounts.system_program.to_account_info(),
@@ -101,8 +133,8 @@ pub mod transmuter_eol_token {
                     to: ctx.accounts.mint.to_account_info(),
                 },
             ),
-            lamports,
-            space,
+            rent.minimum_balance(base_space),
+            base_space as u64,
             ctx.accounts.token_program.key,
         )?;
         transfer_fee_initialize(
@@ -118,6 +150,17 @@ pub mod transmuter_eol_token {
             0,
             u64::MAX / 2,
         )?;
+        metadata_pointer_initialize(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                MetadataPointerInitialize {
+                    token_program_id: ctx.accounts.token_program.to_account_info(),
+                    mint: ctx.accounts.mint.to_account_info(),
+                },
+            ),
+            Some(ctx.accounts.mint_authority.key()),
+            Some(ctx.accounts.mint.key()),
+        )?;
         initialize_mint2(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
@@ -128,6 +171,49 @@ pub mod transmuter_eol_token {
             params.decimals,
             &ctx.accounts.mint_authority.key(),
             None,
+        )?;
+
+        // Fund the mint for the variable-length TokenMetadata, then write it.
+        // Size = 4-byte extension TLV header + borsh-packed TokenMetadata:
+        //   update_authority(32) + mint(32) + name + symbol + uri + empty vec(4).
+        let meta_packed = 32
+            + 32
+            + (4 + params.name.len())
+            + (4 + params.symbol.len())
+            + (4 + params.metadata_uri.len())
+            + 4;
+        let meta_min = rent.minimum_balance(base_space + 4 + meta_packed);
+        let cur = ctx.accounts.mint.lamports();
+        if meta_min > cur {
+            system_program::transfer(
+                CpiContext::new(
+                    ctx.accounts.system_program.to_account_info(),
+                    SysTransfer {
+                        from: ctx.accounts.payer.to_account_info(),
+                        to: ctx.accounts.mint.to_account_info(),
+                    },
+                ),
+                meta_min - cur,
+            )?;
+        }
+        let mint_key = ctx.accounts.mint.key();
+        let ma_bump = ctx.bumps.mint_authority;
+        let ma_seeds: &[&[u8]] = &[b"mint_authority", mint_key.as_ref(), &[ma_bump]];
+        token_metadata_initialize(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                TokenMetadataInitialize {
+                    program_id: ctx.accounts.token_program.to_account_info(),
+                    metadata: ctx.accounts.mint.to_account_info(),
+                    update_authority: ctx.accounts.mint_authority.to_account_info(),
+                    mint_authority: ctx.accounts.mint_authority.to_account_info(),
+                    mint: ctx.accounts.mint.to_account_info(),
+                },
+                &[ma_seeds],
+            ),
+            params.name.clone(),
+            params.symbol.clone(),
+            params.metadata_uri.clone(),
         )?;
 
         let sale_tokens = bps_tokens(params.total_supply, params.sale_bps);
@@ -1087,6 +1173,18 @@ pub mod transmuter_eol_token {
             EolError::VoteClosed
         );
         require!(weight > 0, EolError::ZeroAmount);
+        let lock_line = ctx
+            .accounts
+            .config
+            .vote_closes_at
+            .saturating_add(VOTER_LOCK_SECS);
+        if !ctx.accounts.config.staking.eq(&Pubkey::default()) {
+            let current = stake_lock_until(
+                &ctx.accounts.stake_account.to_account_info(),
+                &ctx.accounts.voter.key(),
+            )?;
+            require!(current < lock_line, EolError::AlreadyVoted);
+        }
         if yes {
             ctx.accounts.config.vote_yes = ctx.accounts.config.vote_yes.saturating_add(weight);
         } else {
@@ -1105,10 +1203,7 @@ pub mod transmuter_eol_token {
                     },
                     &[&[b"config", mint.as_ref(), &[bump]]],
                 ),
-                ctx.accounts
-                    .config
-                    .vote_closes_at
-                    .saturating_add(VOTER_LOCK_SECS),
+                lock_line,
             )?;
         }
         Ok(())
@@ -1440,6 +1535,14 @@ pub mod transmuter_eol_token {
 
 fn bps_tokens(supply: u64, bps: u16) -> u64 {
     ((supply as u128) * (bps as u128) / math::BPS) as u64
+}
+
+fn stake_lock_until(stake: &AccountInfo, voter: &Pubkey) -> Result<i64> {
+    let mut data: &[u8] = &stake.try_borrow_data()?;
+    let rec = transmuter_staking::StakeAccount::try_deserialize(&mut data)
+        .map_err(|_| error!(EolError::StakeRecord))?;
+    require!(rec.owner == *voter, EolError::StakeRecord);
+    Ok(rec.lock_until)
 }
 
 fn token_amount(account: &AccountInfo) -> Result<u64> {
@@ -1822,13 +1925,16 @@ pub struct Finalize<'info> {
     pub native_vault: UncheckedAccount<'info>,
     /// CHECK:
     pub escrow_program: UncheckedAccount<'info>,
-    /// CHECK:
+    /// CHECK: escrow config PDA; mutated by runway-escrow `fund` / `stamp_start_time`.
+    #[account(mut)]
     pub escrow_config: UncheckedAccount<'info>,
-    /// CHECK:
+    /// CHECK: escrow USDC vault; receives funds in runway-escrow `fund`.
+    #[account(mut)]
     pub escrow_vault: UncheckedAccount<'info>,
     /// CHECK:
     pub vesting_program: UncheckedAccount<'info>,
-    /// CHECK:
+    /// CHECK: vesting config PDA; mutated by vesting `stamp_start_time`.
+    #[account(mut)]
     pub vesting_config: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token2022>,
     pub usdc_program: Interface<'info, TokenInterface>,
@@ -2015,7 +2121,8 @@ pub struct CastVote<'info> {
     pub staking_program: UncheckedAccount<'info>,
     /// CHECK:
     pub staking_config: UncheckedAccount<'info>,
-    /// CHECK:
+    /// CHECK: staking StakeAccount. set_voter_lock writes lock_until.
+    #[account(mut)]
     pub stake_account: UncheckedAccount<'info>,
 }
 
@@ -2296,6 +2403,8 @@ pub struct RedemptionCompleted {
 pub enum EolError {
     #[msg("launch params invalid")]
     BadParams,
+    #[msg("token metadata invalid (name/symbol/uri)")]
+    Metadata,
     #[msg("public sale below 25%")]
     SalePct,
     #[msg("LP below 10%")]
@@ -2370,4 +2479,8 @@ pub enum EolError {
     OracleConf,
     #[msg("dex_program is not mock_dex or Raydium CPMM")]
     BadDex,
+    #[msg("you already voted")]
+    AlreadyVoted,
+    #[msg("stake account is not a staking record")]
+    StakeRecord,
 }

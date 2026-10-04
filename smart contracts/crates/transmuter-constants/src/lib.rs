@@ -9,8 +9,18 @@ pub const MAX_COMPUTE_UNITS: u32 = 1_400_000;
 /// Must match `getMintLen([ExtensionType.NonTransferable])` exactly.
 pub const NON_TRANSFERABLE_MINT_SPACE: usize = 170;
 /// Token-2022 mint + TransferFeeConfig. Must match
-/// `getMintLen([ExtensionType.TransferFeeConfig])` exactly.
+/// `getMintLen([ExtensionType.TransferFeeConfig])` exactly. Kept for the
+/// seam tests; the live EOL mint now also carries MetadataPointer +
+/// TokenMetadata, so its on-chain size is computed at runtime, not from this.
 pub const TRANSFER_FEE_MINT_SPACE: usize = 278;
+
+/// Max byte length of the on-chain token name (Token-2022 metadata extension).
+pub const TOKEN_NAME_MAX_LEN: usize = 32;
+/// Max byte length of the on-chain token symbol (Token-2022 metadata extension).
+pub const TOKEN_SYMBOL_MAX_LEN: usize = 12;
+/// Max byte length of the off-chain Metaplex-style metadata JSON URI stored in
+/// the mint's on-chain metadata (and mirrored on the Factory `Launch`).
+pub const METADATA_URI_MAX_LEN: usize = 200;
 
 pub const BPS_DENOM: u64 = 10_000;
 

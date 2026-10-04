@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, Transfer};
+use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
 declare_id!("729ofbpZHYSodUi5ZKXibCFeYCHy9bQ7ojuWrYXLBcZZ");
 
@@ -26,16 +26,18 @@ pub mod transmuter_staking {
         require!(amount > 0, StakeError::ZeroAmount);
         require!(!ctx.accounts.config.liquidated, StakeError::Liquidated);
         let before = ctx.accounts.vault.amount;
-        token_interface::transfer(
+        token_interface::transfer_checked(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
-                Transfer {
+                TransferChecked {
                     from: ctx.accounts.source.to_account_info(),
+                    mint: ctx.accounts.mint.to_account_info(),
                     to: ctx.accounts.vault.to_account_info(),
                     authority: ctx.accounts.owner.to_account_info(),
                 },
             ),
             amount,
+            ctx.accounts.mint.decimals,
         )?;
         ctx.accounts.vault.reload()?;
         let received = ctx.accounts.vault.amount.saturating_sub(before);
@@ -66,17 +68,19 @@ pub mod transmuter_staking {
         require!(ctx.accounts.vault.amount >= gross, StakeError::InsufficientVault);
         let cfg = &ctx.accounts.config;
         let seeds: &[&[u8]] = &[b"config", cfg.mint.as_ref(), &[cfg.bump]];
-        token_interface::transfer(
+        token_interface::transfer_checked(
             CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
-                Transfer {
+                TransferChecked {
                     from: ctx.accounts.vault.to_account_info(),
+                    mint: ctx.accounts.mint.to_account_info(),
                     to: ctx.accounts.destination.to_account_info(),
                     authority: ctx.accounts.config.to_account_info(),
                 },
                 &[seeds],
             ),
             gross,
+            ctx.accounts.mint.decimals,
         )?;
         ctx.accounts.vault.reload()?;
         Ok(())

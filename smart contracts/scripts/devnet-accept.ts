@@ -239,6 +239,7 @@ async function main() {
         .createLaunch(new anchor.BN(id), {
           name: "E2E Accept",
           symbol: "E2E",
+          metadataUri: "",
           decimals: DECIMALS,
           saleType: 0,
           salePrice: new anchor.BN(price.toString()),

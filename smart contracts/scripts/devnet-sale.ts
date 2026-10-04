@@ -189,6 +189,7 @@ async function main() {
       .createLaunch(new anchor.BN(id), {
         name: "Devnet",
         symbol: "DNET",
+        metadataUri: "",
         decimals: DECIMALS,
         saleType: 0,
         salePrice: new anchor.BN(SALE_PRICE),
@@ -210,11 +211,12 @@ async function main() {
         reserveMintVoteWindowSecs: new anchor.BN(SALE_WINDOW_MIN),
         liqVoteWindowSecs: new anchor.BN(14 * 24 * 3600),
         convertChunk: new anchor.BN(0),
-        // Devnet Factory binary (Sep 23) still enforces the previous 0.50% split.
-        transferFeeBps: 50,
+        // Current Factory enforces the 0.55% split with a 0.10% cToken reserve
+        // leg (FEE_CTOKEN_RESERVE_BPS = 10); the old 0.50%/0.05% split is rejected.
+        transferFeeBps: 55,
         feeLpBps: 15,
         feeTreasuryBps: 15,
-        feeCtokenBps: 5,
+        feeCtokenBps: 10,
         feeProtocolBps: 15,
         feeCreatorBps: 0,
         feeBurnBps: 0,
