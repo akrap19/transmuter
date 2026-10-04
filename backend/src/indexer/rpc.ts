@@ -44,6 +44,7 @@ export async function rpcCall(fetchImpl: RpcFetch, rpcUrl: string, method: strin
     if (rateLimited(res.status, "")) {
       await res.arrayBuffer().catch(() => undefined);
       last = `${method} HTTP ${res.status}`;
+      if (attempt >= 1) break;
       await sleep(wait);
       wait = Math.min(wait * 2, 4_000);
       continue;
@@ -51,7 +52,7 @@ export async function rpcCall(fetchImpl: RpcFetch, rpcUrl: string, method: strin
     const body = (await res.json()) as RpcResponse;
     if (body.error) {
       const message = body.error.message ?? method;
-      if (rateLimited(0, message) && attempt < 5) {
+      if (rateLimited(0, message) && attempt < 1) {
         last = message;
         await sleep(wait);
         wait = Math.min(wait * 2, 4_000);

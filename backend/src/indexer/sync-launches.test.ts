@@ -16,7 +16,13 @@ function encodeString(value: string): Buffer {
   return Buffer.concat([head, body]);
 }
 
-function encodeLaunch(mintSeed: number, status: number, name: string, symbol: string): Buffer {
+function encodeLaunch(
+  mintSeed: number,
+  status: number,
+  name: string,
+  symbol: string,
+  metadataUri = "",
+): Buffer {
   const buf = Buffer.alloc(544);
   LAUNCH_DISC.copy(buf, 0);
   pubkey(1).copy(buf, 16);
@@ -26,7 +32,13 @@ function encodeLaunch(mintSeed: number, status: number, name: string, symbol: st
   buf.writeUInt8(status, 400);
   buf.writeBigInt64LE(1_700_000_000n, 405);
   buf.writeBigUInt64LE(900_000_000_000n, 447);
-  return Buffer.concat([buf, encodeString(name), encodeString(symbol), Buffer.from([1]), Buffer.alloc(200)]);
+  return Buffer.concat([
+    buf,
+    encodeString(name),
+    encodeString(symbol),
+    encodeString(metadataUri),
+    Buffer.from([1]),
+  ]);
 }
 
 describe("syncFactoryLaunches", () => {
@@ -61,5 +73,32 @@ describe("syncFactoryLaunches", () => {
     expect(applied).toBe(2);
     expect(catalog.map((item) => item.status).sort()).toEqual(["created", "sale"]);
     expect(catalog.every((item) => item.name === "Test" && item.symbol === "TST" && item.backing === "cSOL")).toBe(true);
+  });
+
+  it("resolves logoUrl from each launch's metadata URI", async () => {
+    const withLogo = encodeLaunch(2, 2, "Logo", "LOG", "https://cdn.example/log.json");
+    const fetchImpl: RpcFetch = async () =>
+      new Response(
+        JSON.stringify({
+          result: [{ account: { data: [withLogo.toString("base64"), "base64"] } }],
+        }),
+      );
+
+    const writes = createMemoryWrites();
+    await syncFactoryLaunches({
+      fetch: fetchImpl,
+      rpcUrl: "http://rpc.test",
+      programId: "factory",
+      writes,
+      backingMints: { [encodeBase58(pubkey(9))]: "cSOL" },
+      fetchJson: async (url) => {
+        expect(url).toBe("https://cdn.example/log.json");
+        return { image: "https://cdn.example/log.png", description: "Logo coin" };
+      },
+    });
+
+    const [coin] = await writes.list();
+    expect(coin.metadataUri).toBe("https://cdn.example/log.json");
+    expect(coin.logoUrl).toBe("https://cdn.example/log.png");
   });
 });

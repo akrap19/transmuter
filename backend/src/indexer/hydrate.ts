@@ -1,8 +1,12 @@
 import type { LaunchStatus } from "../catalog/types.ts";
 import { encodeBase58 } from "./base58.ts";
+import { resolveLaunchMetadata, type JsonFetch } from "./metadata.ts";
 import type { LaunchHydrateInput, LaunchHydration, LaunchHydrator } from "./types.ts";
 
 export const LAUNCH_DISC = Buffer.from([144, 51, 51, 163, 206, 85, 213, 38]);
+
+/** Matches `METADATA_URI_MAX_LEN` in the Factory program. */
+export const METADATA_URI_MAX_LEN = 200;
 
 const FACTORY_STATUS: Record<number, LaunchStatus> = {
   0: "created",
@@ -22,6 +26,7 @@ export type DecodedLaunch = {
   targetRaiseUsdc: bigint;
   name: string;
   symbol: string;
+  metadataUri: string;
 };
 
 export function mapFactoryStatus(value: number): LaunchStatus | null {
@@ -32,12 +37,16 @@ function readPubkey(data: Buffer, offset: number): string {
   return encodeBase58(data.subarray(offset, offset + 32));
 }
 
-function readString(data: Buffer, offset: number): { value: string; next: number } | null {
+function readString(
+  data: Buffer,
+  offset: number,
+  maxLen = 64,
+): { value: string; next: number } | null {
   if (offset + 4 > data.length) return null;
   const length = data.readUInt32LE(offset);
   const start = offset + 4;
   const end = start + length;
-  if (length > 64 || end > data.length) return null;
+  if (length > maxLen || end > data.length) return null;
   return { value: data.subarray(start, end).toString("utf8"), next: end };
 }
 
@@ -51,6 +60,9 @@ export function decodeLaunchAccount(data: Uint8Array): DecodedLaunch | null {
   if (!name) return null;
   const symbol = readString(buf, name.next);
   if (!symbol) return null;
+  // Appended after `symbol` in the Factory `Launch` account. Older accounts
+  // created before this field was added simply have no bytes here → "".
+  const metadata = readString(buf, symbol.next, METADATA_URI_MAX_LEN);
   return {
     mint: readPubkey(buf, 48),
     creator: readPubkey(buf, 16),
@@ -61,12 +73,14 @@ export function decodeLaunchAccount(data: Uint8Array): DecodedLaunch | null {
     targetRaiseUsdc: buf.readBigUInt64LE(447),
     name: name.value,
     symbol: symbol.value,
+    metadataUri: metadata?.value ?? "",
   };
 }
 
 export type AccountReader = {
   getAccounts: (keys: string[]) => Promise<Array<Uint8Array | null>>;
   backingMints?: Record<string, string>;
+  fetchJson?: JsonFetch;
 };
 
 export function createAccountHydrator(reader: AccountReader): LaunchHydrator {
@@ -79,16 +93,17 @@ export function createAccountHydrator(reader: AccountReader): LaunchHydrator {
         if (!raw) continue;
         const decoded = decodeLaunchAccount(raw);
         if (!decoded || decoded.mint !== input.mint) continue;
+        const meta = await resolveLaunchMetadata(decoded.metadataUri, reader.fetchJson);
         return {
           name: decoded.name,
           symbol: decoded.symbol,
           creator: decoded.creator,
           backing: labels[decoded.backingMint] ?? decoded.backingMint,
           status: decoded.status,
-          metadataUri: null,
-          logoUrl: null,
-          description: "",
-          socials: { website: null, twitter: null, telegram: null, discord: null },
+          metadataUri: decoded.metadataUri || null,
+          logoUrl: meta.logoUrl,
+          description: meta.description,
+          socials: meta.socials,
           launchedAt: decoded.launchedAt || input.blockTime || 0,
           eolConfig: decoded.eolConfig,
           targetRaiseUsdc: decoded.targetRaiseUsdc,

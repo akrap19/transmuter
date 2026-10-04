@@ -28,7 +28,7 @@ export async function startIndexerWorker(options: {
     } catch (error) {
       console.error("indexer launch sync failed", error instanceof Error ? error.message : "unknown error");
     }
-    const interval = options.syncIntervalMs ?? 20_000;
+    const interval = options.syncIntervalMs ?? 60_000;
     if (interval > 0) {
       const timer = setInterval(() => {
         void run().catch((error: unknown) => {

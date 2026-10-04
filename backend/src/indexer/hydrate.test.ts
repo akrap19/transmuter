@@ -24,6 +24,7 @@ function encodeLaunch(args: {
   targetRaise: bigint;
   name: string;
   symbol: string;
+  metadataUri?: string;
 }): Buffer {
   const buf = Buffer.alloc(544);
   LAUNCH_DISC.copy(buf, 0);
@@ -34,7 +35,13 @@ function encodeLaunch(args: {
   buf.writeUInt8(args.status, 400);
   buf.writeBigInt64LE(args.timestamp, 405);
   buf.writeBigUInt64LE(args.targetRaise, 447);
-  return Buffer.concat([buf, encodeString(args.name), encodeString(args.symbol), Buffer.from([1])]);
+  return Buffer.concat([
+    buf,
+    encodeString(args.name),
+    encodeString(args.symbol),
+    encodeString(args.metadataUri ?? ""),
+    Buffer.from([1]),
+  ]);
 }
 
 describe("decodeLaunchAccount", () => {
@@ -53,6 +60,7 @@ describe("decodeLaunchAccount", () => {
       targetRaise: 50_000_000n,
       name: "Helix",
       symbol: "HLX",
+      metadataUri: "https://cdn.example/hlx.json",
     });
 
     expect(decodeLaunchAccount(data)).toEqual({
@@ -65,7 +73,26 @@ describe("decodeLaunchAccount", () => {
       targetRaiseUsdc: 50_000_000n,
       name: "Helix",
       symbol: "HLX",
+      metadataUri: "https://cdn.example/hlx.json",
     });
+  });
+
+  it("defaults metadataUri to empty for accounts created before the field existed", () => {
+    const legacy = Buffer.concat([
+      (() => {
+        const buf = Buffer.alloc(544);
+        LAUNCH_DISC.copy(buf, 0);
+        pubkey(2).bytes.copy(buf, 48);
+        buf.writeUInt8(2, 400);
+        buf.writeBigInt64LE(1_700_000_000n, 405);
+        buf.writeBigUInt64LE(50_000_000n, 447);
+        return buf;
+      })(),
+      encodeString("Legacy"),
+      encodeString("LGC"),
+      Buffer.from([1]),
+    ]);
+    expect(decodeLaunchAccount(legacy)?.metadataUri).toBe("");
   });
 
   it("returns null for accounts that are not Factory launches", () => {
@@ -123,6 +150,57 @@ describe("createAccountHydrator", () => {
       status: "sale",
       targetRaiseUsdc: 50_000_000n,
       eolConfig: eol.base58,
+    });
+  });
+
+  it("resolves logoUrl and socials from the Launch metadata URI", async () => {
+    const mint = pubkey(2);
+    const data = encodeLaunch({
+      mint: mint.bytes,
+      creator: pubkey(1).bytes,
+      eol: pubkey(3).bytes,
+      backing: pubkey(9).bytes,
+      status: 2,
+      timestamp: 1_700_000_000n,
+      targetRaise: 50_000_000n,
+      name: "Helix",
+      symbol: "HLX",
+      metadataUri: "https://cdn.example/hlx.json",
+    });
+
+    const hydrator = createAccountHydrator({
+      getAccounts: async () => [data],
+      backingMints: { [pubkey(9).base58]: "cSOL" },
+      fetchJson: async (url) => {
+        expect(url).toBe("https://cdn.example/hlx.json");
+        return {
+          image: "https://cdn.example/hlx.png",
+          description: "The Helix launch.",
+          external_url: "https://helix.example",
+          extensions: { twitter: "https://x.com/helix" },
+        };
+      },
+    });
+
+    const snapshot = await hydrator.hydrate({
+      mint: mint.base58,
+      creator: pubkey(1).base58,
+      eol: pubkey(3).base58,
+      launchId: 1n,
+      accountKeys: ["launch"],
+      blockTime: 1_700_000_111,
+    });
+
+    expect(snapshot).toMatchObject({
+      metadataUri: "https://cdn.example/hlx.json",
+      logoUrl: "https://cdn.example/hlx.png",
+      description: "The Helix launch.",
+      socials: {
+        website: "https://helix.example",
+        twitter: "https://x.com/helix",
+        telegram: null,
+        discord: null,
+      },
     });
   });
 });
