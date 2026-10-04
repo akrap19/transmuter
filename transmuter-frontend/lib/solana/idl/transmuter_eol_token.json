@@ -2288,6 +2288,16 @@
       "code": 6038,
       "name": "BadDex",
       "msg": "dex_program is not mock_dex or Raydium CPMM"
+    },
+    {
+      "code": 6039,
+      "name": "AlreadyVoted",
+      "msg": "you already voted"
+    },
+    {
+      "code": 6040,
+      "name": "StakeRecord",
+      "msg": "stake account is not a staking record"
     }
   ],
   "types": [

@@ -2294,6 +2294,16 @@ export type TransmuterEolToken = {
       "code": 6038,
       "name": "badDex",
       "msg": "dex_program is not mock_dex or Raydium CPMM"
+    },
+    {
+      "code": 6039,
+      "name": "alreadyVoted",
+      "msg": "you already voted"
+    },
+    {
+      "code": 6040,
+      "name": "stakeRecord",
+      "msg": "stake account is not a staking record"
     }
   ],
   "types": [
