@@ -3,6 +3,7 @@
 import { useSubmitHolder } from "@/app/coins/[mint]/use-submit-holder";
 import { formatAmount, formatUnix } from "@/lib/catalog/format";
 import { VOTER_LOCK_SECS, evaluateCastVote } from "@/lib/catalog/governance";
+import { voterLocked } from "@/lib/catalog/stake";
 import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import type { CoinStake, CoinVote } from "@/lib/catalog/types";
 import { toastError } from "@/lib/toast";
@@ -10,6 +11,7 @@ import { toastError } from "@/lib/toast";
 const REASONS: Record<string, string> = {
   closed: "This vote window has closed.",
   weight: "Snapshot weight is zero. Stake before the vote opens.",
+  voted: "You already voted. A wallet can vote once.",
 };
 
 export function VoteActions({
@@ -24,6 +26,7 @@ export function VoteActions({
   onConfirmed: () => void;
 }) {
   const tx = useSubmitHolder(onConfirmed);
+  const alreadyVoted = voterLocked(stake.voterLockedUntil, Math.floor(Date.now() / 1000));
 
   function run(yes: boolean) {
     const result = evaluateCastVote(vote, stake, Math.floor(Date.now() / 1000), yes);
@@ -32,6 +35,10 @@ export function VoteActions({
       return;
     }
     void tx.run("castLiquidationVote", chain, { yes });
+  }
+
+  if (alreadyVoted) {
+    return <p className="coin-note">{REASONS.voted}</p>;
   }
 
   return (
@@ -45,12 +52,15 @@ export function VoteActions({
         </button>
       </div>
       {tx.explorerUrl ? (
-        <p className="coin-note">
-          Cast with weight {formatAmount(stake.weight)}. Voter-lock until {formatUnix(vote.closesAt + VOTER_LOCK_SECS)}.{" "}
-          <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
+        <>
+          <p className="coin-note">
+            Cast with weight {formatAmount(stake.weight)}. Voter-lock until {formatUnix(vote.closesAt + VOTER_LOCK_SECS)}.
+          </p>
+          <a className="coin-tx-link" href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
             View transaction
+            <span aria-hidden="true">↗</span>
           </a>
-        </p>
+        </>
       ) : null}
     </>
   );

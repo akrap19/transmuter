@@ -1,3 +1,4 @@
+import { formatAmount, formatBps } from "./format";
 import type { CoinStake, CoinVote, OpenVoteKind } from "./types";
 
 export const VOTER_LOCK_SECS = 7 * 24 * 3600;
@@ -46,6 +47,18 @@ export function holderOutcome(tally: VoteTally, daoQuorumMet: boolean) {
   return { decidedByHolders: !daoQuorumMet, passing: tally.passing };
 }
 
+export function voteReadout(vote: CoinVote, tally: VoteTally = voteTally(vote)) {
+  const yesNeed = formatBps(vote.passBps);
+  const turnoutNeed = formatBps(vote.quorumBps);
+  const supply = formatAmount(vote.denom);
+  const yesLine =
+    tally.cast <= 0
+      ? `No votes yet. This vote needs ${yesNeed} yes to pass.`
+      : `${formatBps(tally.yesBps)} of the votes are yes. This vote needs ${yesNeed} yes to pass.`;
+  const turnoutLine = `${formatBps(tally.reachedQuorumBps)} of the ${supply} token supply has voted. This vote needs ${turnoutNeed} turnout.`;
+  return { yesLine, turnoutLine };
+}
+
 export function evaluateCastVote(
   vote: CoinVote,
   stake: CoinStake,
@@ -53,6 +66,7 @@ export function evaluateCastVote(
   yes: boolean,
 ): CastVoteResult {
   if (now >= vote.closesAt) return { ok: false, reason: "closed" };
+  if (stake.voterLockedUntil != null && now < stake.voterLockedUntil) return { ok: false, reason: "voted" };
   if (stake.weight <= 0) return { ok: false, reason: "weight" };
   return { ok: true, weight: stake.weight, lockUntil: vote.closesAt + VOTER_LOCK_SECS, yes };
 }

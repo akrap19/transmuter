@@ -22,6 +22,20 @@ function WizardContent() {
   }, [dispatch]);
 
   useEffect(() => {
+    const page = document.querySelector(".launch-page");
+    if (!page) return;
+    const stopNumberScroll = (event: Event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.type !== "number") return;
+      if (document.activeElement !== target) return;
+      event.preventDefault();
+      target.blur();
+    };
+    page.addEventListener("wheel", stopNumberScroll, { capture: true, passive: false });
+    return () => page.removeEventListener("wheel", stopNumberScroll, { capture: true });
+  }, []);
+
+  useEffect(() => {
     if (launchSolve?.minRaise !== undefined && isFinite(launchSolve.minRaise)) {
       dispatch({ type: "SET_FIELD", field: "lastMinRaise", value: launchSolve.minRaise });
     }

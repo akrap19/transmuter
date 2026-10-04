@@ -100,8 +100,9 @@ describe("submitCreateLaunch", () => {
       metadataUri: "https://cdn.example/aero.json",
     });
     expect(factory.createLaunch).toHaveBeenCalledOnce();
-    const [launchId] = factory.createLaunch.mock.calls[0] as [BN, Record<string, unknown>];
+    const [launchId, params] = factory.createLaunch.mock.calls[0] as [BN, Record<string, unknown>];
     expect(launchId.toString()).toBe("3");
+    expect(params.metadataUri).toBe("https://cdn.example/aero.json");
     const accountArg = factory.accounts.mock.calls[0][0] as { mint: PublicKey; creator: PublicKey };
     expect(accountArg.mint.equals(MINT.publicKey)).toBe(true);
     expect(Keypair.fromSecretKey(result.mintSecretKey).publicKey.equals(MINT.publicKey)).toBe(true);

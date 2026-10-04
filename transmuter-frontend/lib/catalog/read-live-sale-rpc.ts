@@ -1,6 +1,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { createReadonlyProvider, createTransmuterClient } from "@/lib/solana/anchor-client";
 import { solanaEndpoint } from "@/lib/solana/config";
+import { solanaConnectionConfig } from "@/lib/solana/rpc-fetch";
 import type { LiveSaleView } from "./live-sale";
 import { readLiveSale, type LiveSaleReaders } from "./read-live-sale";
 
@@ -14,7 +15,7 @@ export async function readServerLiveSale(mint: string, depositor: string | null 
     return null;
   }
 
-  const connection = new Connection(solanaEndpoint, "confirmed");
+  const connection = new Connection(solanaEndpoint, solanaConnectionConfig);
   const client = createTransmuterClient(createReadonlyProvider(connection, depositorKey ?? PublicKey.default));
   return readLiveSale(readersFrom(client), mintKey, depositorKey, Math.floor(Date.now() / 1000));
 }

@@ -1,25 +1,26 @@
 import { CoinAvatar } from "@/components/catalog/coin-avatar";
 import { CoinStatus } from "@/components/catalog/coin-status";
-import { formatBps, formatUsd } from "@/lib/catalog/format";
-import type { CoinListItem } from "@/lib/catalog/types";
-import { coinPath } from "@/lib/routes";
+import { formatBps, formatUnix, formatUsd } from "@/lib/catalog/format";
+import { coinPathWithExplore } from "@/lib/catalog/search-params";
+import type { CoinListItem, CoinQuery } from "@/lib/catalog/types";
 import Link from "next/link";
 
 type CoinCardProps = {
   item: CoinListItem;
+  query: CoinQuery;
 };
 
 function showSale(item: CoinListItem) {
   return item.status === "sale" || (item.saleProgressBps != null && item.saleProgressBps > 0);
 }
 
-export function CoinCard({ item }: CoinCardProps) {
+export function CoinCard({ item, query }: CoinCardProps) {
   const backing =
     item.backingRatioBps == null ? item.backing : `${item.backing} · ${formatBps(item.backingRatioBps)}`;
 
   return (
     <article className="explore-card">
-      <Link href={coinPath(item.mint)} className="explore-card-link" aria-label={`${item.name} ($${item.symbol})`}>
+      <Link href={coinPathWithExplore(item.mint, query)} className="explore-card-link" aria-label={`${item.name} ($${item.symbol})`}>
         <header className="explore-card-head">
           <CoinAvatar symbol={item.symbol} logoUrl={item.logoUrl} />
           <span className="explore-card-id">
@@ -54,7 +55,9 @@ export function CoinCard({ item }: CoinCardProps) {
             </span>
           </div>
         ) : (
-          <p className="explore-card-open">Open launch</p>
+          <p className="explore-card-open">
+            Open launch{item.launchedAt ? ` · Launched ${formatUnix(item.launchedAt)}` : ""}
+          </p>
         )}
       </Link>
     </article>

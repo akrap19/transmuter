@@ -1567,156 +1567,161 @@
     },
     {
       "code": 6002,
+      "name": "MetadataUri",
+      "msg": "metadata uri too long"
+    },
+    {
+      "code": 6003,
       "name": "BadParams",
       "msg": "bad launch params"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "SaleType",
       "msg": "only FIXED sales are in MVP scope"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "ForfeitDest",
       "msg": "forfeit destination must be treasury"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "SalePct",
       "msg": "sale pct below minimum"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "LpPct",
       "msg": "lp pct below minimum"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "TeamPct",
       "msg": "team pct above maximum"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "InvestorPct",
       "msg": "investor allocation is not in MVP scope"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "DaoPct",
       "msg": "dao airdrop pct above maximum"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "AllocSum",
       "msg": "allocation percentages must sum to 100%"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "LpSplit",
       "msg": "lp split invalid"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "Fee",
       "msg": "transfer fee / split invalid"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "ReservePct",
       "msg": "reserve-mint bounds"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "ReserveGap",
       "msg": "reserve-mint gap"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "ReserveVoteWindow",
       "msg": "reserve-mint vote window"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "Schedule",
       "msg": "vesting schedule"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "SaleWindow",
       "msg": "sale window must be 1–60 days"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "FallbackSame",
       "msg": "fallback cToken equals backing"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "BackingWhitelist",
       "msg": "backing cToken is not whitelisted"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "FallbackWhitelist",
       "msg": "fallback cToken is not whitelisted"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "Infeasible",
       "msg": "launch is infeasible at snapshotted g/L"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "MinRaise",
       "msg": "targetRaise below minRaise"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "FixedRaise",
       "msg": "FIXED salePrice * salePct * supply != targetRaise"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "TeamRecipient",
       "msg": "team recipient required"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "DaoUnset",
       "msg": "dao contract required"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "Mint",
       "msg": "mint mismatch"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "BadStatus",
       "msg": "bad launch status"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "NeedEol",
       "msg": "EOL must be wired first"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "VestingNotRequired",
       "msg": "vesting is not required for this launch"
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "EscrowNotRequired",
       "msg": "escrow is not required for this launch"
     },
     {
-      "code": 6031,
+      "code": 6032,
       "name": "NotWired",
       "msg": "wiring incomplete; SALE is unreachable"
     },
     {
-      "code": 6032,
+      "code": 6033,
       "name": "Overflow",
       "msg": "overflow"
     }
@@ -2049,6 +2054,14 @@
           },
           {
             "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "metadata_uri",
+            "docs": [
+              "Off-chain Metaplex metadata JSON URI (holds name/symbol/image/socials).",
+              "Empty string = no metadata. Bounded to `METADATA_URI_MAX_LEN`."
+            ],
             "type": "string"
           },
           {
@@ -2413,6 +2426,10 @@
           },
           {
             "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "metadata_uri",
             "type": "string"
           },
           {

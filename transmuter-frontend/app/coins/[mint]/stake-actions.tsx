@@ -5,7 +5,7 @@ import { StakeForm } from "@/app/coins/[mint]/stake-form";
 import { useSubmitHolder } from "@/app/coins/[mint]/use-submit-holder";
 import { WalletGate } from "@/components/catalog/wallet-gate";
 import { tokenToAtoms } from "@/lib/catalog/holder-accounts";
-import { evaluateStakeAction } from "@/lib/catalog/stake";
+import { evaluateStakeAction, unstakeLockMessage } from "@/lib/catalog/stake";
 import type { HolderSubmit } from "@/lib/catalog/submit-holder";
 import type { CoinStake, LaunchStatus } from "@/lib/catalog/types";
 import { toastError } from "@/lib/toast";
@@ -15,7 +15,6 @@ const REASONS: Record<string, string> = {
   status: "Staking is not open for this launch.",
   amount: "Enter an amount greater than zero.",
   credit: "Not enough staked to unstake.",
-  lock: "Unstake is voter-locked until the lock expires.",
   liquidated: "Stake is off after end of life. Unstake remains open.",
 };
 
@@ -42,7 +41,9 @@ export function StakeActions({
     const now = Math.floor(Date.now() / 1000);
     const result = evaluateStakeAction(status, stake, now, { kind, amount: Number(amount) });
     if (!result.ok) {
-      toastError(REASONS[result.reason] ?? result.reason);
+      toastError(
+        result.reason === "lock" ? unstakeLockMessage(stake.voterLockedUntil) : (REASONS[result.reason] ?? result.reason),
+      );
       return;
     }
     void tx.run(kind, chain, { amount });
@@ -57,7 +58,7 @@ export function StakeActions({
         <StakeForm
           stake={stake}
           amount={amount}
-          busy={tx.busy}
+          pending={tx.pending === "stake" || tx.pending === "unstake" ? tx.pending : null}
           explorerUrl={tx.explorerUrl}
           onAmount={setAmount}
           onStake={() => run("stake")}

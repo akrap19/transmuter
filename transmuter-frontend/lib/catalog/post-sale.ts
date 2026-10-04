@@ -36,6 +36,16 @@ export function postSaleOffers(input: PostSaleInput): PostSaleKind[] {
   return offers;
 }
 
+export function postSaleButtonOrder(offers: PostSaleKind[]): PostSaleKind[] {
+  const claim = offers.indexOf("claimTokens");
+  const convert = offers.indexOf("convertTreasury");
+  if (claim < 0 || convert < 0 || claim < convert) return offers;
+  const next = offers.slice();
+  const [claimKind] = next.splice(claim, 1);
+  next.splice(convert, 0, claimKind);
+  return next;
+}
+
 export function raydiumSeedAmounts(
   input: Pick<PostSaleInput, "lpTokenAtoms" | "saleUsdcAtoms" | "wsolAtoms" | "lpUsdcShareBps">,
 ): RaydiumSeed {

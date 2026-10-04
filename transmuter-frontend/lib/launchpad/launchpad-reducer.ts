@@ -70,7 +70,7 @@ export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction)
             daoAirdropPct: next.daoAirdropPct,
             daoAirdrop: toggles.daoAirdrop,
           },
-          toggles.daoAirdrop ? "dao" : "lp",
+          "dao",
         );
         next = { ...next, ...synced };
       }

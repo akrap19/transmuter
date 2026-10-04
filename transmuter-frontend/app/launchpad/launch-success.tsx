@@ -1,11 +1,7 @@
 "use client";
 
-import { LaunchWiring } from "./launch-wiring";
+import { WireModal } from "./wire-modal";
 
 export function LaunchSuccess() {
-  return (
-    <div className="launch-success">
-      <LaunchWiring />
-    </div>
-  );
+  return <WireModal />;
 }

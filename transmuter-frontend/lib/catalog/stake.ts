@@ -1,3 +1,4 @@
+import { formatUnix } from "./format";
 import type { CoinStake, LaunchStatus } from "./types";
 
 export const STAKE_FEE_BPS = 0;
@@ -21,6 +22,11 @@ export function grossUp(amount: number, feeBps: number) {
 
 export function voterLocked(lockUntil: number | null, now: number) {
   return lockUntil != null && now < lockUntil;
+}
+
+export function unstakeLockMessage(lockUntil: number | null) {
+  if (lockUntil == null) return "You cannot unstake because of governance voting.";
+  return `You cannot unstake because of governance voting. Unstake unlocks on ${formatUnix(lockUntil)}.`;
 }
 
 export function evaluateStakeAction(

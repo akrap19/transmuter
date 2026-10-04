@@ -1,7 +1,13 @@
 import { PublicKey } from "@solana/web3.js";
 import { describe, expect, it } from "vitest";
 import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE } from "./fee-calculator";
-import { mapLaunchpadToCreateLaunch } from "./map-create-launch";
+import {
+  LaunchValidationError,
+  formatSaleWindow,
+  launchMissingLabels,
+  mapLaunchpadToCreateLaunch,
+  saleWindowSeconds,
+} from "./map-create-launch";
 import { initialLaunchpadState, type LaunchpadState } from "./types";
 
 const CSOL = "So11111111111111111111111111111111111111112";
@@ -19,7 +25,7 @@ function launchState(overrides: Partial<LaunchpadState> = {}): LaunchpadState {
     escrowNeed: "0",
     targetRaise: "70000",
     saleType: "fixed",
-    saleWindow: "1 week",
+    saleWindow: "7",
     allocLP: 20,
     allocTeam: 10,
     allocPublic: 70,
@@ -89,10 +95,10 @@ describe("mapLaunchpadToCreateLaunch", () => {
     expect(params.reserveMintVoteWindowSecs.toString()).toBe(String(48 * 3600));
     expect(params.liqVoteWindowSecs.toString()).toBe(String(14 * 24 * 3600));
     expect(params.convertChunk.toString()).toBe("0");
-    expect(params.transferFeeBps).toBe(50);
+    expect(params.transferFeeBps).toBe(55);
     expect(params.feeLpBps).toBe(15);
     expect(params.feeTreasuryBps).toBe(15);
-    expect(params.feeCtokenBps).toBe(5);
+    expect(params.feeCtokenBps).toBe(10);
     expect(params.feeProtocolBps).toBe(15);
     expect(params.feeCreatorBps).toBe(0);
     expect(params.feeBurnBps).toBe(0);
@@ -109,17 +115,34 @@ describe("mapLaunchpadToCreateLaunch", () => {
     expect(accounts.fallbackListing).toBeInstanceOf(PublicKey);
   });
 
-  it("converts a 1 week sale window and vesting presets to chain units", () => {
+  it("converts a day-count sale window and vesting presets to chain units", () => {
     expect(map(launchState({ vesting: "None" })).params.vestingSchedule).toBe(0);
     expect(map(launchState({ vesting: "6 Month Cliff" })).params.vestingSchedule).toBe(1);
     expect(map(launchState({ vesting: "24 Month Linear" })).params.vestingSchedule).toBe(3);
     expect(map(launchState({ vesting: "6M Cliff + 18M Linear" })).params.vestingSchedule).toBe(4);
-    expect(map(launchState({ saleWindow: "2 days" })).params.saleEnd.toString()).toBe(
+    expect(map(launchState({ saleWindow: "2" })).params.saleEnd.toString()).toBe(
       String(NOW + 2 * 24 * 3600),
     );
-    expect(map(launchState({ saleWindow: "60 days" })).params.saleEnd.toString()).toBe(
+    expect(map(launchState({ saleWindow: "1.5" })).params.saleEnd.toString()).toBe(
+      String(NOW + 1.5 * 24 * 3600),
+    );
+    expect(map(launchState({ saleWindow: "60" })).params.saleEnd.toString()).toBe(
       String(NOW + 60 * 24 * 3600),
     );
+    expect(map(launchState({ saleWindow: "1" })).params.saleEnd.toString()).toBe(
+      String(NOW + 24 * 3600),
+    );
+  });
+
+  it("rejects sale windows outside 1–60 days", () => {
+    expect(saleWindowSeconds("0.5")).toBeNull();
+    expect(saleWindowSeconds("60.1")).toBeNull();
+    expect(saleWindowSeconds("61")).toBeNull();
+    expect(saleWindowSeconds("")).toBeNull();
+    expect(formatSaleWindow("2.5")).toBe("2.5 days");
+    expect(formatSaleWindow("1")).toBe("1 day");
+    expect(() => map(launchState({ saleWindow: "0.5" }))).toThrow(/1–60 days/);
+    expect(launchMissingLabels(launchState({ saleWindow: "90" }))).toContain("a sale window of 1–60 days");
   });
 
   it("rejects sale types, investor allocations, and custom vesting the chain cannot snapshot", () => {
@@ -129,5 +152,26 @@ describe("mapLaunchpadToCreateLaunch", () => {
       map(launchState({ showInvestors: true, allocInvestors: 10, allocPublic: 60 })),
     ).toThrow(/investor/i);
     expect(() => map(launchState({ vesting: "Custom" }))).toThrow(/vesting/i);
+  });
+
+  it("names every missing piece in one readable list", () => {
+    expect(launchMissingLabels(launchState({ tokenName: "", tokenTicker: "", allocPublic: 50 }))).toEqual([
+      "token name",
+      "token ticker",
+      "an allocation that totals 100%",
+    ]);
+  });
+
+  it("reports a name problem and an allocation problem together", () => {
+    expect(() => map(launchState({ tokenName: "", allocPublic: 50 }))).toThrow(LaunchValidationError);
+    try {
+      map(launchState({ tokenName: "", allocPublic: 50 }));
+    } catch (error) {
+      expect(error).toBeInstanceOf(LaunchValidationError);
+      const issues = (error as LaunchValidationError).issues;
+      expect(issues).toContain("token name and ticker are required");
+      expect(issues).toContain("allocations must sum to 100%");
+      expect(issues.length).toBeGreaterThan(1);
+    }
   });
 });

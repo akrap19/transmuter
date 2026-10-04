@@ -8,6 +8,7 @@ import {
 } from "@solana/spl-token";
 import { ComputeBudgetProgram, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { eolConfigPda } from "@/lib/solana/programs/eol-token";
+import { factoryMintIndexPda, launchPda } from "@/lib/solana/programs/factory";
 import type { AccountMeta } from "@/lib/solana/raydium-cpmm";
 import {
   ChainTransactionError,
@@ -39,6 +40,17 @@ export type EolPostSaleClient = {
   };
 };
 
+export type FactoryOutcomeClient = {
+  methods: {
+    syncOutcome: () => IxBuilder;
+  };
+  account: {
+    mintIndex: {
+      fetchNullable: (address: PublicKey) => Promise<{ launchId: { toString(): string } } | null>;
+    };
+  };
+};
+
 export type PostSaleChain = PostSaleAccountsInput & {
   lpUsdcShareBps: number;
   lpTokenAtoms: bigint;
@@ -56,6 +68,7 @@ export async function submitPostSale(input: {
   kind: PostSaleKind;
   chain: PostSaleChain;
   eol: EolPostSaleClient;
+  factory?: FactoryOutcomeClient;
   connection: TxConnection;
   signer: TransactionSigner;
   send?: typeof signSendAndConfirm;
@@ -69,7 +82,7 @@ export async function submitPostSale(input: {
     if (input.kind !== "claimTokens") {
       transaction.add(ComputeBudgetProgram.setComputeUnitLimit({ units: FINALIZE_CU }));
     }
-    transaction.add(...(await instructions(input.kind, input.chain, input.eol)));
+    transaction.add(...(await instructions(input.kind, input.chain, input.eol, input.factory)));
     return await send({ connection: input.connection, signer: input.signer, transaction });
   } catch (error) {
     if (error instanceof ChainTransactionError) throw error;
@@ -78,7 +91,12 @@ export async function submitPostSale(input: {
   }
 }
 
-async function instructions(kind: PostSaleKind, chain: PostSaleChain, eol: EolPostSaleClient): Promise<Transaction["instructions"]> {
+async function instructions(
+  kind: PostSaleKind,
+  chain: PostSaleChain,
+  eol: EolPostSaleClient,
+  factory?: FactoryOutcomeClient,
+): Promise<Transaction["instructions"]> {
   if (kind === "claimTokens") {
     const plan = claimPlan({ mint: chain.mint, depositor: chain.cranker, saleTokenVault: chain.saleTokenVault });
     const claim = await compile(eol.methods.claimTokens(), plan.accounts, []);
@@ -98,7 +116,11 @@ async function instructions(kind: PostSaleKind, chain: PostSaleChain, eol: EolPo
     const prelude = wsolPrelude(chain);
     if (kind === "finalize") {
       const plan = finalizePlan(chain);
-      return [...prelude, ...(await compile(eol.methods.finalize(), plan.accounts, plan.remaining))];
+      return [
+        ...prelude,
+        ...(await compile(eol.methods.finalize(), plan.accounts, plan.remaining)),
+        ...(await syncOutcomeIx(factory, chain)),
+      ];
     }
     const plan = convertPlan(chain);
     return [
@@ -126,6 +148,18 @@ async function instructions(kind: PostSaleKind, chain: PostSaleChain, eol: EolPo
     plan.remaining,
   );
   return [...fundLpSigner(chain, plan.lpSigner), ...wsolPrelude(chain), ...built];
+}
+
+async function syncOutcomeIx(factory: FactoryOutcomeClient | undefined, chain: PostSaleChain): Promise<Transaction["instructions"]> {
+  if (!factory) throw new ChainTransactionError("Factory client is required to record the sale outcome.");
+  const index = await factory.account.mintIndex.fetchNullable(factoryMintIndexPda(chain.mint));
+  if (!index) throw new ChainTransactionError("This mint is not in the Factory index.");
+  const launch = launchPda(BigInt(index.launchId.toString()));
+  return compile(
+    factory.methods.syncOutcome(),
+    { cranker: chain.cranker, launch, eolConfig: eolConfigPda(chain.mint) },
+    [],
+  );
 }
 
 function wsolPrelude(chain: PostSaleChain) {

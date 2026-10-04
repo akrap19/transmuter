@@ -3,15 +3,15 @@ import { ComputeBudgetProgram, Keypair, PublicKey, SystemProgram, Transaction } 
 import { describe, expect, it, vi } from "vitest";
 import { PROGRAM_IDS } from "@/lib/solana/program-ids";
 import { claimPlan, finalizePlan } from "./post-sale-accounts";
-import { submitPostSale, type EolPostSaleClient, type PostSaleChain } from "./submit-post-sale";
+import { submitPostSale, type EolPostSaleClient, type FactoryOutcomeClient, type PostSaleChain } from "./submit-post-sale";
 
 const mint = Keypair.generate().publicKey;
 const cranker = Keypair.generate().publicKey;
 const usdc = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
 
 describe("submitPostSale", () => {
-  it("finalizes through the mock DEX pools with the finalize compute budget", async () => {
-    const { eol, finalize, accounts } = client();
+  it("finalizes through the mock DEX pools and records the outcome on the Factory launch", async () => {
+    const { eol, finalize, accounts, factory, syncOutcome } = client();
     const send = vi.fn().mockResolvedValue({ signature: "fin", explorerUrl: "https://explorer.solana.com/tx/fin?cluster=devnet" });
     const chain = fixture();
 
@@ -19,15 +19,18 @@ describe("submitPostSale", () => {
       kind: "finalize",
       chain,
       eol,
+      factory,
       connection: {} as never,
       signer: { publicKey: cranker, signTransaction: async (tx) => tx },
       send,
     });
 
     expect(finalize).toHaveBeenCalled();
+    expect(syncOutcome).toHaveBeenCalled();
     expect(accounts).toHaveBeenCalledWith(finalizePlan(chain).accounts);
     const tx = send.mock.calls[0][0].transaction as Transaction;
     expect(tx.instructions[0]?.programId.equals(ComputeBudgetProgram.programId)).toBe(true);
+    expect(tx.instructions.some((ix) => ix.programId.equals(new PublicKey(PROGRAM_IDS.factory)))).toBe(true);
     expect(result.signature).toBe("fin");
   });
 
@@ -91,16 +94,26 @@ describe("submitPostSale", () => {
 
 function client() {
   const built = new Transaction().add({ keys: [], programId: new PublicKey(PROGRAM_IDS.eolToken), data: Buffer.from([1]) });
+  const synced = new Transaction().add({ keys: [], programId: new PublicKey(PROGRAM_IDS.factory), data: Buffer.from([2]) });
   const accounts = vi.fn().mockReturnValue({
     remainingAccounts: vi.fn().mockReturnValue({ transaction: vi.fn().mockResolvedValue(built) }),
     transaction: vi.fn().mockResolvedValue(built),
+  });
+  const syncAccounts = vi.fn().mockReturnValue({
+    remainingAccounts: vi.fn().mockReturnValue({ transaction: vi.fn().mockResolvedValue(synced) }),
+    transaction: vi.fn().mockResolvedValue(synced),
   });
   const finalize = vi.fn().mockReturnValue({ accounts });
   const convert = vi.fn().mockReturnValue({ accounts });
   const seed = vi.fn().mockReturnValue({ accounts });
   const claim = vi.fn().mockReturnValue({ accounts });
+  const syncOutcome = vi.fn().mockReturnValue({ accounts: syncAccounts });
   const eol: EolPostSaleClient = { methods: { finalize, convertTreasury: convert, seedRaydiumLp: seed, claimTokens: claim } };
-  return { eol, finalize, convert, seed, claim, accounts };
+  const factory: FactoryOutcomeClient = {
+    methods: { syncOutcome },
+    account: { mintIndex: { fetchNullable: vi.fn().mockResolvedValue({ launchId: { toString: () => "3" } }) } },
+  };
+  return { eol, factory, finalize, convert, seed, claim, accounts, syncOutcome };
 }
 
 function fixture(overrides: Partial<PostSaleChain> = {}): PostSaleChain {

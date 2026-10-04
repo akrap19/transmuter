@@ -11,7 +11,7 @@ import { toastError, toastSuccess } from "@/lib/toast";
 export function useSubmitHolder(onConfirmed: () => void) {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<HolderKind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null);
 
@@ -23,7 +23,7 @@ export function useSubmitHolder(onConfirmed: () => void) {
         setError(message);
         return;
       }
-      setBusy(true);
+      setPending(kind);
       setError(null);
       setExplorerUrl(null);
       try {
@@ -47,16 +47,28 @@ export function useSubmitHolder(onConfirmed: () => void) {
         toastSuccess("Transaction confirmed");
         onConfirmed();
       } catch (err) {
-        const message = err instanceof Error ? err.message : "The transaction failed.";
+        const message = holderFailureMessage(err);
         toastError(message);
         setError(message);
         setExplorerUrl(err instanceof ChainTransactionError ? (err.explorerUrl ?? null) : null);
       } finally {
-        setBusy(false);
+        setPending(null);
       }
     },
     [connection, onConfirmed, wallet],
   );
 
-  return { busy, error, explorerUrl, run };
+  return { busy: pending != null, pending, error, explorerUrl, run };
+}
+
+function holderFailureMessage(err: unknown): string {
+  const message = err instanceof Error ? err.message : "The transaction failed.";
+  const code = err instanceof ChainTransactionError ? err.code : undefined;
+  if (code === "VoterLock" || /voter lock has not expired/i.test(message)) {
+    return "You cannot unstake because of governance voting.";
+  }
+  if (code === "AlreadyVoted" || /you already voted/i.test(message)) {
+    return "You already voted. A wallet can vote once.";
+  }
+  return message;
 }

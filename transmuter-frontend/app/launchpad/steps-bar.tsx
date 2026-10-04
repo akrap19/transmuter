@@ -16,7 +16,7 @@ export function StepsBar() {
         return (
           <div key={label} style={{ display: "contents" }}>
             {i > 0 && (
-              <div className={`step-line${isDone ? " done" : ""}`} />
+              <div className={`step-line${currentStep >= step ? " done" : ""}`} />
             )}
             <button
               type="button"

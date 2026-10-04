@@ -88,6 +88,7 @@ export async function submitCreateLaunch(
     teamRecipient: input.wallet,
     daoContract: input.daoContract ?? PROGRAM_IDS.dao,
     whitelist: input.whitelist,
+    metadataUri,
   });
 
   const factoryPdaKey = factoryPda();

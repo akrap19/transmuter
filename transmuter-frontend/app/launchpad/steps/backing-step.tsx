@@ -22,20 +22,21 @@ export function BackingStep() {
             className={`ctoken-card${selectedCToken.name === c.name ? " selected" : ""}`}
             onClick={() => dispatch({ type: "SELECT_CTOKEN", cToken: c })}
           >
-            <div className="ctoken-icon">{c.icon}</div>
+            <div className="ctoken-icon">
+              {c.name === "cSOL" ? <SolanaMark /> : c.icon}
+            </div>
             <div className="ctoken-name">{c.name}</div>
             <div className="ctoken-base">{c.base}</div>
           </button>
         ))}
       </div>
 
-      <hr className="section-divider" />
-      <div className="panel-title reserve-title"><div className="dot dot-gold" />Mint to Scale</div>
+      <div className="section-title"><div className="dot" />Mint to scale</div>
 
       <p className="step-intro reserve-intro">
         If the value of your treasury falls below the activate threshold you set here,
         continuously for 6 hours, a Mint to Scale event opens <em>automatically</em>: up to{" "}
-        <strong style={{ color: "var(--tm-gold)" }}>15% of supply</strong> becomes mintable
+        <strong>15% of supply</strong> becomes mintable
         at market price plus a descending premium (opening near 20%, easing toward 3%),
         refilling the treasury above market. No vote required, no creator involvement,
         manipulation-resistant by design.
@@ -65,7 +66,7 @@ export function BackingStep() {
       />
 
       <div className="auto-mint-info">
-        <strong style={{ color: "var(--tm-gold)" }}>
+        <strong>
           Hysteresis band {autoMintTrigger}% / {autoMintDeactivate}%:
         </strong>{" "}
         a Mint to Scale event opens automatically if backing stays below {autoMintTrigger}%
@@ -77,9 +78,9 @@ export function BackingStep() {
         influence or block this.
       </div>
 
-      <hr className="section-divider" />
+      <div className="section-title"><div className="dot" />Governance</div>
       <SliderBlock
-        label="Governance Mint Vote Window"
+        label="Governance mint vote window"
         value={voteWindow}
         display={`${voteWindow}h`}
         min={24}
@@ -92,7 +93,7 @@ export function BackingStep() {
       />
 
       <div className="reserve-limits">
-        <strong style={{ color: "var(--tm-gold)" }}>Hard limits, enforced on-chain:</strong>{" "}
+        <strong>Hard limits, enforced on-chain:</strong>{" "}
         max 3 automatic events per rolling year (60 days apart) · max 3 governance events
         per rolling year · nothing opens while backing is at or above 50% · only one event
         open at a time · every mint prices above market and feeds the treasury.
@@ -103,6 +104,25 @@ export function BackingStep() {
         <button type="button" className="btn btn-primary" onClick={() => goToStep(4)}>Next: Fees →</button>
       </div>
     </div>
+  );
+}
+
+function SolanaMark() {
+  return (
+    <svg className="solana-mark" viewBox="0 0 398 312" aria-hidden="true">
+      <defs>
+        <linearGradient id="csol-solana" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#9945FF" />
+          <stop offset="50%" stopColor="#7961F2" />
+          <stop offset="100%" stopColor="#14F195" />
+        </linearGradient>
+      </defs>
+      <g fill="url(#csol-solana)">
+        <path d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z" />
+        <path d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z" />
+        <path d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z" />
+      </g>
+    </svg>
   );
 }
 
@@ -148,7 +168,7 @@ function SliderBlock({
         <span>{hints[0]}</span>
         <span>{hints[1]}</span>
       </div>
-      {note && <div className="small-note" style={{ marginTop: 8 }}>{note}</div>}
+      {note && <div className="small-note">{note}</div>}
     </div>
   );
 }

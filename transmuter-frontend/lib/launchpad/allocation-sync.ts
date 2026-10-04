@@ -73,6 +73,19 @@ export function syncAllocation(
         lp -= cut;
       }
     }
+  } else if (changed === "dao" && total < MAX) {
+    let gap = MAX - total;
+    const teamRoom = Math.max(0, 20 - team);
+    const toTeam = Math.min(gap, teamRoom);
+    team += toTeam;
+    gap -= toTeam;
+    if (gap > 0) {
+      const lpRoom = Math.max(0, 45 - lp);
+      const toLp = Math.min(gap, lpRoom);
+      lp += toLp;
+      gap -= toLp;
+    }
+    if (gap > 0) pub += gap;
   }
 
   return {

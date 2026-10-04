@@ -1573,156 +1573,161 @@ export type TransmuterFactory = {
     },
     {
       "code": 6002,
+      "name": "metadataUri",
+      "msg": "metadata uri too long"
+    },
+    {
+      "code": 6003,
       "name": "badParams",
       "msg": "bad launch params"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "saleType",
       "msg": "only FIXED sales are in MVP scope"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "forfeitDest",
       "msg": "forfeit destination must be treasury"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "salePct",
       "msg": "sale pct below minimum"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "lpPct",
       "msg": "lp pct below minimum"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "teamPct",
       "msg": "team pct above maximum"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "investorPct",
       "msg": "investor allocation is not in MVP scope"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "daoPct",
       "msg": "dao airdrop pct above maximum"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "allocSum",
       "msg": "allocation percentages must sum to 100%"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "lpSplit",
       "msg": "lp split invalid"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "fee",
       "msg": "transfer fee / split invalid"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "reservePct",
       "msg": "reserve-mint bounds"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "reserveGap",
       "msg": "reserve-mint gap"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "reserveVoteWindow",
       "msg": "reserve-mint vote window"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "schedule",
       "msg": "vesting schedule"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "saleWindow",
       "msg": "sale window must be 1–60 days"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "fallbackSame",
       "msg": "fallback cToken equals backing"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "backingWhitelist",
       "msg": "backing cToken is not whitelisted"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "fallbackWhitelist",
       "msg": "fallback cToken is not whitelisted"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "infeasible",
       "msg": "launch is infeasible at snapshotted g/L"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "minRaise",
       "msg": "targetRaise below minRaise"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "fixedRaise",
       "msg": "FIXED salePrice * salePct * supply != targetRaise"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "teamRecipient",
       "msg": "team recipient required"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "daoUnset",
       "msg": "dao contract required"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "mint",
       "msg": "mint mismatch"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "badStatus",
       "msg": "bad launch status"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "needEol",
       "msg": "EOL must be wired first"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "vestingNotRequired",
       "msg": "vesting is not required for this launch"
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "escrowNotRequired",
       "msg": "escrow is not required for this launch"
     },
     {
-      "code": 6031,
+      "code": 6032,
       "name": "notWired",
       "msg": "wiring incomplete; SALE is unreachable"
     },
     {
-      "code": 6032,
+      "code": 6033,
       "name": "overflow",
       "msg": "overflow"
     }
@@ -2055,6 +2060,14 @@ export type TransmuterFactory = {
           },
           {
             "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "metadataUri",
+            "docs": [
+              "Off-chain Metaplex metadata JSON URI (holds name/symbol/image/socials).",
+              "Empty string = no metadata. Bounded to `METADATA_URI_MAX_LEN`."
+            ],
             "type": "string"
           },
           {
@@ -2419,6 +2432,10 @@ export type TransmuterFactory = {
           },
           {
             "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "metadataUri",
             "type": "string"
           },
           {

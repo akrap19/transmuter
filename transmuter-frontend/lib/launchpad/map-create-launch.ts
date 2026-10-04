@@ -13,13 +13,9 @@ export const LP_SPLIT_BPS = 5000;
 export const RESERVE_MINT_DURATION_SECS = 6 * 3600;
 export const LIQ_VOTE_WINDOW_SECS = 14 * 24 * 3600;
 
-const SALE_WINDOW_SECS: Record<string, number> = {
-  "2 days": 2 * 24 * 3600,
-  "1 week": 7 * 24 * 3600,
-  "2 weeks": 14 * 24 * 3600,
-  "1 month": 30 * 24 * 3600,
-  "60 days": 60 * 24 * 3600,
-};
+const SECONDS_PER_DAY = 24 * 3600;
+export const SALE_WINDOW_MIN_DAYS = 1;
+export const SALE_WINDOW_MAX_DAYS = 60;
 
 const VESTING_KIND: Record<Exclude<VestingPreset, "Custom">, number> = {
   None: 0,
@@ -29,17 +25,22 @@ const VESTING_KIND: Record<Exclude<VestingPreset, "Custom">, number> = {
   "6M Cliff + 18M Linear": 4,
 };
 
+export const METADATA_URI_MAX_LEN = 200;
+
 export type MapCreateLaunchInput = {
   state: LaunchpadState;
   nowSeconds: number;
   teamRecipient: string;
   daoContract: string;
   whitelist: CToken[];
+  /** Off-chain Metaplex metadata JSON URI, stored on the Launch account. */
+  metadataUri?: string;
 };
 
 export type MappedCreateLaunchParams = {
   name: string;
   symbol: string;
+  metadataUri: string;
   decimals: number;
   saleType: number;
   salePrice: BN;
@@ -81,24 +82,32 @@ export type MappedCreateLaunchAccounts = {
   daoContract: PublicKey;
 };
 
-export function mapLaunchpadToCreateLaunch(input: MapCreateLaunchInput): {
-  params: MappedCreateLaunchParams;
-  accounts: MappedCreateLaunchAccounts;
-} {
-  const { state, whitelist } = input;
+export class LaunchValidationError extends Error {
+  readonly issues: readonly string[];
+
+  constructor(issues: readonly string[]) {
+    super(issues.join("\n"));
+    this.name = "LaunchValidationError";
+    this.issues = issues;
+  }
+}
+
+/** Every wizard problem that blocks createLaunch. Independent checks all stay in the list. */
+export function launchValidationIssues(state: LaunchpadState): string[] {
+  const issues: string[] = [];
   const name = state.tokenName.trim();
   const symbol = state.tokenTicker.trim().toUpperCase();
   if (!name || !symbol) {
-    throw new Error("token name and ticker are required");
+    issues.push("token name and ticker are required");
   }
   if (name.length > 32 || symbol.length > 12) {
-    throw new Error("token name or ticker exceeds on-chain length");
+    issues.push("token name or ticker exceeds on-chain length");
   }
   if (state.saleType !== "fixed") {
-    throw new Error("Factory only accepts FIXED sales");
+    issues.push("Factory only accepts FIXED sales");
   }
   if (state.vesting === "Custom") {
-    throw new Error("custom vesting is not a chain schedule");
+    issues.push("custom vesting is not a chain schedule");
   }
 
   const saleBps = pctToBps(state.allocPublic);
@@ -107,32 +116,139 @@ export function mapLaunchpadToCreateLaunch(input: MapCreateLaunchInput): {
   const investorBps = state.showInvestors ? pctToBps(state.allocInvestors) : 0;
   const daoBps = state.toggles.daoAirdrop ? pctToBps(state.daoAirdropPct) : 0;
   if (investorBps > 0) {
-    throw new Error("investor allocation is not enabled on-chain");
+    issues.push("investor allocation is not enabled on-chain");
   }
   if (saleBps + lpBps + teamBps + investorBps + daoBps !== 10_000) {
-    throw new Error("allocations must sum to 100%");
+    issues.push("allocations must sum to 100%");
   }
 
   const solve = solveFromState(state);
   if (!solve?.feasible || solve.R == null || solve.supply == null) {
-    throw new Error("launch is not feasible");
+    issues.push("launch is not feasible");
   }
 
-  const windowSecs = SALE_WINDOW_SECS[state.saleWindow];
+  if (saleWindowSeconds(state.saleWindow) == null) {
+    issues.push("sale window must be 1–60 days");
+  }
+
+  let totalSupply = BigInt(0);
+  try {
+    totalSupply = decimalToAtomic(state.tokenSupply, TOKEN_DECIMALS);
+  } catch (error) {
+    issues.push(error instanceof Error ? error.message : "invalid supply");
+  }
+  try {
+    decimalToAtomic(state.escrowNeed || "0", USDC_DECIMALS);
+  } catch (error) {
+    issues.push(error instanceof Error ? error.message : "invalid escrow");
+  }
+
+  const saleTokens = (totalSupply * BigInt(saleBps)) / BigInt(10_000);
+  if (saleTokens === BigInt(0) || totalSupply === BigInt(0)) {
+    issues.push("supply and sale allocation must be positive");
+  } else if (solve?.feasible && solve.R != null) {
+    const salePrice = (numberToAtomic(solve.R, USDC_DECIMALS) * BigInt(10) ** BigInt(TOKEN_DECIMALS)) / saleTokens;
+    if (salePrice === BigInt(0)) {
+      issues.push("sale price rounds to zero");
+    }
+  }
+
+  return issues;
+}
+
+/** Plain labels for the review step. One line under Deploy, not a stack of toasts. */
+export function launchMissingLabels(state: LaunchpadState): string[] {
+  const labels: string[] = [];
+  const name = state.tokenName.trim();
+  const symbol = state.tokenTicker.trim();
+  if (!name) labels.push("token name");
+  else if (name.length > 32) labels.push("a token name of 32 characters or fewer");
+  if (!symbol) labels.push("token ticker");
+  else if (symbol.length > 12) labels.push("a ticker of 12 characters or fewer");
+
+  const supplyMissing = !state.tokenSupply.trim() || Number(state.tokenSupply) <= 0;
+  if (supplyMissing) labels.push("token supply");
+
+  for (const issue of launchValidationIssues(state)) {
+    if (
+      issue === "token name and ticker are required" ||
+      issue === "token name or ticker exceeds on-chain length" ||
+      issue === "supply and sale allocation must be positive" ||
+      (issue === "launch is not feasible" && supplyMissing)
+    ) {
+      continue;
+    }
+    if (issue === "allocations must sum to 100%") {
+      labels.push("an allocation that totals 100%");
+      continue;
+    }
+    if (issue === "launch is not feasible") {
+      labels.push("a raise this split can fund");
+      continue;
+    }
+    if (issue === "Factory only accepts FIXED sales") {
+      labels.push("a fixed-price sale");
+      continue;
+    }
+    if (issue === "custom vesting is not a chain schedule") {
+      labels.push("a supported vesting schedule");
+      continue;
+    }
+    if (issue === "investor allocation is not enabled on-chain") {
+      labels.push("investor allocation turned off");
+      continue;
+    }
+    if (issue === "sale window must be 1–60 days") {
+      labels.push("a sale window of 1–60 days");
+      continue;
+    }
+    if (issue === "sale price rounds to zero") {
+      labels.push("a sale price above zero");
+      continue;
+    }
+    if (issue.startsWith("invalid decimal")) {
+      labels.push("a valid supply and escrow amount");
+      continue;
+    }
+    labels.push(issue);
+  }
+
+  return labels;
+}
+
+export function mapLaunchpadToCreateLaunch(input: MapCreateLaunchInput): {
+  params: MappedCreateLaunchParams;
+  accounts: MappedCreateLaunchAccounts;
+} {
+  const { state, whitelist } = input;
+  const issues = launchValidationIssues(state);
+  if (issues.length > 0) {
+    throw new LaunchValidationError(issues);
+  }
+  if (state.vesting === "Custom") {
+    throw new LaunchValidationError(["custom vesting is not a chain schedule"]);
+  }
+
+  const name = state.tokenName.trim();
+  const symbol = state.tokenTicker.trim().toUpperCase();
+  const saleBps = pctToBps(state.allocPublic);
+  const lpBps = pctToBps(state.allocLP);
+  const teamBps = pctToBps(state.allocTeam);
+  const investorBps = state.showInvestors ? pctToBps(state.allocInvestors) : 0;
+  const daoBps = state.toggles.daoAirdrop ? pctToBps(state.daoAirdropPct) : 0;
+  const solve = solveFromState(state);
+  if (!solve?.feasible || solve.R == null || solve.supply == null) {
+    throw new LaunchValidationError(["launch is not feasible"]);
+  }
+  const windowSecs = saleWindowSeconds(state.saleWindow);
   if (windowSecs == null) {
-    throw new Error(`unknown sale window ${state.saleWindow}`);
+    throw new LaunchValidationError(["sale window must be 1–60 days"]);
   }
 
   const totalSupply = decimalToAtomic(state.tokenSupply, TOKEN_DECIMALS);
   const targetFromUi = numberToAtomic(solve.R, USDC_DECIMALS);
   const saleTokens = (totalSupply * BigInt(saleBps)) / BigInt(10_000);
-  if (saleTokens === BigInt(0) || totalSupply === BigInt(0)) {
-    throw new Error("supply and sale allocation must be positive");
-  }
   const salePrice = (targetFromUi * BigInt(10) ** BigInt(TOKEN_DECIMALS)) / saleTokens;
-  if (salePrice === BigInt(0)) {
-    throw new Error("sale price rounds to zero");
-  }
   const targetRaise = (saleTokens * salePrice) / BigInt(10) ** BigInt(TOKEN_DECIMALS);
 
   const feeLpBps = pctToBps(state.fees.lpFee);
@@ -152,10 +268,16 @@ export function mapLaunchpadToCreateLaunch(input: MapCreateLaunchInput): {
   const backingCtoken = new PublicKey(backing.mint);
   const fallbackCtokenPk = new PublicKey(fallback.mint);
 
+  const metadataUri = input.metadataUri ?? "";
+  if (metadataUri.length > METADATA_URI_MAX_LEN) {
+    throw new Error(`metadata URI exceeds ${METADATA_URI_MAX_LEN} chars`);
+  }
+
   return {
     params: {
       name,
       symbol,
+      metadataUri,
       decimals: TOKEN_DECIMALS,
       saleType: 0,
       salePrice: bn(salePrice),
@@ -196,6 +318,36 @@ export function mapLaunchpadToCreateLaunch(input: MapCreateLaunchInput): {
       daoContract: new PublicKey(input.daoContract),
     },
   };
+}
+
+/** Days in the wizard (decimals allowed) to whole seconds, inside the 1–60 day chain window. */
+export function saleWindowSeconds(raw: string): number | null {
+  const match = /^(\d+)(?:\.(\d+))?$/.exec(raw.trim());
+  if (!match) return null;
+  const whole = BigInt(match[1]);
+  const frac = match[2] ?? "";
+  if (whole < BigInt(SALE_WINDOW_MIN_DAYS) || whole > BigInt(SALE_WINDOW_MAX_DAYS)) return null;
+  if (whole === BigInt(SALE_WINDOW_MAX_DAYS) && /[1-9]/.test(frac)) return null;
+
+  const day = BigInt(SECONDS_PER_DAY);
+  let fracSecs = BigInt(0);
+  if (frac) {
+    const scale = BigInt(10) ** BigInt(frac.length);
+    fracSecs = (BigInt(frac) * day + scale / BigInt(2)) / scale;
+    if (fracSecs >= day) fracSecs = day - BigInt(1);
+  }
+  const secs = whole * day + fracSecs;
+  const min = BigInt(SALE_WINDOW_MIN_DAYS) * day;
+  const max = BigInt(SALE_WINDOW_MAX_DAYS) * day;
+  if (secs < min || secs > max) return null;
+  return Number(secs);
+}
+
+export function formatSaleWindow(raw: string): string {
+  const secs = saleWindowSeconds(raw);
+  if (secs == null) return "—";
+  const days = Number(raw.trim());
+  return `${days} ${days === 1 ? "day" : "days"}`;
 }
 
 function pctToBps(pct: number): number {

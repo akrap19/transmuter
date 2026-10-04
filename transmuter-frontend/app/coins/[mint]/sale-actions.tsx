@@ -21,11 +21,13 @@ export function SaleActions({
   mint,
   status,
   sale,
+  depositKnown,
   onConfirmed,
 }: {
   mint: string;
   status: CoinDetail["status"];
   sale: SaleSnapshot;
+  depositKnown: boolean;
   onConfirmed: () => void;
 }) {
   const [amount, setAmount] = useState("250");
@@ -58,7 +60,7 @@ export function SaleActions({
 
   return (
     <WalletGate
-      title="Connect to deposit USDC"
+      title={sale.depositsOpen ? "Connect to deposit USDC" : "Connect to withdraw USDC"}
       body="Deposits and full withdrawals are signed by the connected wallet. There is no login."
     >
       {(wallet) => (
@@ -66,8 +68,9 @@ export function SaleActions({
           wallet={wallet}
           revision={revision}
           amount={amount}
-          busy={saleTx.busy}
+          pending={saleTx.pending}
           sale={sale}
+          depositKnown={depositKnown}
           explorerUrl={saleTx.explorerUrl}
           onAmount={setAmount}
           onDeposit={() => run("deposit")}

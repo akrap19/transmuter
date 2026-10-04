@@ -50,11 +50,10 @@ export function VestingActions({
           </div>
           {!chain.vesting ? <p className="coin-note">This wallet has no vesting entry on the launch.</p> : null}
           {tx.explorerUrl ? (
-            <p className="coin-note">
-              <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
-                View transaction
-              </a>
-            </p>
+            <a className="coin-tx-link" href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
+              View transaction
+              <span aria-hidden="true">↗</span>
+            </a>
           ) : null}
         </div>
       )}

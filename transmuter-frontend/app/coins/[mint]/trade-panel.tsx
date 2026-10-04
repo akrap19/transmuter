@@ -1,27 +1,19 @@
 import { CoinSection } from "@/app/coins/[mint]/coin-section";
-import { CatalogEmpty } from "@/components/catalog/catalog-empty";
+import { ScrollRows } from "@/app/coins/[mint]/scroll-rows";
+import { shownTradePools } from "@/lib/catalog/trade";
 import { shortenAddress } from "@/lib/solana/config";
-import { tradeAvailable } from "@/lib/catalog/trade";
 import type { CoinDetail } from "@/lib/catalog/types";
 
 export function TradePanel({ coin }: { coin: CoinDetail }) {
-  if (!tradeAvailable(coin.status)) return null;
-
-  const pools = coin.trade?.pools ?? [];
-  if (pools.length === 0) {
-    return (
-      <CoinSection title="Trade">
-        <CatalogEmpty title="Pools not indexed yet" body="After finalize, EOL/USDC and EOL/SOL links will land here." />
-      </CoinSection>
-    );
-  }
+  const pools = shownTradePools(coin.status, coin.trade?.pools);
+  if (pools.length === 0) return null;
 
   return (
     <CoinSection
       title="Trade"
       lede="Buy or sell through the post-finalize EOL/USDC and EOL/SOL pools. Deep-links open the DEX with this mint selected."
     >
-      <div className="coin-trade">
+      <ScrollRows className="coin-trade">
         {pools.map((pool) => (
           <article key={pool.label}>
             <span>{pool.label}</span>
@@ -31,7 +23,7 @@ export function TradePanel({ coin }: { coin: CoinDetail }) {
             </a>
           </article>
         ))}
-      </div>
+      </ScrollRows>
     </CoinSection>
   );
 }

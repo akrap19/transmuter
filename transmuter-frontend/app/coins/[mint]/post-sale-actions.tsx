@@ -1,7 +1,7 @@
 "use client";
 
 import { WalletGate } from "@/components/catalog/wallet-gate";
-import type { PostSaleKind } from "@/lib/catalog/post-sale";
+import { postSaleButtonOrder, type PostSaleKind } from "@/lib/catalog/post-sale";
 import type { PostSaleChain } from "@/lib/catalog/submit-post-sale";
 import { useSubmitPostSale } from "./use-submit-post-sale";
 
@@ -30,26 +30,25 @@ export function PostSaleActions({
       body="Finalize, treasury conversion, LP seeding, and token claims are signed here. Any wallet can crank them. The creator is not required."
     >
       {() => (
-        <div className="coin-actions">
+        <div className="coin-actions coin-actions-row">
           <div className="coin-buttons">
-            {offers.map((kind) => (
+            {postSaleButtonOrder(offers).map((kind, index) => (
               <button
                 key={kind}
                 type="button"
-                className={kind === "claimTokens" || kind === "finalize" ? "button button-primary" : "button button-ghost"}
+                className={index === 0 ? "button button-primary" : "button button-ghost"}
                 disabled={tx.busy}
                 onClick={() => void tx.run(kind, chain)}
               >
-                {tx.busy ? "Signing…" : LABELS[kind]}
+                {tx.pending === kind ? "Signing…" : LABELS[kind]}
               </button>
             ))}
           </div>
           {tx.explorerUrl ? (
-            <p className="coin-note">
-              <a href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
-                View transaction
-              </a>
-            </p>
+            <a className="coin-tx-link" href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
+              View transaction
+              <span aria-hidden="true">↗</span>
+            </a>
           ) : null}
         </div>
       )}

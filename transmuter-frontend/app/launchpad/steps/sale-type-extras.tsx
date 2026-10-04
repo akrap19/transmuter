@@ -46,7 +46,7 @@ export function SaleTypeExtras() {
       <div id="overflowParams">
         <div className="form-row cols-2">
           <div className="field">
-            <label className="field-label">Raise Cap <span className="badge" style={{ opacity: 0.6 }}>Optional</span></label>
+            <label className="field-label">Raise Cap <span className="badge">Optional</span></label>
             <div className="input-wrap">
               <input type="number" placeholder="No cap" min={0} value={state.overflowCap}
                 onChange={(e) => setField("overflowCap", e.target.value)} />
@@ -54,7 +54,7 @@ export function SaleTypeExtras() {
             </div>
             <div className="small-note">
               Leave blank for an uncapped raise. If set, demand above the cap is scaled down{" "}
-              <strong style={{ color: "var(--tm-gold)" }}>pro rata</strong> across every
+              <strong>pro rata</strong> across every
               depositor, so nobody is front run and the valuation stays where you want it.
             </div>
           </div>
@@ -62,10 +62,10 @@ export function SaleTypeExtras() {
         <div className="form-row cols-2">
           <div className="field">
             <label className="field-label">Forego Surplus Escrow</label>
-            <div className="input-wrap" style={{ alignItems: "center", gap: 10 }}>
-              <input type="range" min={0} max={100} value={state.overflowForego} step={10} style={{ flex: 1 }}
+            <div className="range-with-value">
+              <input type="range" min={0} max={100} value={state.overflowForego} step={10}
                 onChange={(e) => setField("overflowForego", parseInt(e.target.value))} />
-              <span className="input-suffix" style={{ minWidth: 38, textAlign: "right" }}>
+              <span className="alloc-value">
                 {overflow ? `${overflow.foregoPct.toFixed(0)}%` : "75%"}
               </span>
             </div>
@@ -77,21 +77,19 @@ export function SaleTypeExtras() {
           </div>
           <div className="field">
             <label className="field-label">Redirected escrow goes to</label>
-            <div className="small-note" style={{ marginTop: 8 }}>
-              The <strong style={{ color: "var(--tm-green)" }}>treasury</strong>, in full.
+            <div className="small-note">
+              The <strong>treasury</strong>, in full.
               Surplus already scales the LP at its base ratio, and cash parked in an LP can
               be drained by arbitrage, so redirected escrow deepens the treasury instead.
               Backing rises, the listing price does not move.
             </div>
           </div>
         </div>
-        <div className="small-note overflow-projection-box">
-          Projected {overflow?.basis ?? "at target (grows with demand)"} · Listing price:{" "}
-          <strong style={{ color: "var(--tm-cyan)" }}>{overflow?.listPrice ?? "—"}</strong>
-          {" "}· Backing/token:{" "}
-          <strong style={{ color: "var(--tm-gold)" }}>{overflow?.backing ?? "—"}</strong>
-          {" "}· Final MCP:{" "}
-          <strong style={{ color: "var(--tm-green)" }}>{overflow?.mcp ?? "—"}</strong>
+        <div className="overflow-projection-box">
+          Projected {overflow?.basis ?? "at target (grows with demand)"} · Listing price{" "}
+          <strong>{overflow?.listPrice ?? "—"}</strong>
+          {" "}· Backing per token <strong>{overflow?.backing ?? "—"}</strong>
+          {" "}· Final market cap <strong>{overflow?.mcp ?? "—"}</strong>
         </div>
       </div>
     );

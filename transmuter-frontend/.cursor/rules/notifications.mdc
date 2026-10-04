@@ -1,0 +1,21 @@
+---
+description: User-facing notices use toast messages, not alerts or one-off banners
+globs: "**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+# Notifications
+
+When the UI needs to tell the user something — a validation error, a failed action, or a completed action — show a toast. Do not use `alert`, `confirm`, or a throwaway inline banner for a transient notice.
+
+```ts
+import { toastError, toastSuccess } from "@/lib/toast";
+
+toastError("Use a PNG, JPG, or SVG.");
+toastSuccess("Launch created.");
+```
+
+- `toastError` for invalid input and failures
+- `toastSuccess` when an action completes
+- One short, specific sentence
+- The toaster is already mounted in the root layout

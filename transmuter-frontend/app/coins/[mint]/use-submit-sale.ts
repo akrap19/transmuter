@@ -4,6 +4,7 @@ import { AnchorProvider } from "@coral-xyz/anchor";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useCallback, useState } from "react";
+import type { SaleKind } from "@/lib/catalog/sale";
 import { submitSale, type EolSaleClient } from "@/lib/catalog/submit-sale";
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { ChainTransactionError } from "@/lib/solana/tx";
@@ -12,19 +13,19 @@ import { toastError, toastSuccess } from "@/lib/toast";
 export function useSubmitSale(mint: string, onConfirmed: () => void) {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<SaleKind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null);
 
   const run = useCallback(
-    async (kind: "deposit" | "withdraw", amount?: string) => {
+    async (kind: SaleKind, amount?: string) => {
       if (!wallet) {
         const message = "Connect a wallet to sign.";
         toastError(message);
         setError(message);
         return;
       }
-      setBusy(true);
+      setPending(kind);
       setError(null);
       setExplorerUrl(null);
       try {
@@ -48,11 +49,11 @@ export function useSubmitSale(mint: string, onConfirmed: () => void) {
         setError(message);
         setExplorerUrl(err instanceof ChainTransactionError ? (err.explorerUrl ?? null) : null);
       } finally {
-        setBusy(false);
+        setPending(null);
       }
     },
     [connection, mint, onConfirmed, wallet],
   );
 
-  return { busy, error, explorerUrl, run };
+  return { pending, error, explorerUrl, run };
 }

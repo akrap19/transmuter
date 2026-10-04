@@ -10,14 +10,13 @@ import { PublicFundBox } from "../public-fund-box";
 import { AllocationSection } from "./allocation-section";
 import { MidasDaoSection } from "./midas-dao-section";
 import { SaleTypeExtras } from "./sale-type-extras";
+import { SaleTypeSelect } from "./sale-type-select";
 
 const SALE_NOTES = {
   fixed: (
     <>
-      One known price, one known valuation. Buyers deposit{" "}
-      <strong style={{ color: "var(--tm-gold)" }}>USDC</strong>; deposits stay{" "}
-      <strong style={{ color: "var(--tm-green)" }}>withdrawable</strong> until finalization.
-      Best when you want a predictable raise.
+      One known price, one known valuation. Buyers deposit <strong>USDC</strong>; deposits stay{" "}
+      <strong>withdrawable</strong> until finalization. Best when you want a predictable raise.
     </>
   ),
   dutch:
@@ -56,9 +55,8 @@ export function TokenomicsStep() {
       <SaleTypeFields note={SALE_NOTES[state.saleType]} />
       <SaleTypeExtras />
       <div className="small-note" style={{ marginBottom: 20 }}>
-        Implied Market Cap (MCP):{" "}
-        <strong style={{ color: "var(--tm-cyan)" }}>{mcap ? `$${formatMcap(mcap)}` : "-"}</strong>
-        {" "}&nbsp;·&nbsp; USD shown for sizing; the sale itself is denominated in your backing cToken.
+        Implied market cap: <strong>{mcap ? `$${formatMcap(mcap)}` : "—"}</strong>
+        {" "}· USD shown for sizing; the sale itself is denominated in your backing cToken.
       </div>
       <PublicFundBox />
       <VestingBlock />
@@ -142,24 +140,37 @@ function SaleTypeFields({ note }: { note: ReactNode }) {
         <div className="field">
           <label className="field-label">Sale Window <span className="badge required">Required</span></label>
           <div className="input-wrap">
-            <select value={state.saleWindow} onChange={(e) => setField("saleWindow", e.target.value)}>
-              {["2 days", "1 week", "2 weeks", "1 month", "60 days"].map((v) => (
-                <option key={v} value={v === "60 days" ? "60 days" : v}>{v === "60 days" ? "60 days (max)" : v}</option>
-              ))}
-            </select>
+            <input
+              type="number"
+              inputMode="decimal"
+              min={1}
+              max={60}
+              step="any"
+              value={state.saleWindow}
+              onChange={(e) => {
+                const raw = e.target.value;
+                const days = Number(raw);
+                setField("saleWindow", Number.isFinite(days) && days > 60 ? "60" : raw);
+              }}
+              onBlur={(e) => {
+                const trimmed = e.target.value.trim().replace(/\.$/, "");
+                setField("saleWindow", trimmed);
+              }}
+            />
+            <span className="input-suffix">days</span>
           </div>
           <div className="small-note">
-            How long the sale stays open. It ends on sellout, the funding target, or when this window closes.
+            How long the sale stays open, from 1 to 60 days. Decimals such as 2.5 are allowed.
+            It ends on sellout, the funding target, or when this window closes.
           </div>
         </div>
         <div className="field">
           <label className="field-label">Sale Type <span className="badge required">Required</span></label>
           <div className="input-wrap">
-            <select value={state.saleType} onChange={(e) => setField("saleType", e.target.value as typeof state.saleType)}>
-              <option value="fixed">Fixed price · certainty</option>
-              <option value="dutch">Reverse Dutch · price discovery</option>
-              <option value="overflow">Overflow pool · demand led depth</option>
-            </select>
+            <SaleTypeSelect
+              value={state.saleType}
+              onChange={(saleType) => setField("saleType", saleType)}
+            />
           </div>
           <div className="small-note">{note}</div>
         </div>
@@ -219,22 +230,31 @@ function VestingBlock() {
   const { state, dispatch } = useLaunchpad();
   return (
     <>
-      <div className="panel-title vesting-title"><div className="dot dot-pink" />Vesting Schedule</div>
+      <div className="section-title"><div className="dot" />Vesting schedule</div>
       <div className="vesting-presets">
-        {VESTING_PRESETS.map((p) => (
-          <button key={p.value} type="button" className={`vesting-preset${state.vesting === p.value ? " selected" : ""}`}
-            onClick={() => dispatch({ type: "SET_VESTING", vesting: p.value })}>
-            <div className="vesting-preset-name">{p.label}</div>
-            <div className="vesting-preset-sub">{p.sub}</div>
-          </button>
-        ))}
+        {VESTING_PRESETS.map((p) => {
+          const unavailable = p.value === "Custom";
+          return (
+            <button
+              key={p.value}
+              type="button"
+              disabled={unavailable}
+              className={`vesting-preset${state.vesting === p.value ? " selected" : ""}${unavailable ? " is-disabled" : ""}`}
+              onClick={() => {
+                if (unavailable) return;
+                dispatch({ type: "SET_VESTING", vesting: p.value });
+              }}
+            >
+              <div className="vesting-preset-name">{p.label}</div>
+              <div className="vesting-preset-sub">{unavailable ? "Not available" : p.sub}</div>
+            </button>
+          );
+        })}
       </div>
       <p className="small-note vesting-note">
-        Vesting applies to the <strong style={{ color: "var(--tm-gold)" }}>Team</strong> and{" "}
-        <strong style={{ color: "#BCA9E0" }}>Investor</strong> allocations. Vesting clocks
-        start at sale finalization, not at deployment.
+        Vesting applies to the <strong>team</strong> and <strong>investor</strong> allocations.
+        Vesting clocks start at sale finalization, not at deployment.
       </p>
-      <hr className="section-divider" />
     </>
   );
 }

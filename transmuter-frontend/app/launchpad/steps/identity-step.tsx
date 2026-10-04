@@ -1,6 +1,6 @@
 "use client";
 
-import { LogoUpload } from "../shared-form";
+import { LogoUpload } from "../logo-upload";
 import { useLaunchpad } from "../launchpad-context";
 
 export function IdentityStep() {

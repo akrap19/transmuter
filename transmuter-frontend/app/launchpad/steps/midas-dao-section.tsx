@@ -13,10 +13,10 @@ export function MidasDaoSection() {
   }
 
   return (
-    <>
-      <div className="panel-title" style={{ marginBottom: 14 }}>
-        <div className="dot" style={{ background: "var(--tm-gold)", boxShadow: "0 0 8px var(--tm-gold)" }} />
-        MIDAS DAO Integration
+    <div className="midas-dao">
+      <div className="section-title">
+        <div className="dot" />
+        MIDAS DAO
       </div>
       <ToggleRow
         toggleKey="daoAirdrop"
@@ -24,7 +24,7 @@ export function MidasDaoSection() {
         desc="Deposit a token allocation to get airdropped to all MIDAS DAO holders. Free visibility across the ecosystem."
       />
       {state.toggles.daoAirdrop && (
-        <div style={{ marginTop: 4, marginBottom: 12 }}>
+        <div className="form-row">
           <div className="field">
             <label className="field-label">
               % of Supply for DAO Airdrop <span className="badge">Opt-in</span>
@@ -47,6 +47,6 @@ export function MidasDaoSection() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

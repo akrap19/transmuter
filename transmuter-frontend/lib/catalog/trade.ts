@@ -7,6 +7,11 @@ export function tradeAvailable(status: LaunchStatus) {
   return status === "active" || status === "liquidating";
 }
 
+export function shownTradePools(status: LaunchStatus, pools: TradePool[] | null | undefined) {
+  if (!tradeAvailable(status) || !pools?.length) return [];
+  return pools;
+}
+
 export function dexSwapUrl(inputMint: string, outputMint: string) {
   return `https://jup.ag/swap/${inputMint}-${outputMint}`;
 }

@@ -1,7 +1,9 @@
-import { AnchorProvider, Wallet } from '@coral-xyz/anchor'
+import { AnchorProvider, BN, Wallet } from '@coral-xyz/anchor'
 import { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { describe, expect, it } from 'vitest'
 import { createReadonlyProvider, createTransmuterClient } from '@/lib/solana/anchor-client'
+import { eolConfigPda } from '@/lib/solana/programs/eol-token'
+import { STAKING_PROGRAM_ID } from '@/lib/solana/programs/staking'
 import factoryIdl from '@/lib/solana/idl/transmuter_factory.json'
 import ctokenIdl from '@/lib/solana/idl/transmuter_ctoken.json'
 import eolIdl from '@/lib/solana/idl/transmuter_eol_token.json'
@@ -40,6 +42,28 @@ describe('createTransmuterClient', () => {
 		expect(PROGRAM_IDS.staking).toBe(stakingIdl.address)
 		expect(PROGRAM_IDS.registry).toBe(registryIdl.address)
 		expect(PROGRAM_IDS.dao).toBe(daoIdl.address)
+	})
+})
+
+describe('castLiquidationVote', () => {
+	it('marks the stake account writable so the voter lock can be written', async () => {
+		const program = createTransmuterClient(dummyProvider()).eolToken
+		const voter = Keypair.generate().publicKey
+		const mint = Keypair.generate().publicKey
+		const stakingConfig = Keypair.generate().publicKey
+		const stakeAccount = Keypair.generate().publicKey
+		const instruction = await program.methods
+			.castLiquidationVote(true, new BN(1))
+			.accounts({
+				voter,
+				config: eolConfigPda(mint),
+				stakingProgram: STAKING_PROGRAM_ID,
+				stakingConfig,
+				stakeAccount
+			})
+			.instruction()
+
+		expect(instruction.keys.find((key) => key.pubkey.equals(stakeAccount))?.isWritable).toBe(true)
 	})
 })
 

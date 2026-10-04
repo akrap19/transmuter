@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   evaluateCastVote,
   holderOutcome,
+  voteReadout,
   voteTally,
   voteThresholds,
 } from "./governance";
@@ -69,6 +70,17 @@ describe("governance votes", () => {
     });
   });
 
+  it("explains the yes share and the turnout in plain language", () => {
+    expect(voteReadout(SOLACE)).toEqual({
+      yesLine: "86.66% of the votes are yes. This vote needs 67% yes to pass.",
+      turnoutLine: "40% of the 15,000 token supply has voted. This vote needs 10% turnout.",
+    });
+    expect(voteReadout({ ...SOLACE, yesWeight: 0, noWeight: 0 })).toEqual({
+      yesLine: "No votes yet. This vote needs 67% yes to pass.",
+      turnoutLine: "0% of the 15,000 token supply has voted. This vote needs 10% turnout.",
+    });
+  });
+
   it("lets the holder tally stand when the DAO shim reports no quorum", () => {
     expect(holderOutcome(voteTally(SOLACE), false)).toEqual({
       decidedByHolders: true,
@@ -94,6 +106,10 @@ describe("governance votes", () => {
     expect(evaluateCastVote(SOLACE, STAKE, 1_747_000_000, false)).toEqual({
       ok: false,
       reason: "closed",
+    });
+    expect(evaluateCastVote(SOLACE, { ...STAKE, voterLockedUntil: 1_747_604_800 }, 1_746_000_000, true)).toEqual({
+      ok: false,
+      reason: "voted",
     });
   });
 });

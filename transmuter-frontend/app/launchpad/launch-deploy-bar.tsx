@@ -6,28 +6,35 @@ export function LaunchDeployBar({
   busy,
   connected,
   status,
+  missing,
   onBack,
   onLaunch,
 }: {
   busy: boolean;
   connected: boolean;
   status: LaunchStatus;
+  missing: readonly string[];
   onBack: () => void;
   onLaunch: () => void;
 }) {
   return (
-    <div className="btn-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-      <button type="button" className="btn btn-outline" onClick={onBack}>
-        ← Back
-      </button>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-        {!connected && (
-          <div className="small-note">Connect a wallet to sign the Factory createLaunch transaction.</div>
-        )}
+    <>
+      <div className="btn-row">
+        <button type="button" className="btn btn-outline" onClick={onBack}>
+          ← Back
+        </button>
         <button type="button" className="btn btn-launch" onClick={onLaunch} disabled={busy}>
-          {busy ? (status === "uploading" ? "Uploading metadata…" : "Sign createLaunch…") : "🚀 Deploy Token"}
+          {busy ? (status === "uploading" ? "Uploading metadata…" : "Sign createLaunch…") : "Deploy token"}
         </button>
       </div>
-    </div>
+      {missing.length > 0 && (
+        <p className="launch-missing">Missing: {missing.join(", ")}.</p>
+      )}
+      {!connected && (
+        <p className="small-note launch-actions-note">
+          Connect a wallet to sign the Factory createLaunch transaction.
+        </p>
+      )}
+    </>
   );
 }

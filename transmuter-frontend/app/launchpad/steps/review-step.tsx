@@ -1,36 +1,27 @@
 "use client";
 
-import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE } from "@/lib/launchpad/fee-calculator";
-import { toastError } from "@/lib/toast";
-import { formatMcap, formatNum, formatPrice } from "@/lib/launchpad/launch-solver";
+import { launchMissingLabels, launchValidationIssues } from "@/lib/launchpad/map-create-launch";
+import { launchReviewSections, type ReviewRowModel } from "@/lib/launchpad/review-summary";
 import { useLaunchpad } from "../launchpad-context";
 import { LaunchDeployBar } from "../launch-deploy-bar";
 import { useSubmitLaunch } from "../use-submit-launch";
 
 export function ReviewStep() {
-  const { state, goToStep, launchSolve: L } = useLaunchpad();
+  const { state, goToStep, launchSolve } = useLaunchpad();
   const { submit, busy, connected } = useSubmitLaunch();
-  const price = L?.feasible ? L.price : undefined;
-  const supply = parseFloat(state.tokenSupply);
+  const missing = launchMissingLabels(state);
+  const sections = launchReviewSections(state, launchSolve);
 
   async function handleLaunch() {
-    if (!state.tokenName || !state.tokenTicker) {
-      toastError("Please fill in token name and ticker before launching.");
-      goToStep(1);
-      return;
-    }
+    if (launchValidationIssues(state).length > 0) return;
     await submit();
   }
-
-  const pubLp = L?.lpFrac ? (L.lpFrac * 100).toFixed(0) : "—";
-  const pubTreas = L?.treasFrac ? (L.treasFrac * 100).toFixed(0) : "—";
-  const pubRunway = L?.escrowFrac ? (L.escrowFrac * 100).toFixed(0) : "—";
 
   return (
     <div className={`step-panel panel${state.currentStep === 5 ? " active" : ""}`}>
       <div className="panel-title"><div className="dot" />Review & Launch</div>
       <div className="launch-warning">
-        <strong>⚠️ Before you launch:</strong> Deploying opens your sale. Buyers claim tokens only
+        <strong>Before you launch.</strong> Deploying opens your sale. Buyers claim tokens only
         after it concludes. Deposits stay withdrawable until the sale concludes; if the raise can&apos;t fund
         the backing minimums (treasury {state.treasuryBackingPct}% ask in this wizard; on-chain accept 8% of MCP
         after conversion, combined 18%), the launch voids and
@@ -39,41 +30,24 @@ export function ReviewStep() {
       </div>
 
       <div className="review-grid">
-        <ReviewBlock title="Token Identity">
-          <ReviewRow label="Name" value={state.tokenName || "—"} />
-          <ReviewRow label="Ticker" value={`$${state.tokenTicker || "—"}`} cyan />
-          <ReviewRow label="DAO Airdrop" value={state.toggles.daoAirdrop ? `Yes - ${state.daoAirdropPct}% of supply` : "No"} />
-          <ReviewRow label="Vesting" value={state.vesting} />
-        </ReviewBlock>
-        <ReviewBlock title="Tokenomics">
-          <ReviewRow label="Total Supply" value={supply ? formatNum(supply) : "—"} />
-          <ReviewRow label="Initial Price" value={price ? `$${formatPrice(price)}` : "—"} />
-          <ReviewRow label="Implied MCP" value={price && supply ? `$${formatMcap(price * supply)}` : "—"} cyan />
-          <ReviewRow label="Public Sale → LP" value={`${pubLp}% of proceeds`} />
-          <ReviewRow label="Public Sale → Treasury" value={`${pubTreas}% of proceeds`} gold />
-          <ReviewRow label="Public Sale → Runway" value={`${pubRunway}% of proceeds`} />
-        </ReviewBlock>
-        <ReviewBlock title="Backing">
-          <ReviewRow label="Backing cToken" value={state.selectedCToken.name} gold />
-          <ReviewRow label="Mint to Scale band" value={`open <${state.autoMintTrigger}% / close ${state.autoMintDeactivate}% (6h continuous)`} gold />
-          <ReviewRow label="Gov. Vote Window" value={`${state.voteWindow}h`} />
-          <ReviewRow label="Sale Window" value={state.saleWindow} />
-        </ReviewBlock>
-        <ReviewBlock title="Fee Structure">
-          <ReviewRow label="Total TX Fee" value={`${state.fees.totalFee.toFixed(2)}%`} cyan />
-          <ReviewRow label="→ LP" value={`${state.fees.lpFee.toFixed(2)}%`} />
-          <ReviewRow label="→ Treasury" value={`${state.fees.treasuryFee.toFixed(2)}%`} />
-          <ReviewRow label="→ cToken reserve" value={`${CTOKEN_RESERVE_FEE.toFixed(2)}%`} />
-          <ReviewRow label="→ Protocol" value={`${PROTOCOL_FEE.toFixed(2)}%`} pink />
-          <ReviewRow label="Burn Fee" value={state.toggles.burnFee ? `${state.fees.burnFee.toFixed(2)}%` : "Off"} />
-          <ReviewRow label="Creator Fee" value={state.toggles.creatorFee ? `${state.fees.creatorFee.toFixed(2)}%` : "Off"} />
-        </ReviewBlock>
+        {sections.map((section) => (
+          <ReviewBlock key={section.title} title={section.title}>
+            {section.rows.map((row) => (
+              <ReviewRow
+                key={row.label}
+                row={row}
+                image={row.logo ? state.logoUrl : null}
+              />
+            ))}
+          </ReviewBlock>
+        ))}
       </div>
 
       <LaunchDeployBar
         busy={busy}
         connected={connected}
         status={state.launchStatus}
+        missing={missing}
         onBack={() => goToStep(4)}
         onLaunch={handleLaunch}
       />
@@ -90,26 +64,22 @@ function ReviewBlock({ title, children }: { title: string; children: React.React
   );
 }
 
-function ReviewRow({
-  label,
-  value,
-  cyan,
-  gold,
-  green,
-  pink,
-}: {
-  label: string;
-  value: string;
-  cyan?: boolean;
-  gold?: boolean;
-  green?: boolean;
-  pink?: boolean;
-}) {
-  const color = cyan ? "var(--tm-cyan)" : gold ? "var(--tm-gold)" : green ? "var(--tm-green)" : pink ? "var(--tm-pink)" : undefined;
+function ReviewRow({ row, image }: { row: ReviewRowModel; image?: string | null }) {
   return (
-    <div className="review-item">
-      <span className="review-item-label">{label}</span>
-      <span className="review-item-value" style={color ? { color } : undefined}>{value}</span>
+    <div className={`review-item${row.stacked ? " is-stacked" : ""}`}>
+      <span className="review-item-label">{row.label}</span>
+      <span className="review-item-value">
+        {image ? (
+          <span className="review-logo-value">
+            {/* Data URLs from the logo picker are not a remote image host. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="review-logo" src={image} alt="" />
+            {row.value}
+          </span>
+        ) : (
+          row.value
+        )}
+      </span>
     </div>
   );
 }

@@ -3001,30 +3001,57 @@ nav.launchpad-nav .nav-links a:hover {
 }
 
 .logo-upload-zone {
+	position: relative;
 	border: 1.5px dashed var(--tm-border);
 	border-radius: 10px;
 	padding: 20px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	cursor: pointer;
+	gap: 16px;
 	transition: all 0.25s;
 	background: rgba(0, 10, 15, 0.5);
 	min-height: 90px;
 }
 
-.logo-upload-zone:hover {
+.logo-upload-pick {
+	appearance: none;
+	background: none;
+	border: 0;
+	color: inherit;
+	font: inherit;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	min-width: 0;
+	padding: 0;
+	cursor: pointer;
+	text-align: center;
+}
+
+.logo-upload-zone:hover,
+.logo-upload-zone.is-dragging {
 	border-color: var(--tm-cyan);
 	background: rgba(240, 194, 75, 0.04);
+}
+
+.logo-upload-zone.is-dragging {
+	background: rgba(240, 194, 75, 0.1);
 }
 
 .logo-upload-zone.has-logo {
 	border-style: solid;
 	border-color: var(--tm-cyan);
 	background: rgba(240, 194, 75, 0.05);
-	gap: 18px;
 	justify-content: flex-start;
-	padding: 16px 20px;
+	padding: 16px 18px 16px 20px;
+}
+
+.logo-upload-zone.has-logo .logo-upload-pick {
+	justify-content: flex-start;
+	gap: 18px;
+	text-align: left;
 }
 
 .logo-upload-inner {
@@ -3038,30 +3065,54 @@ nav.launchpad-nav .nav-links a:hover {
 }
 
 .logo-upload-text {
-	font-size: 12px;
+	font-size: 16px;
 	color: var(--tm-text);
-	margin-bottom: 3px;
+	margin-bottom: 4px;
 }
 
 .logo-upload-sub {
-	font-size: 10px;
+	font-size: 13px;
 	color: var(--tm-muted);
 }
 
 .logo-upload-meta {
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
+	gap: 6px;
+	min-width: 0;
+	flex: 1;
 }
 .logo-upload-filename {
-	font-size: 11px;
+	font-size: 16px;
+	line-height: 1.35;
 	color: var(--tm-cyan);
 	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 .logo-upload-change {
-	font-size: 10px;
+	font-size: 14px;
 	color: var(--tm-muted);
 	text-decoration: underline;
+}
+
+.logo-upload-remove {
+	flex: none;
+	width: 40px;
+	height: 40px;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	border: 1px solid var(--tm-border);
+	background: rgba(0, 0, 0, 0.28);
+	color: var(--tm-text);
+	cursor: pointer;
+}
+
+.logo-upload-remove:hover {
+	border-color: var(--tm-cyan);
+	color: var(--tm-cyan);
 }
 
 .dao-airdrop-readonly {

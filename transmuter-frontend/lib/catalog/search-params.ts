@@ -1,3 +1,4 @@
+import { coinPath, routes } from "@/lib/routes";
 import {
   COIN_SORT_FIELDS,
   LAUNCH_STATUSES,
@@ -6,6 +7,8 @@ import {
   type LaunchStatus,
   type SortDir,
 } from "./types";
+
+const EXPLORE_RETURN = "explore";
 
 function isStatus(value: string): value is LaunchStatus {
   return (LAUNCH_STATUSES as readonly string[]).includes(value);
@@ -62,4 +65,17 @@ export function serializeCoinQuery(query: CoinQuery): URLSearchParams {
   if (query.dir) params.set("dir", query.dir);
   if (query.backing) params.set("backing", query.backing);
   return params;
+}
+
+export function coinPathWithExplore(mint: string, query: CoinQuery): string {
+  const qs = serializeCoinQuery(query).toString();
+  if (!qs) return coinPath(mint);
+  return `${coinPath(mint)}?${EXPLORE_RETURN}=${encodeURIComponent(qs)}`;
+}
+
+export function explorePathFromCoinSearch(params: URLSearchParams): string {
+  const raw = params.get(EXPLORE_RETURN);
+  if (!raw) return routes.coins;
+  const qs = serializeCoinQuery(parseCoinSearchParams(new URLSearchParams(raw))).toString();
+  return qs ? `${routes.coins}?${qs}` : routes.coins;
 }

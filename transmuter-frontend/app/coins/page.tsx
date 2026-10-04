@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import "@/app/brand/explore.css";
 import { CatalogBanner } from "@/components/catalog/catalog-banner";
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
-import { CoinGrid } from "@/components/catalog/coin-grid";
 import { ExploreToolbar } from "@/components/catalog/explore-toolbar";
+import { InfiniteCoinGrid } from "@/components/catalog/infinite-coin-grid";
+import { explorePageQuery } from "@/lib/catalog/explore-page";
 import { loadCoinList } from "@/lib/catalog/load-catalog";
-import { parseCoinSearchParams, searchParamsFromRecord } from "@/lib/catalog/search-params";
+import { parseCoinSearchParams, searchParamsFromRecord, serializeCoinQuery } from "@/lib/catalog/search-params";
 
 export const metadata: Metadata = {
   title: "Explore",
@@ -20,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const query = parseCoinSearchParams(searchParamsFromRecord(await searchParams));
-  const { result, source } = await loadCoinList(query);
+  const { result, source } = await loadCoinList(explorePageQuery(query, 0));
 
   return (
     <main className="explore-page">
@@ -38,7 +39,13 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         {result.items.length === 0 ? (
           <CatalogEmpty title="No launches match" body="Clear search or filters to see the full index, including VOIDED sales." />
         ) : (
-          <CoinGrid items={result.items} />
+          <InfiniteCoinGrid
+            key={serializeCoinQuery(query).toString()}
+            items={result.items}
+            total={result.total}
+            query={query}
+            source={source}
+          />
         )}
       </section>
     </main>

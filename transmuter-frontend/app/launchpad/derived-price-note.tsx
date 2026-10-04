@@ -12,9 +12,7 @@ export function DerivedPriceNote({ variant }: { variant: "hint" | "outcome" }) {
     if (L?.clampedUp) {
       return (
         <div className="small-note">
-          <span style={{ color: "var(--tm-gold)" }}>
-            Raised to the minimum this configuration needs.
-          </span>
+          <strong>Raised to the minimum this configuration needs.</strong>
         </div>
       );
     }
@@ -37,16 +35,8 @@ export function DerivedPriceNote({ variant }: { variant: "hint" | "outcome" }) {
 
   if (!L || L.needRaise) {
     return (
-      <div
-        id="derivedPriceNote"
-        style={{
-          background: "rgba(240,194,75,0.03)",
-          border: "1px solid var(--tm-border)",
-          borderRadius: 8,
-          padding: "14px 16px",
-        }}
-      >
-        <div className="small-note" style={{ margin: 0 }}>
+      <div id="derivedPriceNote" className="outcome-card">
+        <div className="small-note outcome-foot">
           Enter a supply and a total target raise to price the launch.
         </div>
       </div>
@@ -70,16 +60,9 @@ export function DerivedPriceNote({ variant }: { variant: "hint" | "outcome" }) {
           more supply, or lower the LP allocation.
         </>;
     return (
-      <div
-        style={{
-          background: "rgba(240,194,75,0.03)",
-          border: "1px solid var(--tm-border)",
-          borderRadius: 8,
-          padding: "14px 16px",
-        }}
-      >
-        <div className="small-note" style={{ margin: 0 }}>
-          <strong style={{ color: "var(--tm-pink)" }}>{prefix}</strong> {body}
+      <div className="outcome-card">
+        <div className="small-note outcome-foot">
+          <strong className="outcome-warn">{prefix}</strong> {body}
         </div>
       </div>
     );
@@ -103,96 +86,41 @@ export function DerivedPriceNote({ variant }: { variant: "hint" | "outcome" }) {
       : null;
 
   return (
-    <div
-      style={{
-        background: "rgba(240,194,75,0.03)",
-        border: "1px solid var(--tm-border)",
-        borderRadius: 8,
-        padding: "14px 16px",
-      }}
-    >
-      <OutcomeRow label="Listing" value={`$${formatPrice(L.price ?? 0)}`} color="var(--tm-cyan)" />
-      <OutcomeRow label="MCP" value={`$${formatMcap(L.mcp ?? 0)}`} color="var(--tm-gold)" />
-      <OutcomeRow label="LP" value={`$${formatMcap(L.lpCash ?? 0)}`} />
+    <div className="outcome-card">
+      <OutcomeRow label="Listing" value={`$${formatPrice(L.price ?? 0)}`} />
+      <OutcomeRow label="Market cap" value={`$${formatMcap(L.mcp ?? 0)}`} />
+      <OutcomeRow label="Liquidity pool" value={`$${formatMcap(L.lpCash ?? 0)}`} />
       <OutcomeRow label="Escrow" value={`$${formatMcap(L.escrowNeed ?? 0)}`} />
       <OutcomeRow
         label="Treasury"
-        value={
-          <>
-            ${formatMcap(L.treasury ?? 0)}{" "}
-            <span style={{ color: "var(--tm-text-dim)" }}>
-              ({((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of MCP)
-            </span>
-          </>
-        }
-        color="var(--tm-green)"
+        value={`$${formatMcap(L.treasury ?? 0)} (${((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of MCP)`}
       />
-      <div style={{ marginTop: 9, fontSize: 11, color: "var(--tm-text-dim)", lineHeight: 1.6 }}>
+      <p className="small-note outcome-foot">
         {strong}.
         {(L.minRaise ?? 0) > 0 && (
           <>
             {" "}
-            Minimum raise{" "}
-            <strong style={{ color: "var(--tm-text)" }}>
-              ${formatMcap(L.minRaise ?? 0)}
-            </strong>
-            .
+            Minimum raise <strong>${formatMcap(L.minRaise ?? 0)}</strong>.
           </>
         )}
         {extraAboveMin && (
           <>
             {" "}
-            <span style={{ color: "var(--tm-green)" }}>
-              ${formatMcap(extraAboveMin.e)}
-            </span>{" "}
-            above it: ${formatMcap(extraAboveMin.toLP)} pairs the deeper LP, $
+            <strong>${formatMcap(extraAboveMin.e)}</strong> above it: $
+            {formatMcap(extraAboveMin.toLP)} pairs the deeper liquidity pool, $
             {formatMcap(extraAboveMin.toTreas)} deepens the treasury.
           </>
         )}
-      </div>
+      </p>
     </div>
   );
 }
 
-function OutcomeRow({
-  label,
-  value,
-  color = "var(--tm-text)",
-}: {
-  label: string;
-  value: ReactNode;
-  color?: string;
-}) {
+function OutcomeRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        gap: 12,
-        padding: "5px 0",
-        borderBottom: "1px solid rgba(240,194,75,0.06)",
-      }}
-    >
-      <span
-        style={{
-          color: "var(--tm-text-dim)",
-          fontSize: 11,
-          letterSpacing: "0.04em",
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          fontFamily: "var(--tm-font-mono)",
-          fontSize: 12,
-          color,
-          textAlign: "right",
-        }}
-      >
-        {value}
-      </span>
+    <div className="outcome-row">
+      <span className="outcome-label">{label}</span>
+      <span className="outcome-value">{value}</span>
     </div>
   );
 }

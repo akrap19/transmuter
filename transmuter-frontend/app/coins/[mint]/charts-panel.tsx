@@ -1,5 +1,4 @@
 import { CoinSection } from "@/app/coins/[mint]/coin-section";
-import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { formatUsd, formatUnix } from "@/lib/catalog/format";
 import type { ChartPoint } from "@/lib/catalog/types";
 
@@ -8,35 +7,31 @@ const HEIGHT = 200;
 const PAD = 16;
 
 export function ChartsPanel({ points }: { points: ChartPoint[] }) {
+  if (points.length === 0) return null;
+
   return (
     <CoinSection title="Charts" lede="Price and volume from the indexer price history.">
-      {points.length === 0 ? (
-        <CatalogEmpty title="No price history" body="Charts fill after the first indexed trades or sale prints." />
-      ) : (
-        <>
-          <PriceVolumeChart points={points} />
-          <div className="coin-table-wrap">
-            <table className="coin-table">
-              <thead>
-                <tr>
-                  <th>When</th>
-                  <th>Price</th>
-                  <th>Volume</th>
-                </tr>
-              </thead>
-              <tbody>
-                {points.map((point) => (
-                  <tr key={point.t}>
-                    <td>{formatUnix(point.t)}</td>
-                    <td>{formatUsd(point.priceUsd)}</td>
-                    <td>{formatUsd(point.volumeUsd)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+      <PriceVolumeChart points={points} />
+      <div className="coin-table-wrap">
+        <table className="coin-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Price</th>
+              <th>Volume</th>
+            </tr>
+          </thead>
+          <tbody>
+            {points.map((point) => (
+              <tr key={point.t}>
+                <td>{formatUnix(point.t)}</td>
+                <td>{formatUsd(point.priceUsd)}</td>
+                <td>{formatUsd(point.volumeUsd)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </CoinSection>
   );
 }

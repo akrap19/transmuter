@@ -1,6 +1,13 @@
 import type { LaunchStatus, SaleSnapshot } from "./types";
 
+export type SaleKind = "deposit" | "withdraw";
+
 export type SaleAction = { kind: "deposit"; amountUsdc: number } | { kind: "withdraw" };
+
+export function saleButtonLabel(kind: SaleKind, pending: SaleKind | null, withdrawLabel: string): string {
+  if (pending === kind) return "Signing…";
+  return kind === "deposit" ? "Deposit" : withdrawLabel;
+}
 
 export type SaleActionResult =
   | { ok: true; amountUsdc: number }

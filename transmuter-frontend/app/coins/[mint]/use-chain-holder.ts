@@ -2,12 +2,13 @@
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { readHolder, type HolderView } from "@/lib/catalog/read-holder";
 import { holderReaders } from "@/lib/catalog/read-holder-rpc";
 import { createReadonlyProvider, createTransmuterClient } from "@/lib/solana/anchor-client";
 
-const LIVE_MS = 12_000;
+const LIVE_MS = 30_000;
+const FIRST_DELAY_MS = 16_000;
 
 export function useChainHolder(mint: string) {
   const { connection } = useConnection();
@@ -15,6 +16,7 @@ export function useChainHolder(mint: string) {
   const [view, setView] = useState<HolderView | null>(null);
   const [tick, setTick] = useState(0);
   const reload = useCallback(() => setTick((value) => value + 1), []);
+  const opened = useRef(false);
 
   useEffect(() => {
     let mintKey: PublicKey;
@@ -37,10 +39,13 @@ export function useChainHolder(mint: string) {
         });
     };
 
-    load();
+    const wait = opened.current ? 0 : FIRST_DELAY_MS;
+    opened.current = true;
+    const start = setTimeout(load, wait);
     const id = setInterval(load, LIVE_MS);
     return () => {
       cancelled = true;
+      clearTimeout(start);
       clearInterval(id);
     };
   }, [connection, mint, publicKey, tick]);

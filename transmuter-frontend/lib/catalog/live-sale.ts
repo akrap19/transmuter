@@ -51,7 +51,7 @@ export function liveSaleFromChain(input: LiveSaleInput): LiveSaleView | null {
   const capAtoms = chainAmount(input.targetRaise);
   const raisedAtoms = chainAmount(input.raisedUsdc);
   const remainingAtoms = capAtoms > raisedAtoms ? capAtoms - raisedAtoms : BigInt(0);
-  const saleProgressBps = capAtoms > BigInt(0) ? Math.min(10_000, Number((raisedAtoms * BigInt(10_000)) / capAtoms)) : null;
+  const saleProgressBps = progressBps(raisedAtoms, capAtoms);
   const closesAt = Number(chainAmount(input.saleEnd));
 
   if (status !== "sale") {
@@ -72,6 +72,13 @@ export function liveSaleFromChain(input: LiveSaleInput): LiveSaleView | null {
       myDepositUsdc: input.depositAmount == null ? 0 : usdcFromAtoms(input.depositAmount),
     },
   };
+}
+
+function progressBps(raisedAtoms: bigint, capAtoms: bigint): number | null {
+  if (capAtoms <= BigInt(0)) return null;
+  const bps = Math.min(10_000, Number((raisedAtoms * BigInt(10_000)) / capAtoms));
+  if (bps === 0 && raisedAtoms > BigInt(0)) return 1;
+  return bps;
 }
 
 function statusAt<T extends string>(table: readonly T[], value: number | null): T | null {

@@ -4,7 +4,7 @@ import { AnchorProvider } from "@coral-xyz/anchor";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useCallback, useState } from "react";
 import type { PostSaleKind } from "@/lib/catalog/post-sale";
-import { submitPostSale, type EolPostSaleClient, type PostSaleChain } from "@/lib/catalog/submit-post-sale";
+import { submitPostSale, type EolPostSaleClient, type FactoryOutcomeClient, type PostSaleChain } from "@/lib/catalog/submit-post-sale";
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { ChainTransactionError } from "@/lib/solana/tx";
 import { toastError, toastSuccess } from "@/lib/toast";
@@ -12,7 +12,7 @@ import { toastError, toastSuccess } from "@/lib/toast";
 export function useSubmitPostSale(onConfirmed: () => void) {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();
-  const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<PostSaleKind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null);
 
@@ -24,7 +24,7 @@ export function useSubmitPostSale(onConfirmed: () => void) {
         setError(message);
         return;
       }
-      setBusy(true);
+      setPending(kind);
       setError(null);
       setExplorerUrl(null);
       try {
@@ -34,6 +34,7 @@ export function useSubmitPostSale(onConfirmed: () => void) {
           kind,
           chain: { ...chain, cranker: wallet.publicKey },
           eol: client.eolToken as unknown as EolPostSaleClient,
+          factory: client.factory as unknown as FactoryOutcomeClient,
           connection,
           signer: wallet,
         });
@@ -46,11 +47,11 @@ export function useSubmitPostSale(onConfirmed: () => void) {
         setError(message);
         setExplorerUrl(err instanceof ChainTransactionError ? (err.explorerUrl ?? null) : null);
       } finally {
-        setBusy(false);
+        setPending(null);
       }
     },
     [connection, onConfirmed, wallet],
   );
 
-  return { busy, error, explorerUrl, run };
+  return { busy: pending != null, pending, error, explorerUrl, run };
 }

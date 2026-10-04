@@ -12,8 +12,10 @@ type WalletListProps = {
 }
 
 export function WalletList({ wallets, onSelect }: WalletListProps) {
-	const detected = wallets.filter(
-		wallet => wallet.readyState === WalletReadyState.Installed || wallet.readyState === WalletReadyState.Loadable
+	const detected = preferSolflare(
+		wallets.filter(
+			wallet => wallet.readyState === WalletReadyState.Installed || wallet.readyState === WalletReadyState.Loadable
+		)
 	)
 
 	if (detected.length === 0) {
@@ -42,6 +44,14 @@ export function WalletList({ wallets, onSelect }: WalletListProps) {
 			))}
 		</>
 	)
+}
+
+function preferSolflare(wallets: Wallet[]): Wallet[] {
+	if (wallets.length < 2) return wallets
+	const solflareIndex = wallets.findIndex(wallet => wallet.adapter.name === 'Solflare')
+	if (solflareIndex <= 0) return wallets
+	const solflare = wallets[solflareIndex]
+	return [solflare, ...wallets.slice(0, solflareIndex), ...wallets.slice(solflareIndex + 1)]
 }
 
 function SolflareMark() {

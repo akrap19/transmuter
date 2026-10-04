@@ -7,6 +7,7 @@ import { useCallback } from "react";
 import { resolveCtokens } from "@/lib/launchpad/ctokens";
 import { resolveMediaEndpoint, uploadMedia } from "@/lib/launchpad/media";
 import { browserSession, saveMintSecret, savePendingWire } from "@/lib/launchpad/mint-secret";
+import { LaunchValidationError } from "@/lib/launchpad/map-create-launch";
 import { submitCreateLaunch, type FactoryCreateLaunchClient } from "@/lib/launchpad/submit-launch";
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { PROGRAM_IDS } from "@/lib/solana/program-ids";
@@ -63,6 +64,10 @@ export function useSubmitLaunch() {
       });
       toastSuccess("Launch created. Continue with wiring.");
     } catch (error) {
+      if (error instanceof LaunchValidationError) {
+        dispatch({ type: "LAUNCH_ERROR", error: error.issues.join("\n") });
+        return;
+      }
       const message = error instanceof Error ? error.message : "Launch failed";
       toastError(message);
       dispatch({ type: "LAUNCH_ERROR", error: message });

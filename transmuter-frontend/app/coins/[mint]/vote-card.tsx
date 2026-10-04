@@ -1,7 +1,7 @@
 import { CoinProgress } from "@/app/coins/[mint]/coin-progress";
 import { CoinStats } from "@/app/coins/[mint]/coin-stats";
-import { formatAmount, formatBps, formatStatus, formatUnix } from "@/lib/catalog/format";
-import { holderOutcome, DAO_SHIM_QUORUM_MET, voteTally } from "@/lib/catalog/governance";
+import { formatAmount, formatStatus, formatUnix } from "@/lib/catalog/format";
+import { voteReadout, voteTally } from "@/lib/catalog/governance";
 import type { CoinVote } from "@/lib/catalog/types";
 import type { ReactNode } from "react";
 
@@ -15,7 +15,7 @@ export function VoteCard({
   children?: ReactNode;
 }) {
   const tally = voteTally(vote);
-  const outcome = holderOutcome(tally, DAO_SHIM_QUORUM_MET);
+  const readout = voteReadout(vote, tally);
   const yesWidth = Math.min(100, tally.yesBps / 100);
   const quorumWidth = Math.min(100, (tally.reachedQuorumBps / Math.max(vote.quorumBps, 1)) * 100);
   const title =
@@ -36,16 +36,19 @@ export function VoteCard({
           { label: "Yes", value: formatAmount(vote.yesWeight) },
           { label: "No", value: formatAmount(vote.noWeight) },
           { label: "Closes", value: formatUnix(vote.closesAt) },
-          { label: "Outcome", value: outcome.passing ? "Passing" : "Not passing" },
+          { label: "Outcome", value: tally.passing ? "Passing" : "Not passing" },
         ]}
       />
-      <p className="coin-note">
-        Yes {formatBps(tally.yesBps)} of participating (need {formatBps(vote.passBps)}). Quorum{" "}
-        {formatBps(tally.reachedQuorumBps)} of circulating (need {formatBps(vote.quorumBps)}). Denom{" "}
-        {formatAmount(vote.denom)}. {outcome.decidedByHolders ? "DAO shim: quorum not met; holders decide." : null}
-      </p>
-      <CoinProgress value={yesWidth} label="Yes share" />
-      <CoinProgress value={Math.min(100, quorumWidth)} label="Quorum" />
+      <div className="coin-vote-readout">
+        <div className="coin-vote-meter">
+          <p>{readout.yesLine}</p>
+          <CoinProgress value={yesWidth} label="Share of votes that are yes" />
+        </div>
+        <div className="coin-vote-meter">
+          <p>{readout.turnoutLine}</p>
+          <CoinProgress value={Math.min(100, quorumWidth)} label="Progress toward the required turnout" />
+        </div>
+      </div>
       {children}
     </article>
   );

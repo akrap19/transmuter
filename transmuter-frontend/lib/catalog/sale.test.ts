@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evaluateSaleAction } from "./sale";
+import { evaluateSaleAction, saleButtonLabel } from "./sale";
 
 const SALE = {
   capUsdc: 100_000,
@@ -10,6 +10,16 @@ const SALE = {
   depositsOpen: true,
   myDepositUsdc: 250,
 };
+
+describe("saleButtonLabel", () => {
+  it("puts Signing on the action in flight and leaves the other button on its idle label", () => {
+    expect(saleButtonLabel("deposit", "withdraw", "Withdraw $250.00")).toBe("Deposit");
+    expect(saleButtonLabel("withdraw", "withdraw", "Withdraw $250.00")).toBe("Signing…");
+    expect(saleButtonLabel("deposit", "deposit", "Withdraw $250.00")).toBe("Signing…");
+    expect(saleButtonLabel("withdraw", "deposit", "Withdraw $250.00")).toBe("Withdraw $250.00");
+    expect(saleButtonLabel("withdraw", null, "Withdraw …")).toBe("Withdraw …");
+  });
+});
 
 describe("evaluateSaleAction", () => {
   it("accepts a USDC deposit under the remaining sale cap while the sale is open", () => {

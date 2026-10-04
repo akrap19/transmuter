@@ -32,6 +32,24 @@ describe("liveSaleFromChain", () => {
     });
   });
 
+  it("does not report an empty sale when the raise is small beside the cap", () => {
+    const live = liveSaleFromChain({
+      factoryStatus: 2,
+      eolStatus: 0,
+      targetRaise: BigInt("71400000856"),
+      raisedUsdc: BigInt("5000000"),
+      salePrice: BigInt(102),
+      saleEnd: NOW + 86_400,
+      depositAmount: BigInt("5000000"),
+      now: NOW,
+    });
+
+    expect(live?.sale?.raisedUsdc).toBe(5);
+    expect(live?.sale?.priceUsd).toBe(0.000102);
+    expect(live?.sale?.myDepositUsdc).toBe(5);
+    expect(live?.saleProgressBps).toBe(1);
+  });
+
   it("closes deposits after sale end or when the cap is filled", () => {
     const closed = liveSaleFromChain({
       factoryStatus: 2,

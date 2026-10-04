@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { evaluateStakeAction, grossUp, stakingAvailable, voterLocked } from "./stake";
+import { formatUnix } from "./format";
+import { evaluateStakeAction, grossUp, stakingAvailable, unstakeLockMessage, voterLocked } from "./stake";
 import type { CoinStake } from "./types";
 
 const HELIX: CoinStake = {
@@ -22,6 +23,13 @@ describe("staking", () => {
   it("treats stake and unstake as free, with gross-up a no-op at fee_bps 0", () => {
     expect(grossUp(10, 0)).toBe(10);
     expect(grossUp(100, 50)).toBeGreaterThan(100);
+  });
+
+  it("tells a locked holder they cannot unstake because of governance voting", () => {
+    expect(unstakeLockMessage(1_747_200_000)).toBe(
+      `You cannot unstake because of governance voting. Unstake unlocks on ${formatUnix(1_747_200_000)}.`,
+    );
+    expect(unstakeLockMessage(null)).toBe("You cannot unstake because of governance voting.");
   });
 
   it("locks unstake until the voter-lock timestamp and unlocks after", () => {

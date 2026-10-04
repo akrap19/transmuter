@@ -171,11 +171,16 @@ function usdcWsol(input: PostSaleAccountsInput) {
 function sidePrograms(input: PostSaleAccountsInput) {
   const escrowSet = !input.escrow.equals(SystemProgram.programId);
   const vestingSet = !input.vesting.equals(SystemProgram.programId);
+  // escrow_config / escrow_vault / vesting_config are `#[account(mut)]`, so Anchor
+  // requires them writable even when the matching CPI branch is skipped. The System
+  // Program is executable and cannot be writable, so use the config PDA (already
+  // writable, unconstrained in those unchecked slots) as the mut-safe sentinel.
+  const mutSentinel = eolConfigPda(input.mint);
   return {
     escrowProgram: escrowSet ? RUNWAY_ESCROW_PROGRAM_ID : SystemProgram.programId,
-    escrowConfig: escrowSet ? input.escrow : SystemProgram.programId,
-    escrowVault: escrowSet ? input.escrowVault : SystemProgram.programId,
+    escrowConfig: escrowSet ? input.escrow : mutSentinel,
+    escrowVault: escrowSet ? input.escrowVault : mutSentinel,
     vestingProgram: vestingSet ? VESTING_PROGRAM_ID : SystemProgram.programId,
-    vestingConfig: vestingSet ? input.vesting : SystemProgram.programId,
+    vestingConfig: vestingSet ? input.vesting : mutSentinel,
   };
 }

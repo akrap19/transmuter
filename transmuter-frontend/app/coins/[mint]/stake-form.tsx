@@ -7,7 +7,7 @@ import type { CoinStake } from "@/lib/catalog/types";
 export function StakeForm({
   stake,
   amount,
-  busy,
+  pending,
   explorerUrl,
   onAmount,
   onStake,
@@ -15,12 +15,13 @@ export function StakeForm({
 }: {
   stake: CoinStake;
   amount: string;
-  busy: boolean;
+  pending: "stake" | "unstake" | null;
   explorerUrl: string | null;
   onAmount: (value: string) => void;
   onStake: () => void;
   onUnstake: () => void;
 }) {
+  const busy = pending != null;
   return (
     <>
       <CoinStats
@@ -38,18 +39,17 @@ export function StakeForm({
         </label>
         <div className="coin-buttons">
           <button type="button" className="button button-primary" disabled={busy} onClick={onStake}>
-            {busy ? "Signing…" : "Stake"}
+            {pending === "stake" ? "Signing…" : "Stake"}
           </button>
           <button type="button" className="button button-ghost" disabled={busy} onClick={onUnstake}>
-            {busy ? "Signing…" : "Unstake"}
+            {pending === "unstake" ? "Signing…" : "Unstake"}
           </button>
         </div>
         {explorerUrl ? (
-          <p className="coin-note">
-            <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
-              View transaction
-            </a>
-          </p>
+          <a className="coin-tx-link" href={explorerUrl} target="_blank" rel="noopener noreferrer">
+            View transaction
+            <span aria-hidden="true">↗</span>
+          </a>
         ) : null}
       </div>
     </>

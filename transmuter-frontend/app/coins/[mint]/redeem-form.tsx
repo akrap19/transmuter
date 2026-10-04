@@ -36,11 +36,10 @@ export function RedeemForm({
           Outstanding cSOL and USDC legs are paid inside this redeem. The program has no separate retry.
         </p>
         {explorerUrl ? (
-          <p className="coin-note">
-            <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
-              View transaction
-            </a>
-          </p>
+          <a className="coin-tx-link" href={explorerUrl} target="_blank" rel="noopener noreferrer">
+            View transaction
+            <span aria-hidden="true">↗</span>
+          </a>
         ) : null}
       </div>
     </>

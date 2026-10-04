@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { postSaleOffers, raydiumSeedAmounts } from "./post-sale";
+import { postSaleButtonOrder, postSaleOffers, raydiumSeedAmounts } from "./post-sale";
 
 const NOW = 1_700_000_000;
 
@@ -9,6 +9,12 @@ describe("postSaleOffers", () => {
     expect(postSaleOffers(sale({ now: NOW - 1, saleEnd: NOW, soldTokens: BigInt(40), saleTokens: BigInt(40) }))).toEqual(["finalize"]);
     expect(postSaleOffers(sale({ now: NOW - 1, saleEnd: NOW, soldTokens: BigInt(10), saleTokens: BigInt(40) }))).toEqual([]);
     expect(postSaleOffers(sale({ status: "active", now: NOW, saleEnd: NOW }))).not.toContain("finalize");
+  });
+
+  it("shows claim before treasury conversion", () => {
+    expect(postSaleButtonOrder(["convertTreasury", "claimTokens"])).toEqual(["claimTokens", "convertTreasury"]);
+    expect(postSaleButtonOrder(["claimTokens"])).toEqual(["claimTokens"]);
+    expect(postSaleButtonOrder(["convertTreasury"])).toEqual(["convertTreasury"]);
   });
 
   it("offers treasury conversion, Raydium LP seed, and a participant claim after the sale is active", () => {

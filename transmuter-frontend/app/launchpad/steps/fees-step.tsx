@@ -14,21 +14,16 @@ export function FeesStep() {
     <div className={`step-panel panel${state.currentStep === 4 ? " active" : ""}`}>
       <div className="panel-title"><div className="dot" />Transaction Fee Configuration</div>
       <p className="step-intro">
-        Set the total transfer fee and how it splits.{" "}
-        <strong style={{ color: "var(--tm-gold)" }}>
-          Protocol Revenue ({PROTOCOL_FEE.toFixed(2)}%) and cToken reserve contribution ({CTOKEN_RESERVE_FEE.toFixed(2)}%) are fixed by the protocol
-        </strong>{" "}
-        — a combined fixed minimum of {(PROTOCOL_FEE + CTOKEN_RESERVE_FEE).toFixed(2)}%. You control how the rest splits between LP
-        and Treasury, each with a{" "}
-        <strong style={{ color: "var(--tm-cyan)" }}>minimum of 0.10%</strong>. Redeeming
-        carries a fee that tracks this transfer fee, so exiting by redemption is never
-        cheaper than selling; its protocol share funds the protocol and the remainder
-        stays in the treasury for remaining holders.
+        Set the total transfer fee and how it splits. Protocol revenue ({PROTOCOL_FEE.toFixed(2)}%) and
+        the cToken reserve contribution ({CTOKEN_RESERVE_FEE.toFixed(2)}%) are fixed — a combined
+        minimum of {(PROTOCOL_FEE + CTOKEN_RESERVE_FEE).toFixed(2)}%. You choose how the rest splits
+        between the liquidity pool and the treasury, each at least 0.10%. Redeeming tracks this same
+        fee, so exiting is never cheaper than selling.
       </p>
 
-      <div className="panel-title fee-split-title">
-        <div className="dot dot-gold" />
-        Fee Destination Split
+      <div className="section-title">
+        <div className="dot" />
+        Fee split
       </div>
 
       <RangeField
@@ -44,8 +39,7 @@ export function FeesStep() {
       <FixedFee
         label={
           <>
-            🔒 Protocol Revenue{" "}
-            <span className="fee-fixed-badge">FIXED</span>
+            Protocol revenue <span className="fee-fixed-badge">Fixed</span>
           </>
         }
         value={PROTOCOL_FEE}
@@ -56,9 +50,8 @@ export function FeesStep() {
       <FixedFee
         label={
           <>
-            🔒 cToken reserve contribution{" "}
-            <span className="fee-ctoken-badge">({selectedCToken.name})</span>{" "}
-            <span className="fee-fixed-badge">FIXED</span>
+            cToken reserve <span className="fee-ctoken-badge">{selectedCToken.name}</span>{" "}
+            <span className="fee-fixed-badge">Fixed</span>
           </>
         }
         value={CTOKEN_RESERVE_FEE}
@@ -69,8 +62,7 @@ export function FeesStep() {
       <AdjustableFee
         label={
           <>
-            🌊 Liquidity Pool Allocation{" "}
-            <span className="fee-min-badge">(min 0.10%)</span>
+            Liquidity pool <span className="fee-min-badge">Min 0.10%</span>
           </>
         }
         value={fees.lpFee}
@@ -81,8 +73,7 @@ export function FeesStep() {
       <AdjustableFee
         label={
           <>
-            🏛️ Treasury (Backing) Allocation{" "}
-            <span className="fee-min-badge">(min 0.10%)</span>
+            Treasury <span className="fee-min-badge">Min 0.10%</span>
           </>
         }
         value={fees.treasuryFee}
@@ -93,8 +84,8 @@ export function FeesStep() {
         warning={fees.feeWarning ? (
           <div id="treasuryFeeWarning" className="fee-budget-warning">
             {fees.feeGap > 0
-              ? `⚠️ ${fees.feeGap.toFixed(2)}% of the total fee is not allocated. LP, treasury, and any optional fees have to use the whole total.`
-              : `⚠️ The split is ${Math.abs(fees.feeGap).toFixed(2)}% above the total fee. Lower a destination or raise Total TX Fee.`}
+              ? `${fees.feeGap.toFixed(2)}% of the total fee is not allocated. Liquidity pool, treasury, and any optional fees have to use the whole total.`
+              : `The split is ${Math.abs(fees.feeGap).toFixed(2)}% above the total fee. Lower a destination or raise the total fee.`}
           </div>
         ) : null}
       />
@@ -168,7 +159,7 @@ function RangeField({
 }) {
   const valueClass = gold ? " gold" : green ? " green" : pink ? " pink" : "";
   return (
-    <div className="slider-section" style={disabled ? { opacity: 0.6 } : undefined}>
+    <div className={`slider-section${disabled ? " is-fixed" : ""}`}>
       <div className="slider-header">
         <span className="slider-label">{label}</span>
         <span className={`slider-value${valueClass}`}>{value.toFixed(2)}%</span>
@@ -183,7 +174,7 @@ function RangeField({
         disabled={disabled}
         onChange={(e) => onChange?.(parseFloat(e.target.value))}
       />
-      {note && <div className="small-note" style={{ marginTop: 8 }}>{note}</div>}
+      {note && <div className="small-note">{note}</div>}
       {warning}
     </div>
   );
@@ -227,15 +218,15 @@ function AdjustableFee({
 function BurnFeeSection() {
   const { state, updateFees } = useLaunchpad();
   return (
-    <div className="slider-section">
+    <div className="option-block">
       <ToggleRow
         toggleKey="burnFee"
-        name="🔥 Optional Burn Allocation (Optional)"
+        name="Burn allocation"
         desc="Burns your token's own supply on every transfer. Part of the total fee, not an extra charge. When on: 0.05% to 1%."
       />
       {state.toggles.burnFee && (
         <RangeField
-          label="🔥 Burn Allocation"
+          label="Burn allocation"
           value={state.fees.burnFee}
           min={0.05}
           max={state.fees.burnMax}
@@ -251,15 +242,15 @@ function BurnFeeSection() {
 function CreatorFeeSection() {
   const { state, updateFees } = useLaunchpad();
   return (
-    <div className="slider-section">
+    <div className="option-block">
       <ToggleRow
         toggleKey="creatorFee"
-        name="💰 Optional Creator Fee (Optional)"
+        name="Creator fee"
         desc="Pays you a share of every trade, the same way the protocol takes its cut. Part of the total fee, not an extra charge. When on: up to 0.5%, shown to buyers at launch."
       />
       {state.toggles.creatorFee && (
         <RangeField
-          label="💰 Creator Fee"
+          label="Creator fee"
           value={state.fees.creatorFee}
           min={0}
           max={state.fees.creatorMax}
@@ -276,17 +267,17 @@ function FeeBreakdownVisual() {
   const { state } = useLaunchpad();
   const { fees } = state;
   const items = [
-    { short: "LP", label: "Liquidity Pool", pct: fees.lpFee, color: "rgba(240,194,75,0.8)" },
-    { short: "TREASURY", label: "Treasury Acquisition", pct: fees.treasuryFee, color: "rgba(240,194,75,0.8)" },
-    { short: "PROTOCOL", label: "Protocol Revenue", pct: PROTOCOL_FEE, color: "rgba(224,138,78,0.8)" },
-    { short: "RESERVE", label: "cToken reserve", pct: CTOKEN_RESERVE_FEE, color: "rgba(229,199,107,0.8)" },
-    { short: "BURN", label: "Burn (optional)", pct: state.toggles.burnFee ? fees.burnFee : 0, color: "rgba(188,169,224,0.85)" },
-    { short: "CREATOR", label: "Creator (optional)", pct: state.toggles.creatorFee ? fees.creatorFee : 0, color: "rgba(120,200,220,0.85)" },
+    { short: "LP", label: "Liquidity pool", pct: fees.lpFee, color: "rgba(255, 216, 127, 0.95)" },
+    { short: "TREASURY", label: "Treasury", pct: fees.treasuryFee, color: "rgba(234, 179, 84, 0.9)" },
+    { short: "PROTOCOL", label: "Protocol revenue", pct: PROTOCOL_FEE, color: "rgba(201, 146, 58, 0.95)" },
+    { short: "RESERVE", label: "cToken reserve", pct: CTOKEN_RESERVE_FEE, color: "rgba(243, 214, 154, 0.8)" },
+    { short: "BURN", label: "Burn", pct: state.toggles.burnFee ? fees.burnFee : 0, color: "rgba(255, 255, 255, 0.45)" },
+    { short: "CREATOR", label: "Creator", pct: state.toggles.creatorFee ? fees.creatorFee : 0, color: "rgba(229, 182, 84, 0.4)" },
   ];
 
   return (
     <div className="fee-breakdown">
-      <div className="fee-breakdown-title">Live Fee Breakdown - per 100 tokens traded</div>
+      <div className="fee-breakdown-title">Fee breakdown</div>
       <div className="fee-bar">
         {items.filter((i) => i.pct > 0).map((i) => (
           <div

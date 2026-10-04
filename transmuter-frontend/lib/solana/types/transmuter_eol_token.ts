@@ -124,7 +124,8 @@ export type TransmuterEolToken = {
           "name": "stakingConfig"
         },
         {
-          "name": "stakeAccount"
+          "name": "stakeAccount",
+          "writable": true
         }
       ],
       "args": [
@@ -875,16 +876,19 @@ export type TransmuterEolToken = {
           "name": "escrowProgram"
         },
         {
-          "name": "escrowConfig"
+          "name": "escrowConfig",
+          "writable": true
         },
         {
-          "name": "escrowVault"
+          "name": "escrowVault",
+          "writable": true
         },
         {
           "name": "vestingProgram"
         },
         {
-          "name": "vestingConfig"
+          "name": "vestingConfig",
+          "writable": true
         },
         {
           "name": "tokenProgram",
@@ -2103,186 +2107,191 @@ export type TransmuterEolToken = {
     },
     {
       "code": 6001,
+      "name": "metadata",
+      "msg": "token metadata invalid (name/symbol/uri)"
+    },
+    {
+      "code": 6002,
       "name": "salePct",
       "msg": "public sale below 25%"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "lpPct",
       "msg": "LP below 10%"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "teamPct",
       "msg": "team above 20%"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "daoPct",
       "msg": "dao airdrop above 10%"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "lpSplit",
       "msg": "LP split must sum to 100% and stay in [25%, 75%]"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "allocSum",
       "msg": "allocations must sum to 100%"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "reservePct",
       "msg": "governed mint pct out of [5%, 15%]"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "reserveGap",
       "msg": "reserve mint deactivate must sit >= 10 points above activate"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "infeasible",
       "msg": "lpPct*L + treasuryMinPct*g makes this launch infeasible"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "wrongStatus",
       "msg": "wrong lifecycle status"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "zeroAmount",
       "msg": "amount must be positive"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "saleClosed",
       "msg": "sale window has closed"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "saleOpen",
       "msg": "sale is still open"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "cap",
       "msg": "deposit exceeds remaining sale cap"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "dust",
       "msg": "credited tokens would be zero"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "depositMismatch",
       "msg": "USDC received did not match amount"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "insufficientCredit",
       "msg": "insufficient deposit credit"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "noEscrow",
       "msg": "escrow config required when escrowFundingNeed > 0"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "alreadyClaimed",
       "msg": "already claimed"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "insufficient",
       "msg": "insufficient treasury"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "healthy",
       "msg": "volume is not in the trouble band"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "noGate",
       "msg": "trouble gate is closed"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "voteOpen",
       "msg": "vote already open"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "noVote",
       "msg": "no open vote"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "voteClosed",
       "msg": "vote window closed"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "noQuorum",
       "msg": "quorum not met"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "voteFailed",
       "msg": "holder vote failed"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "allowanceOpen",
       "msg": "allowance already open"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "noTrigger",
       "msg": "automatic trigger has not armed"
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "duration",
       "msg": "duration has not elapsed"
     },
     {
-      "code": 6031,
+      "code": 6032,
       "name": "noAllowance",
       "msg": "no reserve-mint allowance"
     },
     {
-      "code": 6032,
+      "code": 6033,
       "name": "vaultsReady",
       "msg": "vaults already initialised"
     },
     {
-      "code": 6033,
+      "code": 6034,
       "name": "oracleOwner",
       "msg": "price account owner is not a pinned oracle program"
     },
     {
-      "code": 6034,
+      "code": 6035,
       "name": "oracleLayout",
       "msg": "price account layout is not Pyth PriceUpdateV2 or mock_pyth"
     },
     {
-      "code": 6035,
+      "code": 6036,
       "name": "oracleStale",
       "msg": "oracle print is stale"
     },
     {
-      "code": 6036,
+      "code": 6037,
       "name": "oracleConf",
       "msg": "oracle confidence interval is too wide"
     },
     {
-      "code": 6037,
+      "code": 6038,
       "name": "badDex",
       "msg": "dex_program is not mock_dex or Raydium CPMM"
     }
@@ -2621,6 +2630,28 @@ export type TransmuterEolToken = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "name",
+            "docs": [
+              "On-chain token name written to the mint's Token-2022 metadata."
+            ],
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "docs": [
+              "On-chain token symbol written to the mint's Token-2022 metadata."
+            ],
+            "type": "string"
+          },
+          {
+            "name": "metadataUri",
+            "docs": [
+              "Off-chain Metaplex-style metadata JSON URI (image/socials). Written to",
+              "the mint's Token-2022 metadata `uri`. Empty string = none."
+            ],
+            "type": "string"
+          },
           {
             "name": "decimals",
             "type": "u8"

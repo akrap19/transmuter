@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRows } from "@/app/coins/[mint]/scroll-rows";
 import { VoteCard } from "@/app/coins/[mint]/vote-card";
 import { VoteActions } from "@/app/coins/[mint]/vote-actions";
 import { WalletGate } from "@/components/catalog/wallet-gate";
@@ -20,7 +21,7 @@ export function GovernanceVotes({
   onConfirmed: () => void;
 }) {
   return (
-    <div className="coin-votes">
+    <ScrollRows className="coin-votes">
       {votes.map((vote) => (
         <VoteCard key={vote.kind} vote={vote} governedPct={governedPct}>
           {vote.kind === "liquidation" && stake ? (
@@ -33,6 +34,6 @@ export function GovernanceVotes({
           ) : null}
         </VoteCard>
       ))}
-    </div>
+    </ScrollRows>
   );
 }

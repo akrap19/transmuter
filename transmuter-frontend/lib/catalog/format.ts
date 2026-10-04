@@ -1,10 +1,12 @@
 export function formatUsd(value: number | null): string {
   if (value == null) return "—";
+  const abs = Math.abs(value);
+  const maximumFractionDigits = abs > 0 && abs < 0.005 ? 8 : 2;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits,
   }).format(value);
 }
 
