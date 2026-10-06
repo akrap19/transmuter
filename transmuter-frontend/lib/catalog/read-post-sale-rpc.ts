@@ -1,8 +1,9 @@
 import type { Connection } from "@solana/web3.js";
 import type { TransmuterClient } from "@/lib/solana/anchor-client";
+import { decodeMintSupply, decodeTokenAmount } from "@/lib/solana/batch-connection";
 import type { PostSaleReaders } from "./read-post-sale";
 
-type Rpc = Pick<Connection, "getAccountInfo" | "getTokenAccountBalance" | "getBalance" | "getTokenSupply">;
+type Rpc = Pick<Connection, "getAccountInfo">;
 
 export function postSaleReaders(client: TransmuterClient, connection: Rpc): PostSaleReaders {
   return {
@@ -15,22 +16,11 @@ export function postSaleReaders(client: TransmuterClient, connection: Rpc): Post
       const info = await connection.getAccountInfo(address, "confirmed");
       return info ? new Uint8Array(info.data) : null;
     },
-    tokenAmount: async (address) => {
-      try {
-        const balance = await connection.getTokenAccountBalance(address, "confirmed");
-        return BigInt(balance.value.amount);
-      } catch {
-        return BigInt(0);
-      }
+    tokenAmount: async (address) => decodeTokenAmount(await connection.getAccountInfo(address, "confirmed")),
+    lamports: async (address) => {
+      const info = await connection.getAccountInfo(address, "confirmed");
+      return info ? BigInt(info.lamports) : BigInt(0);
     },
-    lamports: async (address) => BigInt(await connection.getBalance(address, "confirmed")),
-    mintSupply: async (address) => {
-      try {
-        const supply = await connection.getTokenSupply(address, "confirmed");
-        return BigInt(supply.value.amount);
-      } catch {
-        return BigInt(0);
-      }
-    },
+    mintSupply: async (address) => decodeMintSupply(await connection.getAccountInfo(address, "confirmed")),
   };
 }

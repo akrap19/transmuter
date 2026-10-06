@@ -106,6 +106,41 @@ describe('createDevnetFailoverFetch', () => {
 		expect((await res.json()).error.message).toBe('Transaction simulation failed')
 	})
 
+	it('runs at most two calls at once', async () => {
+		let active = 0
+		let max = 0
+		const release: Array<() => void> = []
+		const rpcFetch = createDevnetFailoverFetch({
+			endpoints: [PRIMARY],
+			fetchImpl: () =>
+				new Promise((resolve) => {
+					active += 1
+					max = Math.max(max, active)
+					release.push(() => {
+						active -= 1
+						resolve(jsonResponse(200, { jsonrpc: '2.0', result: 'ok', id: 'test-id' }))
+					})
+				})
+		})
+
+		const flush = async () => {
+			for (let step = 0; step < 6; step += 1) await Promise.resolve()
+		}
+		const pending = Promise.all([rpcFetch(PRIMARY), rpcFetch(PRIMARY), rpcFetch(PRIMARY)])
+		await flush()
+		expect(max).toBe(2)
+		expect(release).toHaveLength(2)
+
+		release[0]()
+		await new Promise((resolve) => setTimeout(resolve, 0))
+		expect(max).toBe(2)
+		expect(release).toHaveLength(3)
+
+		release[1]()
+		release[2]()
+		await pending
+	})
+
 	it('waits out a cooldown and reads the account from the host once it is open again', async () => {
 		let now = 1_000
 		const calls: string[] = []

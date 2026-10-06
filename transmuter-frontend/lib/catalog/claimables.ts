@@ -3,7 +3,9 @@ import { unpaidLegs } from "./redeem";
 import { evaluateVestingClaim } from "./vesting";
 import type { Claimable, CoinDetail } from "./types";
 
-export function claimablesFromCoin(coin: CoinDetail, wallet: string, now: number): Claimable[] {
+type ClaimableCoin = Pick<CoinDetail, "mint" | "name" | "symbol" | "vesting" | "redeem" | "escrow">;
+
+export function claimablesFromCoin(coin: ClaimableCoin, wallet: string, now: number): Claimable[] {
   const rows: Claimable[] = [];
   const base = { mint: coin.mint, name: coin.name, symbol: coin.symbol };
 

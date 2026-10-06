@@ -29,6 +29,18 @@ describe("evaluateSaleAction", () => {
     });
   });
 
+  it("fills the cap when the typed dollars match the displayed remaining", () => {
+    const rounded = { ...SALE, capUsdc: 4.999988, raisedUsdc: 0, remainingUsdc: 4.999988 };
+    expect(evaluateSaleAction("sale", rounded, 1_746_200_000, { kind: "deposit", amountUsdc: 5 })).toEqual({
+      ok: true,
+      amountUsdc: 4.999988,
+    });
+    expect(evaluateSaleAction("sale", rounded, 1_746_200_000, { kind: "deposit", amountUsdc: 5.01 })).toEqual({
+      ok: false,
+      reason: "cap",
+    });
+  });
+
   it("rejects a deposit that exceeds remaining cap, a closed sale, or a non-sale status", () => {
     expect(evaluateSaleAction("sale", SALE, 1_746_200_000, { kind: "deposit", amountUsdc: 39_001 })).toEqual({
       ok: false,

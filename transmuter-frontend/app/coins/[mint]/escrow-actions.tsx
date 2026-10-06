@@ -31,33 +31,41 @@ export function EscrowActions({
       title="Connect to draw runway"
       body="Draw is signed by the team recipient. Halt, resume, and advance stay in Governance."
     >
-      {(wallet) => (
-        <div className="coin-actions">
-          <div className="coin-buttons">
-            <button
-              type="button"
-              className="button button-primary"
-              disabled={tx.busy || !chain.escrow}
-              onClick={() => {
-                const result = evaluateEscrowDraw(escrow, wallet, Math.floor(Date.now() / 1000));
-                if (!result.ok) {
-                  toastError(REASONS[result.reason] ?? result.reason);
-                  return;
-                }
-                void tx.run("escrowDraw", chain);
-              }}
-            >
-              {tx.busy ? "Signing…" : "Draw"}
-            </button>
+      {(wallet) => {
+        const result = evaluateEscrowDraw(escrow, wallet, Math.floor(Date.now() / 1000));
+        const showDraw = result.ok;
+        if (!showDraw && !tx.explorerUrl) return null;
+
+        return (
+          <div className="coin-actions">
+            {showDraw ? (
+              <div className="coin-buttons">
+                <button
+                  type="button"
+                  className="button button-primary"
+                  disabled={tx.busy || !chain.escrow}
+                  onClick={() => {
+                    const next = evaluateEscrowDraw(escrow, wallet, Math.floor(Date.now() / 1000));
+                    if (!next.ok) {
+                      toastError(REASONS[next.reason] ?? next.reason);
+                      return;
+                    }
+                    void tx.run("escrowDraw", chain);
+                  }}
+                >
+                  {tx.busy ? "Signing…" : "Draw"}
+                </button>
+              </div>
+            ) : null}
+            {tx.explorerUrl ? (
+              <a className="coin-tx-link" href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
+                View transaction
+                <span aria-hidden="true">↗</span>
+              </a>
+            ) : null}
           </div>
-          {tx.explorerUrl ? (
-            <a className="coin-tx-link" href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">
-              View transaction
-              <span aria-hidden="true">↗</span>
-            </a>
-          ) : null}
-        </div>
-      )}
+        );
+      }}
     </WalletGate>
   );
 }

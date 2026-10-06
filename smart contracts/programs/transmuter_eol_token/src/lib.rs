@@ -24,8 +24,8 @@ use transmuter_oracle::{self, OracleError};
 
 mod math;
 use math::{
-    bps_of, coeff_g, coeff_l, eval_gates, project, tokens_for_usdc, usdc_for_tokens, GateFail,
-    GateInput,
+    bps_of, coeff_g, coeff_l, eval_gates, project, sale_sold_out, tokens_for_usdc, usdc_for_tokens,
+    GateFail, GateInput,
 };
 
 declare_id!("DUYcHygp6rTdf3XY49ewhEyzpUg2QEfWECPTu5ucpaXJ");
@@ -462,7 +462,12 @@ pub mod transmuter_eol_token {
         let now = Clock::get()?.unix_timestamp;
         require!(
             now >= ctx.accounts.config.sale_end
-                || ctx.accounts.config.sold_tokens == ctx.accounts.config.sale_tokens,
+                || sale_sold_out(
+                    ctx.accounts.config.sold_tokens,
+                    ctx.accounts.config.sale_tokens,
+                    ctx.accounts.config.sale_price,
+                    ctx.accounts.config.decimals,
+                ),
             EolError::SaleOpen
         );
         let input = gate_from_config(&ctx.accounts.config);
@@ -492,6 +497,18 @@ pub mod transmuter_eol_token {
                 let seeds: &[&[u8]] = &[b"config", mint.as_ref(), &bump_seed];
                 if escrow_need > 0 {
                     require!(!escrow.eq(&Pubkey::default()), EolError::NoEscrow);
+                    // `fund` rejects start_time == 0, so the clock is stamped first.
+                    transmuter_runway_escrow::cpi::stamp_start_time(
+                        CpiContext::new_with_signer(
+                            ctx.accounts.escrow_program.to_account_info(),
+                            transmuter_runway_escrow::cpi::accounts::StampStartTime {
+                                eol_token: ctx.accounts.config.to_account_info(),
+                                config: ctx.accounts.escrow_config.to_account_info(),
+                            },
+                            &[seeds],
+                        ),
+                        now,
+                    )?;
                     transmuter_runway_escrow::cpi::fund(
                         CpiContext::new_with_signer(
                             ctx.accounts.escrow_program.to_account_info(),
@@ -505,17 +522,6 @@ pub mod transmuter_eol_token {
                             &[seeds],
                         ),
                         escrow_need,
-                    )?;
-                    transmuter_runway_escrow::cpi::stamp_start_time(
-                        CpiContext::new_with_signer(
-                            ctx.accounts.escrow_program.to_account_info(),
-                            transmuter_runway_escrow::cpi::accounts::StampStartTime {
-                                eol_token: ctx.accounts.config.to_account_info(),
-                                config: ctx.accounts.escrow_config.to_account_info(),
-                            },
-                            &[seeds],
-                        ),
-                        now,
                     )?;
                 }
                 let usdc_tokens =
@@ -1925,7 +1931,7 @@ pub struct Finalize<'info> {
     pub native_vault: UncheckedAccount<'info>,
     /// CHECK:
     pub escrow_program: UncheckedAccount<'info>,
-    /// CHECK: escrow config PDA; mutated by runway-escrow `fund` / `stamp_start_time`.
+    /// CHECK: escrow config PDA; mutated by runway-escrow `stamp_start_time`, then `fund`.
     #[account(mut)]
     pub escrow_config: UncheckedAccount<'info>,
     /// CHECK: escrow USDC vault; receives funds in runway-escrow `fund`.

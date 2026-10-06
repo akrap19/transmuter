@@ -1,7 +1,8 @@
 "use client";
 
 import { RedeemLegs } from "@/app/coins/[mint]/redeem-legs";
-import { formatAmount } from "@/lib/catalog/format";
+import { formatAmount, formatUsd } from "@/lib/catalog/format";
+import { quoteRedeem } from "@/lib/catalog/redeem";
 import type { CoinRedeem } from "@/lib/catalog/types";
 
 export function RedeemForm({
@@ -19,6 +20,9 @@ export function RedeemForm({
   onAmount: (value: string) => void;
   onRedeem: () => void;
 }) {
+  const burn = Number(amount);
+  const quote = Number.isFinite(burn) && burn > 0 ? quoteRedeem(redeem, burn) : null;
+
   return (
     <>
       <RedeemLegs legs={redeem.legs} />
@@ -32,6 +36,12 @@ export function RedeemForm({
             {busy ? "Signing…" : "Redeem"}
           </button>
         </div>
+        {quote ? (
+          <p className="coin-payout">
+            This burn pays <strong>{formatAmount(quote.csolOwed)} cSOL</strong> and{" "}
+            <strong>{formatUsd(quote.usdcOwed)}</strong>.
+          </p>
+        ) : null}
         <p className="coin-note">
           Outstanding cSOL and USDC legs are paid inside this redeem. The program has no separate retry.
         </p>

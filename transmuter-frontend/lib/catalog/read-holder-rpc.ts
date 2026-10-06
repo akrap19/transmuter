@@ -1,9 +1,10 @@
 import type { Connection } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import type { TransmuterClient } from "@/lib/solana/anchor-client";
+import { decodeMintSupply, decodeTokenAmount } from "@/lib/solana/batch-connection";
 import type { HolderReaders } from "./read-holder";
 
-type Rpc = Pick<Connection, "getTokenAccountBalance" | "getTokenSupply">;
+type Rpc = Pick<Connection, "getAccountInfo">;
 
 export function holderReaders(client: TransmuterClient, connection: Rpc): HolderReaders {
   return {
@@ -14,30 +15,11 @@ export function holderReaders(client: TransmuterClient, connection: Rpc): Holder
     vestingEntry: client.vesting.account.vestingEntry,
     escrowConfig: client.runwayEscrow.account.escrowConfig,
     redeemState: client.eolToken.account.redeemState,
-    tokenAmount: async (address) => {
-      try {
-        const balance = await connection.getTokenAccountBalance(address, "confirmed");
-        return BigInt(balance.value.amount);
-      } catch {
-        return BigInt(0);
-      }
-    },
-    mintSupply: async (address) => {
-      try {
-        const supply = await connection.getTokenSupply(address, "confirmed");
-        return BigInt(supply.value.amount);
-      } catch {
-        return BigInt(0);
-      }
-    },
+    tokenAmount: async (address) => decodeTokenAmount(await connection.getAccountInfo(address, "confirmed")),
+    mintSupply: async (address) => decodeMintSupply(await connection.getAccountInfo(address, "confirmed")),
     walletToken: async (mint, owner) => {
       const ata = getAssociatedTokenAddressSync(mint, owner, false, TOKEN_2022_PROGRAM_ID);
-      try {
-        const balance = await connection.getTokenAccountBalance(ata, "confirmed");
-        return BigInt(balance.value.amount);
-      } catch {
-        return BigInt(0);
-      }
+      return decodeTokenAmount(await connection.getAccountInfo(ata, "confirmed"));
     },
   };
 }

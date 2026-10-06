@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { WalletGate } from "@/components/catalog/wallet-gate";
 import { evaluateSaleAction } from "@/lib/catalog/sale";
-import { usdcToAtoms } from "@/lib/catalog/sale-accounts";
+import { usdcAtomsToInput, usdcToAtoms } from "@/lib/catalog/sale-accounts";
 import type { CoinDetail, SaleSnapshot } from "@/lib/catalog/types";
 import { SaleForm } from "./sale-form";
 import { toastError } from "@/lib/toast";
@@ -55,7 +55,9 @@ export function SaleActions({
       toastError(REASONS[result.reason] ?? result.reason);
       return;
     }
-    void saleTx.run(kind, kind === "deposit" ? amount : undefined);
+    const submit =
+      kind === "deposit" ? usdcAtomsToInput(BigInt(Math.round(result.amountUsdc * 1_000_000))) : undefined;
+    void saleTx.run(kind, submit);
   }
 
   return (

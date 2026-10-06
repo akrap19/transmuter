@@ -8,6 +8,18 @@ describe("postSaleOffers", () => {
     expect(postSaleOffers(sale({ now: NOW, saleEnd: NOW }))).toEqual(["finalize"]);
     expect(postSaleOffers(sale({ now: NOW - 1, saleEnd: NOW, soldTokens: BigInt(40), saleTokens: BigInt(40) }))).toEqual(["finalize"]);
     expect(postSaleOffers(sale({ now: NOW - 1, saleEnd: NOW, soldTokens: BigInt(10), saleTokens: BigInt(40) }))).toEqual([]);
+    expect(
+      postSaleOffers(
+        sale({
+          now: NOW - 1,
+          saleEnd: NOW,
+          soldTokens: BigInt(13_299_998_137),
+          saleTokens: BigInt(13_300_000_000),
+          salePrice: BigInt(375_939),
+          decimals: 9,
+        }),
+      ),
+    ).toEqual(["finalize"]);
     expect(postSaleOffers(sale({ status: "active", now: NOW, saleEnd: NOW }))).not.toContain("finalize");
   });
 
@@ -70,6 +82,8 @@ function sale(overrides: Partial<Parameters<typeof postSaleOffers>[0]>) {
     saleUsdcAtoms: BigInt(0),
     wsolAtoms: BigInt(0),
     lpUsdcShareBps: 0,
+    salePrice: BigInt(1_000_000),
+    decimals: 6,
     ...overrides,
   };
 }

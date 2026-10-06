@@ -279,6 +279,18 @@
 	font-size: 14px;
 }
 
+.coin-payout {
+	margin: 0;
+	color: var(--text);
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.coin-payout strong {
+	color: var(--gold);
+	font-weight: 600;
+}
+
 .coin-stats {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -439,11 +451,17 @@
 	align-items: center;
 }
 
-.coin-actions-row .coin-tx-link {
+.coin-actions-row .coin-buttons {
 	flex-basis: 100%;
 }
 
+.coin-actions-row .coin-tx-link {
+	flex: 0 0 auto;
+	width: fit-content;
+}
+
 .coin-actions .coin-note,
+.coin-actions .coin-payout,
 .coin-actions .coin-tx-link {
 	grid-column: 1 / -1;
 }

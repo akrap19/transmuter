@@ -20,8 +20,8 @@ export function RedeemLegs({ legs }: { legs: RedeemLeg[] }) {
             return (
               <tr key={leg.asset}>
                 <td>{leg.asset}</td>
-                <td>{formatAmount(leg.owed)}</td>
-                <td>{formatAmount(leg.paid)}</td>
+                <td title={leg.owed.toString()}>{formatAmount(leg.owed)}</td>
+                <td title={leg.paid.toString()}>{formatAmount(leg.paid)}</td>
                 <td>{status}</td>
               </tr>
             );

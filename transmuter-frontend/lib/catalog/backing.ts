@@ -23,6 +23,8 @@ export type BackingInput = {
 export type BackingView = {
   treasury: TreasurySnapshot;
   backingRatioBps: number | null;
+  priceUsd: number | null;
+  marketCapUsd: number | null;
 };
 
 /** SOL/USD as USDC atoms (6 dp). Same truncation as `oracle_to_usdc_6`. */
@@ -57,10 +59,18 @@ export function backingFromChain(input: BackingInput): BackingView {
       yearlyCap: RESERVE_MINT_YEARLY_CAP,
     },
   });
-  const marketCap = usdcForTokens(input.totalSupplyAtoms, input.salePriceAtoms, input.decimals);
+  const fdvAtoms = usdcForTokens(input.totalSupplyAtoms, input.salePriceAtoms, input.decimals);
+  // Without an oracle mark the cToken/SOL cannot be priced, so the ratio would
+  // read a misleading 0% rather than "unknown". Report null in that case.
+  const unpriceable = solUsd == null && (input.ctokenAtoms > BigInt(0) || input.solResidueLamports > BigInt(0));
+  const priceUsd = input.salePriceAtoms > BigInt(0) ? atomsToNumber(input.salePriceAtoms, 6) : null;
+  const marketCapAtoms = usdcForTokens(input.circulatingAtoms, input.salePriceAtoms, input.decimals);
   return {
     treasury: { ...treasury, backingValueUsd: atomsToNumber(backingAtoms, 6) },
-    backingRatioBps: marketCap > BigInt(0) ? Number((backingAtoms * BigInt(10_000)) / marketCap) : null,
+    backingRatioBps:
+      fdvAtoms > BigInt(0) && !unpriceable ? Number((backingAtoms * BigInt(10_000)) / fdvAtoms) : null,
+    priceUsd,
+    marketCapUsd: priceUsd == null ? null : atomsToNumber(marketCapAtoms, 6),
   };
 }
 

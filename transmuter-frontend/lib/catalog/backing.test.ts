@@ -26,6 +26,8 @@ describe("backingFromChain", () => {
     expect(view.treasury.backingValueUsd).toBe(9.5);
     expect(view.treasury.redemptionRatio).toBe(2 / 10_000);
     expect(view.backingRatioBps).toBe(5000);
+    expect(view.priceUsd).toBe(1);
+    expect(view.marketCapUsd).toBe(10_000);
     expect(view.treasury.reserveMint).toEqual({
       pathAReady: true,
       pathBActivated: true,
@@ -55,5 +57,27 @@ describe("backingFromChain", () => {
     expect(view.treasury.cTokenPriceUsd).toBe(0);
     expect(view.backingRatioBps).toBeNull();
     expect(view.treasury.redemptionRatio).toBe(0);
+  });
+
+  it("reports an unknown backing ratio when the oracle cannot price held cToken", () => {
+    const view = backingFromChain({
+      ctokenAtoms: BigInt(2_000_000_000),
+      unconvertedUsdcAtoms: BigInt(0),
+      solResidueLamports: BigInt(0),
+      oraclePrice: BigInt(0),
+      oracleExpo: -8,
+      circulatingAtoms: BigInt(100_000_000_000_000),
+      totalSupplyAtoms: BigInt(100_000_000_000_000),
+      salePriceAtoms: BigInt(70_000),
+      decimals: 9,
+      governedMintPctBps: 1_000,
+      pathAReady: false,
+      pathBActivated: false,
+    });
+
+    // cToken is held but the oracle mark is 0, so the ratio is unknown, not 0%.
+    expect(view.backingRatioBps).toBeNull();
+    expect(view.priceUsd).toBe(0.07);
+    expect(view.marketCapUsd).toBeCloseTo(7_000, 5);
   });
 });

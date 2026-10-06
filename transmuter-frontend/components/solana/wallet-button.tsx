@@ -42,14 +42,11 @@ export function WalletButton({ className, variant = 'default' }: WalletButtonPro
 
 	function handleSelect(next: Wallet) {
 		setMenuOpen(false)
-		void (async () => {
-			try {
-				select(next.adapter.name)
-				await next.adapter.connect()
-			} catch {
-				return
-			}
-		})()
+		// Select only. WalletProvider attaches connect listeners in an effect, then
+		// autoConnect calls adapter.connect(). Connecting here races that effect: an
+		// already-approved wallet emits `connect` before the listener exists, so the
+		// UI stays disconnected until refresh.
+		select(next.adapter.name)
 	}
 
 	const hasDetectedWallet = wallets.some(

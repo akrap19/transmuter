@@ -20,6 +20,8 @@ export type PostSaleInput = {
   saleUsdcAtoms: bigint;
   wsolAtoms: bigint;
   lpUsdcShareBps: number;
+  salePrice: bigint;
+  decimals: number;
 };
 
 /** Permissionless. The program does not require the creator. */
@@ -64,6 +66,19 @@ export function postSaleNote(status: LaunchStatus, offers: PostSaleKind[]): stri
 
 function canFinalize(input: PostSaleInput): boolean {
   if (input.status !== "sale") return false;
-  const soldOut = input.saleTokens > BigInt(0) && input.soldTokens === input.saleTokens;
-  return input.now >= input.saleEnd || soldOut;
+  return input.now >= input.saleEnd || saleSoldOut(input);
+}
+
+/** Matches on-chain `sale_sold_out`: a remainder smaller than one USDC atom is sold out. */
+function saleSoldOut(input: PostSaleInput): boolean {
+  if (input.soldTokens >= input.saleTokens) return input.soldTokens === input.saleTokens;
+  const remaining = input.saleTokens - input.soldTokens;
+  const step = tokensForOneAtom(input.salePrice, input.decimals);
+  return step == null || step > remaining;
+}
+
+function tokensForOneAtom(salePrice: bigint, decimals: number): bigint | null {
+  if (salePrice <= BigInt(0)) return null;
+  const tokens = BigInt(10) ** BigInt(decimals) / salePrice;
+  return tokens > BigInt(0) ? tokens : null;
 }

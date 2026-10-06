@@ -1646,8 +1646,43 @@
 	.launch-page .review-item-value {
 		text-align: left;
 	}
+}
+
+/* Phones, including landscape: a caption under each dot so all five steps stay visible. */
+@media (max-width: 900px) {
+	.launch-page .steps-bar {
+		align-items: flex-start;
+		justify-content: space-between;
+		padding: 12px 10px 10px;
+	}
+
+	.launch-page .step-item {
+		flex: 0 0 auto;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		padding: 0;
+	}
+
+	.launch-page .step-dot {
+		width: 28px;
+		height: 28px;
+		border-radius: 10px;
+	}
 
 	.launch-page .step-label {
-		display: none;
+		display: block;
+		font-size: 10px;
+		letter-spacing: 0.01em;
+		line-height: 1.2;
+		text-align: center;
+		text-transform: none;
+	}
+
+	.launch-page .step-line {
+		flex: 1 1 8px;
+		min-width: 8px;
+		margin: 13px 0 0;
+		align-self: flex-start;
 	}
 }

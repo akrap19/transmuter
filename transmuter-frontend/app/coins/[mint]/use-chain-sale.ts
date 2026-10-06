@@ -4,9 +4,11 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { depositReadMatches, settleChainRead } from "@/lib/catalog/chain-read";
+import { startChainPoll } from "@/lib/catalog/chain-poll";
 import type { LiveSaleView } from "@/lib/catalog/live-sale";
 import { readLiveSale } from "@/lib/catalog/read-live-sale";
 import { createReadonlyProvider, createTransmuterClient } from "@/lib/solana/anchor-client";
+import { getBatchedConnection } from "@/lib/solana/batch-connection";
 import { readersFrom } from "@/lib/catalog/read-live-sale-rpc";
 
 const LIVE_SALE_MS = 30_000;
@@ -36,29 +38,29 @@ export function useChainSale(mint: string): { live: LiveSaleView | null; deposit
     }
 
     let active = true;
-    const load = () => {
+    const stop = startChainPoll(async () => {
       const request = ++latest.current;
       const key = publicKey?.toBase58() ?? null;
-      const provider = createReadonlyProvider(connection, publicKey ?? PublicKey.default);
+      const provider = createReadonlyProvider(getBatchedConnection(connection), publicKey ?? PublicKey.default);
       const client = createTransmuterClient(provider);
-      void readLiveSale(readersFrom(client), mintKey, publicKey, Math.floor(Date.now() / 1000))
-        .then((view) => {
-          if (!active) return;
-          setLive((current) => settleChainRead(current, view, request, latest.current));
-          if (request === latest.current && view) setReadWallet(key);
-        })
-        .catch(() => {
-          if (!active) return;
+      let view: LiveSaleView | null;
+      try {
+        view = await readLiveSale(readersFrom(client), mintKey, publicKey, Math.floor(Date.now() / 1000));
+      } catch (error) {
+        if (active && request === latest.current) {
           setLive((current) => settleChainRead(current, null, request, latest.current));
-        });
-    };
+        }
+        throw error;
+      }
+      if (!active || request !== latest.current) return;
+      setLive((current) => settleChainRead(current, view, request, latest.current));
+      if (view) setReadWallet(key);
+    }, LIVE_SALE_MS);
 
-    load();
-    const id = setInterval(load, LIVE_SALE_MS);
     return () => {
       active = false;
       latest.current += 1;
-      clearInterval(id);
+      stop();
     };
   }, [connection, mint, publicKey, tick]);
 

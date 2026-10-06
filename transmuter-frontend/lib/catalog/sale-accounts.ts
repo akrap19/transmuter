@@ -14,6 +14,12 @@ export function usdcToAtoms(amount: string): bigint | null {
   return atoms > BigInt(0) ? atoms : null;
 }
 
+export function usdcAtomsToInput(atoms: bigint): string {
+  const whole = atoms / USDC_SCALE;
+  const frac = (atoms % USDC_SCALE).toString().padStart(USDC_DECIMALS, "0").replace(/0+$/, "");
+  return frac ? `${whole}.${frac}` : `${whole}`;
+}
+
 export function saleAccounts(input: {
   mint: PublicKey;
   depositor: PublicKey;

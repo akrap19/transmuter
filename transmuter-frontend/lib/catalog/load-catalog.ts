@@ -77,13 +77,20 @@ export function detailFromApi(coin: ApiCoin, chart: ChartPoint[]): CoinDetail {
 
 export function mergeBacking(
   detail: CoinDetail,
-  backing: { treasury: TreasurySnapshot; backingRatioBps: number | null } | null,
+  backing: {
+    treasury: TreasurySnapshot;
+    backingRatioBps: number | null;
+    priceUsd?: number | null;
+    marketCapUsd?: number | null;
+  } | null,
 ): CoinDetail {
   if (!backing) return detail;
   return {
     ...detail,
     treasury: backing.treasury,
     backingRatioBps: backing.backingRatioBps ?? detail.backingRatioBps,
+    priceUsd: backing.priceUsd ?? detail.priceUsd,
+    marketCapUsd: backing.marketCapUsd ?? detail.marketCapUsd,
   };
 }
 

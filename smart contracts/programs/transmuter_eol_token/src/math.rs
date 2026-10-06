@@ -89,6 +89,19 @@ pub fn tokens_for_usdc(usdc: u64, sale_price: u64, decimals: u8) -> Option<u64> 
     }
 }
 
+/// Sold out when another 1-atom USDC deposit cannot fit. Price division can
+/// leave a few token atoms that no deposit is able to buy.
+pub fn sale_sold_out(sold_tokens: u64, sale_tokens: u64, sale_price: u64, decimals: u8) -> bool {
+    if sold_tokens >= sale_tokens {
+        return sold_tokens == sale_tokens;
+    }
+    let remaining = sale_tokens - sold_tokens;
+    match tokens_for_usdc(1, sale_price, decimals) {
+        Some(step) => step > remaining,
+        None => true,
+    }
+}
+
 pub fn project(input: GateInput) -> Option<GateProjection> {
     if input.sale_tokens == 0 || input.total_supply < input.sale_tokens {
         return None;
@@ -270,6 +283,16 @@ mod tests {
         lp.min_raise = 0;
         lp.escrow_need = 0;
         assert_eq!(eval_gates(lp).unwrap_err(), GateFail::Lp);
+    }
+
+    #[test]
+    fn unsellable_remainder_counts_as_sold_out() {
+        // $0.375939, 9 decimals: 1 USDC atom buys 2660 token atoms.
+        // A filled $4.999988 cap leaves 1863 atoms, which no deposit can buy.
+        assert!(sale_sold_out(13_299_998_137, 13_300_000_000, 375_939, 9));
+        assert!(sale_sold_out(40, 40, 375_939, 9));
+        assert!(!sale_sold_out(10, 40, 1_000_000, 6));
+        assert!(!sale_sold_out(41, 40, 375_939, 9));
     }
 
     #[test]

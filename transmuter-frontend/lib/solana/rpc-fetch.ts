@@ -56,6 +56,9 @@ function readyHosts(url: string, endpoints: readonly string[], cooledUntil: Map<
 	return rpcFailoverOrder(url, endpoints).filter((endpoint) => (cooledUntil.get(endpoint) ?? 0) <= now)
 }
 
+/** Public devnet starts returning 429 once a handful of calls are in flight together. */
+const MAX_IN_FLIGHT = 2
+
 export function createDevnetFailoverFetch(options?: {
 	fetchImpl?: FetchLike
 	now?: () => number
@@ -69,8 +72,34 @@ export function createDevnetFailoverFetch(options?: {
 	const cooldownMs = options?.cooldownMs ?? 15_000
 	const endpoints = options?.endpoints ?? PUBLIC_DEVNET_RPCS
 	const cooledUntil = new Map<string, number>()
+	let inFlight = 0
+	const waiters: Array<() => void> = []
+
+	const acquire = () =>
+		new Promise<void>((resolve) => {
+			const start = () => {
+				inFlight += 1
+				resolve()
+			}
+			if (inFlight < MAX_IN_FLIGHT) start()
+			else waiters.push(start)
+		})
+
+	const release = () => {
+		inFlight -= 1
+		waiters.shift()?.()
+	}
 
 	return async (input, init) => {
+		await acquire()
+		try {
+			return await send(input, init)
+		} finally {
+			release()
+		}
+	}
+
+	async function send(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
 		const url = requestUrl(input)
 		let order = readyHosts(url, endpoints, cooledUntil, now())
 		if (order.length === 0) {

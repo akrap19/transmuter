@@ -1,16 +1,18 @@
 "use client";
 
 import { CatalogBanner } from "@/components/catalog/catalog-banner";
+import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { WalletGate } from "@/components/catalog/wallet-gate";
+import { useOwnedBalances } from "@/components/catalog/use-owned-balances";
 import { getPortfolio } from "@/lib/catalog/client";
 import { formatUsd } from "@/lib/catalog/format";
 import { MOCK_PREVIEW_WALLET } from "@/lib/catalog/mock";
-import type { TokenAccountBalance } from "@/lib/catalog/types";
+import type { PortfolioSnapshot } from "@/lib/catalog/types";
 import { routes } from "@/lib/routes";
 import { CoinStats } from "@/app/coins/[mint]/coin-stats";
-import { useOwnedBalances } from "@/components/catalog/use-owned-balances";
 import { ClaimablesTable, VotesTable } from "./portfolio-claims";
 import { HoldingsTable, StakesTable } from "./portfolio-positions";
+import { usePortfolio } from "./use-portfolio";
 
 type PortfolioViewProps = {
   preview: boolean;
@@ -18,7 +20,7 @@ type PortfolioViewProps = {
 
 export function PortfolioView({ preview }: PortfolioViewProps) {
   if (preview) {
-    return <Dashboard wallet={MOCK_PREVIEW_WALLET} />;
+    return <Dashboard snapshot={getPortfolio(MOCK_PREVIEW_WALLET)} notice />;
   }
 
   return (
@@ -34,15 +36,25 @@ export function PortfolioView({ preview }: PortfolioViewProps) {
 
 function ConnectedDashboard({ wallet }: { wallet: string }) {
   const accounts = useOwnedBalances(wallet);
-  return <Dashboard wallet={wallet} accounts={accounts ?? []} />;
+  const portfolio = usePortfolio(wallet, accounts);
+
+  if (portfolio.loading) return <p className="coin-lede">Loading holdings, stakes, and claims…</p>;
+  if (portfolio.error || !portfolio.snapshot) {
+    return (
+      <CatalogEmpty
+        title="Index unavailable"
+        body="Holdings come from the catalog API and this wallet's token accounts. Stakes, claims, and votes are read from chain once the index responds."
+      />
+    );
+  }
+
+  return <Dashboard snapshot={portfolio.snapshot} />;
 }
 
-function Dashboard({ wallet, accounts }: { wallet: string; accounts?: TokenAccountBalance[] }) {
-  const snapshot = getPortfolio(wallet, accounts);
-
+function Dashboard({ snapshot, notice = false }: { snapshot: PortfolioSnapshot; notice?: boolean }) {
   return (
     <>
-      <CatalogBanner />
+      {notice ? <CatalogBanner /> : null}
       <CoinStats
         items={[
           { label: "Holdings", value: formatUsd(snapshot.totals.holdingsUsd) },

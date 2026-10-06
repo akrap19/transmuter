@@ -3,20 +3,27 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { settleChainRead } from "@/lib/catalog/chain-read";
+import { startChainPoll } from "@/lib/catalog/chain-poll";
 import { readHolder, type HolderView } from "@/lib/catalog/read-holder";
 import { holderReaders } from "@/lib/catalog/read-holder-rpc";
 import { createReadonlyProvider, createTransmuterClient } from "@/lib/solana/anchor-client";
+import { getBatchedConnection } from "@/lib/solana/batch-connection";
 
 const LIVE_MS = 30_000;
-const FIRST_DELAY_MS = 16_000;
 
 export function useChainHolder(mint: string) {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
   const [view, setView] = useState<HolderView | null>(null);
+  const [trackedMint, setTrackedMint] = useState(mint);
   const [tick, setTick] = useState(0);
+  const latest = useRef(0);
   const reload = useCallback(() => setTick((value) => value + 1), []);
-  const opened = useRef(false);
+  if (trackedMint !== mint) {
+    setTrackedMint(mint);
+    setView(null);
+  }
 
   useEffect(() => {
     let mintKey: PublicKey;
@@ -26,27 +33,29 @@ export function useChainHolder(mint: string) {
       return;
     }
 
-    let cancelled = false;
-    const load = () => {
-      const provider = createReadonlyProvider(connection, publicKey ?? PublicKey.default);
+    let active = true;
+    const stop = startChainPoll(async () => {
+      const request = ++latest.current;
+      const batched = getBatchedConnection(connection);
+      const provider = createReadonlyProvider(batched, publicKey ?? PublicKey.default);
       const client = createTransmuterClient(provider);
-      void readHolder(holderReaders(client, connection), mintKey, publicKey, Math.floor(Date.now() / 1000))
-        .then((next) => {
-          if (!cancelled) setView(next);
-        })
-        .catch(() => {
-          if (!cancelled) setView(null);
-        });
-    };
+      let next: HolderView | null;
+      try {
+        next = await readHolder(holderReaders(client, batched), mintKey, publicKey, Math.floor(Date.now() / 1000));
+      } catch (error) {
+        if (active && request === latest.current) {
+          setView((current) => settleChainRead(current, null, request, latest.current));
+        }
+        throw error;
+      }
+      if (!active || request !== latest.current) return;
+      setView((current) => settleChainRead(current, next, request, latest.current));
+    }, LIVE_MS);
 
-    const wait = opened.current ? 0 : FIRST_DELAY_MS;
-    opened.current = true;
-    const start = setTimeout(load, wait);
-    const id = setInterval(load, LIVE_MS);
     return () => {
-      cancelled = true;
-      clearTimeout(start);
-      clearInterval(id);
+      active = false;
+      latest.current += 1;
+      stop();
     };
   }, [connection, mint, publicKey, tick]);
 

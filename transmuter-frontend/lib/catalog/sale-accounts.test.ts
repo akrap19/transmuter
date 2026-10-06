@@ -2,7 +2,7 @@ import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-tok
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { describe, expect, it } from "vitest";
 import { eolConfigPda, eolDepositPda } from "@/lib/solana/programs/eol-token";
-import { saleAccounts, usdcToAtoms } from "./sale-accounts";
+import { saleAccounts, usdcAtomsToInput, usdcToAtoms } from "./sale-accounts";
 
 const mint = Keypair.generate().publicKey;
 const depositor = Keypair.generate().publicKey;
@@ -14,6 +14,11 @@ describe("usdcToAtoms", () => {
     expect(usdcToAtoms("250")).toBe(BigInt(250_000_000));
     expect(usdcToAtoms("1.25")).toBe(BigInt(1_250_000));
     expect(usdcToAtoms("0.000001")).toBe(BigInt(1));
+  });
+
+  it("round-trips a cap that is a few atoms under a whole dollar", () => {
+    expect(usdcToAtoms(usdcAtomsToInput(BigInt(4_999_988)))).toBe(BigInt(4_999_988));
+    expect(usdcAtomsToInput(BigInt(5_000_000))).toBe("5");
   });
 
   it("rejects zero, extra precision, and non-numeric input", () => {

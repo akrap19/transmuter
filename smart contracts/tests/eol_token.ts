@@ -96,6 +96,7 @@ describe("eol token", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
   const eol = anchor.workspace.TransmuterEolToken as Program;
+  const escrow = anchor.workspace.TransmuterRunwayEscrow as Program;
   const ctoken = anchor.workspace.TransmuterCtoken as Program;
   const dex = anchor.workspace.MockDex as Program;
   const connection = provider.connection;
@@ -159,6 +160,7 @@ describe("eol token", () => {
     params?: Record<string, unknown>;
     withDex?: boolean;
     withCtoken?: boolean;
+    escrowNeed?: number;
   } = {}) {
     const withDex = opts.withDex ?? false;
     const withCtoken = opts.withCtoken ?? false;
@@ -191,6 +193,14 @@ describe("eol token", () => {
     const mint = mintKp.publicKey;
     const [mintAuthority] = mintAuthorityPda(eol.programId, mint);
     const [config] = pda([Buffer.from("config"), mint.toBuffer()], eol.programId);
+    const wireEscrow = (opts.escrowNeed ?? 0) > 0;
+    const escrowVaultKp = Keypair.generate();
+    const [escrowConfig] = wireEscrow
+      ? pda(
+          [Buffer.from("config"), config.toBuffer(), usdc.toBuffer()],
+          escrow.programId,
+        )
+      : [SystemProgram.programId];
     const ctokenTreasury = getAssociatedTokenAddressSync(
       cs.mint,
       config,
@@ -218,13 +228,33 @@ describe("eol token", () => {
         protocolRevenueWallet: protocolKp.publicKey,
         vesting: SystemProgram.programId,
         staking: SystemProgram.programId,
-        escrow: SystemProgram.programId,
+        escrow: escrowConfig,
         ctokenTreasury,
         tokenProgram: TOKEN_2022_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
       .signers([mintKp])
       .rpc();
+
+    if (wireEscrow) {
+      await escrow.methods
+        .initialize(0)
+        .accounts({
+          payer: payer.publicKey,
+          factory: payer.publicKey,
+          eolToken: config,
+          usdcMint: usdc,
+          teamRecipient: payer.publicKey,
+          daoDirect: payer.publicKey,
+          registry: payer.publicKey,
+          config: escrowConfig,
+          vault: escrowVaultKp.publicKey,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([escrowVaultKp])
+        .rpc();
+    }
 
     if (withCtoken) {
       const ataIx = createAssociatedTokenAccountInstruction(
@@ -405,6 +435,9 @@ describe("eol token", () => {
       poolVaultB,
       nativePool,
       nativeVault,
+      escrowProgram: wireEscrow ? escrow.programId : SystemProgram.programId,
+      escrowConfig,
+      escrowVault: wireEscrow ? escrowVaultKp.publicKey : SystemProgram.programId,
     };
   }
 
@@ -431,11 +464,11 @@ describe("eol token", () => {
       nativeVault: l.nativeVault.equals(SystemProgram.programId)
         ? payer.publicKey
         : l.nativeVault,
-      escrowProgram: SystemProgram.programId,
-      escrowConfig: SystemProgram.programId,
-      escrowVault: SystemProgram.programId,
+      escrowProgram: l.escrowProgram,
+      escrowConfig: l.escrowConfig.equals(SystemProgram.programId) ? l.config : l.escrowConfig,
+      escrowVault: l.escrowVault.equals(SystemProgram.programId) ? l.config : l.escrowVault,
       vestingProgram: SystemProgram.programId,
-      vestingConfig: SystemProgram.programId,
+      vestingConfig: l.config,
       tokenProgram: TOKEN_2022_PROGRAM_ID,
       usdcProgram: TOKEN_PROGRAM_ID,
     };
@@ -535,6 +568,26 @@ describe("eol token", () => {
     expect(after).to.equal(before);
     void GATE_RAISE;
     void sig;
+  });
+
+  it("finalize stamps runway startTime before funding the escrow vault", async function () {
+    this.timeout(120_000);
+    const need = 1_000_000;
+    const l = await setupLaunch({
+      withDex: true,
+      escrowNeed: need,
+      params: { escrowFundingNeed: new anchor.BN(need) },
+    });
+    const cfg0 = await eol.account.config.fetch(l.config);
+    const saleUsdc = (BigInt(cfg0.saleTokens.toString()) * BigInt(SALE_PRICE)) / SCALE;
+    await depositUsdc(l, saleUsdc);
+    await eol.methods.finalize().accounts(finalizeAccounts(l)).preInstructions([cu]).rpc();
+    const esc = await escrow.account.escrowConfig.fetch(l.escrowConfig);
+    expect(esc.startTime.toNumber()).to.be.greaterThan(0);
+    const vault = await getAccount(connection, l.escrowVault, undefined, TOKEN_PROGRAM_ID);
+    expect(vault.amount).to.equal(BigInt(need));
+    const cfg = await eol.account.config.fetch(l.config);
+    expect(cfg.status).to.equal(STATUS_ACTIVE);
   });
 
     it("finalize voids Lp on a dust fill and refunds", async () => {

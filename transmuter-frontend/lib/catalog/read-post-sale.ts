@@ -61,32 +61,37 @@ export async function readPostSale(
   const status = liveStatus(null, Number(config.status));
   if (!status) return null;
 
-  const launch = await readFactoryLaunchByMint(
-    { launch: readers.launch, mintIndex: readers.mintIndex },
-    mint,
-  );
-  const cpmm = raydiumPoolKeys(config.usdcMint, NATIVE_MINT).poolState;
-  const venue = launch?.account.poolUsdc.equals(cpmm) ? "raydium" : "mock";
-  const poolPda = mockPoolPda(mint, config.usdcMint);
-  const nativePda = mockNativePoolPda(config.usdcMint);
-  const [poolData, nativeData, wsolData, deposit, escrow] = await Promise.all([
-    venue === "mock" ? readers.accountData(poolPda) : Promise.resolve(null),
-    venue === "mock" ? readers.accountData(nativePda) : Promise.resolve(null),
-    readers.accountData(getAssociatedTokenAddressSync(NATIVE_MINT, eolConfigPda(mint), true, TOKEN_PROGRAM_ID)),
+  const wsolAta = getAssociatedTokenAddressSync(NATIVE_MINT, eolConfigPda(mint), true, TOKEN_PROGRAM_ID);
+  // The launch lookup and every config-derived read only need the config and the
+  // mint, so issue them together. With the batching connection they collapse into
+  // one getMultipleAccounts instead of waiting on each other round trip by round trip.
+  const launchPromise = readFactoryLaunchByMint({ launch: readers.launch, mintIndex: readers.mintIndex }, mint);
+  const corePromise = Promise.all([
+    readers.accountData(wsolAta),
     wallet ? readers.deposit.fetchNullable(eolDepositPda(eolConfigPda(mint), wallet)) : Promise.resolve(null),
     isSet(config.escrow) ? readers.escrow.fetchNullable(config.escrow) : Promise.resolve(null),
-  ]);
-  const vaults = poolData ? readMockPoolVaults(poolData) : null;
-  const nativeVault = nativeData ? readNativePoolVault(nativeData) : null;
-  const [treasuryUsdc, ctokenAtoms, lpTokenAtoms, saleUsdcAtoms, wsolAtoms, supply, lpLamports] = await Promise.all([
     readers.tokenAmount(config.treasuryUsdc),
     readers.tokenAmount(config.ctokenTreasury),
     readers.tokenAmount(config.lpTokenVault),
     readers.tokenAmount(config.saleUsdcVault),
-    readers.tokenAmount(getAssociatedTokenAddressSync(NATIVE_MINT, eolConfigPda(mint), true, TOKEN_PROGRAM_ID)),
+    readers.tokenAmount(wsolAta),
     readers.mintSupply(mint),
     readers.lamports(eolLpSignerPda(mint)),
   ]);
+  const [launch, core] = await Promise.all([launchPromise, corePromise]);
+  const [wsolData, deposit, escrow, treasuryUsdc, ctokenAtoms, lpTokenAtoms, saleUsdcAtoms, wsolAtoms, supply, lpLamports] =
+    core;
+
+  const cpmm = raydiumPoolKeys(config.usdcMint, NATIVE_MINT).poolState;
+  const venue = launch?.account.poolUsdc.equals(cpmm) ? "raydium" : "mock";
+  const poolPda = mockPoolPda(mint, config.usdcMint);
+  const nativePda = mockNativePoolPda(config.usdcMint);
+  const [poolData, nativeData] = await Promise.all([
+    venue === "mock" ? readers.accountData(poolPda) : Promise.resolve(null),
+    venue === "mock" ? readers.accountData(nativePda) : Promise.resolve(null),
+  ]);
+  const vaults = poolData ? readMockPoolVaults(poolData) : null;
+  const nativeVault = nativeData ? readNativePoolVault(nativeData) : null;
 
   const depositAtoms = deposit ? chainAmount(deposit.amount) : BigInt(0);
   const backing = backingFromChain({
@@ -116,6 +121,8 @@ export async function readPostSale(
     saleUsdcAtoms,
     wsolAtoms,
     lpUsdcShareBps: Number(config.lpUsdcShareBps),
+    salePrice: chainAmount(config.salePrice),
+    decimals: Number(config.decimals),
   };
   const offers = postSaleOffers(input);
   const chain: PostSaleChain = {
