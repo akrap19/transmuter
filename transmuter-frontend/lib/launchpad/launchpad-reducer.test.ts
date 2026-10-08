@@ -56,4 +56,22 @@ describe("launchpadReducer launch status", () => {
     expect(resumed.tokenTicker).toBe("AERO");
     expect(resumed.selectedCToken.name).toBe("cSOL");
   });
+
+  it("drops a finished launch when the creator leaves, and keeps an in-progress draft", () => {
+    const launched = launchpadReducer(initialLaunchpadState, {
+      type: "LAUNCH_SUCCESS",
+      mint: "Mint111111111111111111111111111111111111111",
+      signature: "sig",
+      launchId: 3,
+      metadataUri: "https://cdn.example/aero.json",
+    });
+    const draft = launchpadReducer(initialLaunchpadState, {
+      type: "SET_FIELD",
+      field: "tokenName",
+      value: "Aero",
+    });
+
+    expect(launchpadReducer(launched, { type: "DISMISS_LAUNCHED" }).launched).toBe(false);
+    expect(launchpadReducer(draft, { type: "DISMISS_LAUNCHED" }).tokenName).toBe("Aero");
+  });
 });

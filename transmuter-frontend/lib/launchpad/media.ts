@@ -41,6 +41,17 @@ export function resolveMediaEndpoint(
   return `${base}/media`;
 }
 
+/** Server-side upload target. The browser posts to `/api/media`, which forwards here so bytes land on R2. */
+export function upstreamMediaUrl(
+  env: Record<string, string | undefined> = {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  },
+): string | null {
+  const base = (env.NEXT_PUBLIC_API_URL ?? "").trim().replace(/\/$/, "");
+  if (!base) return null;
+  return `${base}/media`;
+}
+
 export async function uploadMedia(
   file: MediaUpload,
   options: UploadMediaOptions,

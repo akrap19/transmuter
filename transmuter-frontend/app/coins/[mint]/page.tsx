@@ -6,6 +6,7 @@ import { CoinLive } from "@/app/coins/[mint]/coin-live";
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { fetchCoinRecord } from "@/lib/catalog/api";
 import { loadCoinDetail } from "@/lib/catalog/load-catalog";
+import { readServerChainCoin } from "@/lib/catalog/read-chain-coin";
 import { readServerLiveSale } from "@/lib/catalog/read-live-sale-rpc";
 import { explorePathFromCoinSearch, searchParamsFromRecord } from "@/lib/catalog/search-params";
 
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: CoinPageProps): Promise<Metad
 export default async function CoinPage({ params, searchParams }: CoinPageProps) {
   const { mint } = await params;
   const backHref = explorePathFromCoinSearch(searchParamsFromRecord(await searchParams));
-  const loaded = await loadCoinDetail(mint, { readLive: readServerLiveSale });
+  const loaded = await loadCoinDetail(mint, { readLive: readServerLiveSale, readChain: readServerChainCoin });
 
   return (
     <main className="coin-page">

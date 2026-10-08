@@ -28,6 +28,7 @@ export type LaunchpadAction =
   | { type: "LAUNCH_ERROR"; error: string }
   | { type: "LAUNCH_SUCCESS"; mint: string; signature: string; launchId: number; metadataUri: string }
   | { type: "RESUME_WIRE"; pending: PendingWire }
+  | { type: "DISMISS_LAUNCHED" }
   | { type: "RESET" };
 
 export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction): LaunchpadState {
@@ -163,6 +164,8 @@ export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction)
         tokenTicker: action.pending.tokenTicker,
         selectedCToken: { ...state.selectedCToken, name: action.pending.backingName },
       };
+    case "DISMISS_LAUNCHED":
+      return state.launched ? initialLaunchpadState : state;
     case "RESET":
       return initialLaunchpadState;
     default:

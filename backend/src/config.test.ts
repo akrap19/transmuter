@@ -57,5 +57,25 @@ describe("resolveConfig", () => {
     expect(config.eolProgramId).toBe(DEFAULT_EOL_PROGRAM_ID);
     expect(config.cacheTtlSeconds).toBe(15);
     expect(config.indexerFromSlot).toBe(0n);
+    expect(config.r2).toBeNull();
+  });
+
+  it("uses R2 only when the bucket credentials and public URL are all set", () => {
+    const config = resolveConfig({
+      R2_ACCOUNT_ID: "account",
+      R2_ACCESS_KEY_ID: "key",
+      R2_SECRET_ACCESS_KEY: "secret",
+      R2_BUCKET: "transmuter-media",
+      R2_PUBLIC_URL: "https://media.transmuter.net/",
+    });
+
+    expect(config.r2).toEqual({
+      accountId: "account",
+      accessKeyId: "key",
+      secretAccessKey: "secret",
+      bucket: "transmuter-media",
+      publicUrl: "https://media.transmuter.net",
+    });
+    expect(resolveConfig({ R2_BUCKET: "transmuter-media" }).r2).toBeNull();
   });
 });

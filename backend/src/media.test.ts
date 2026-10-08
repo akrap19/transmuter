@@ -100,6 +100,30 @@ describe("POST /media", () => {
     expect(res.json()).toEqual({ error: "too large" });
   });
 
+  it("returns 502 when the store rejects the upload", async () => {
+    app = await buildApp({
+      catalog: createMemoryCatalog(),
+      cache: createMemoryCache(),
+      cacheTtlSeconds: 0,
+      publicUrl: "http://localhost:3001",
+      media: {
+        save() {
+          throw new Error("Unauthorized");
+        },
+        read() {
+          return null;
+        },
+      },
+    });
+    const res = await app.inject({
+      method: "POST",
+      url: "/media",
+      ...form({ bytes: PNG, type: "image/png", filename: "logo.png" }),
+    });
+    expect(res.statusCode).toBe(502);
+    expect(res.json()).toEqual({ error: "media store unavailable" });
+  });
+
   it("returns 404 for an unknown media id", async () => {
     app = await mediaApp();
     const res = await app.inject({ method: "GET", url: "/media/deadbeef" });

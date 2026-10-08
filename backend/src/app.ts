@@ -50,7 +50,9 @@ async function cachedJson<T>(
   }
 
   const value = await load();
-  if (ttlSeconds > 0) {
+  // A missing coin must not stick. The indexer catches new launches after this
+  // read, and a cached null would keep "mint not found" until TTL.
+  if (ttlSeconds > 0 && value != null) {
     try {
       await cache.set(key, JSON.stringify(value), ttlSeconds);
     } catch {
@@ -98,15 +100,21 @@ export async function buildApp(deps: AppDeps): Promise<AppInstance> {
       if (bytes.byteLength > MAX_MEDIA_BYTES) {
         return reply.code(413).send({ error: "too large" });
       }
-      return media.save({
-        bytes: new Uint8Array(bytes),
-        contentType,
-        filename: file.filename || "upload",
-      });
+      try {
+        return await media.save({
+          bytes: new Uint8Array(bytes),
+          contentType,
+          filename: file.filename || "upload",
+        });
+      } catch (error) {
+        const name = (error as { name?: string }).name ?? "Error";
+        console.error(`media save failed: ${name}`);
+        return reply.code(502).send({ error: "media store unavailable" });
+      }
     });
 
     app.get<{ Params: { id: string } }>("/media/:id", async (request, reply) => {
-      const stored = media.read(request.params.id);
+      const stored = await media.read(request.params.id);
       if (!stored) {
         return reply.code(404).send({ error: "not found" });
       }

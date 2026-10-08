@@ -11,6 +11,8 @@ type LoadOptions = {
   fetchFn?: typeof fetch;
   env?: Record<string, string | undefined>;
   readLive?: (mint: string) => Promise<LiveSaleView | null>;
+  /** Factory account read used when the index has not caught the launch yet. */
+  readChain?: (mint: string) => Promise<CoinDetail | null>;
 };
 
 const EMPTY_SOCIALS: CoinSocials = {
@@ -38,7 +40,7 @@ export async function loadCoinList(
 }
 
 export type LoadedCoin =
-  | { kind: "coin"; detail: CoinDetail; source: "api" }
+  | { kind: "coin"; detail: CoinDetail; source: "api" | "chain" }
   | { kind: "missing" }
   | { kind: "unavailable" };
 
@@ -50,6 +52,14 @@ export async function loadCoinDetail(mint: string, options: LoadOptions = {}): P
   ]);
 
   if (!record.ok) {
+    if (record.status === 404 && options.readChain) {
+      try {
+        const chain = await options.readChain(mint);
+        if (chain) return { kind: "coin", detail: mergeLiveDetail(chain, live), source: "chain" };
+      } catch {
+        // The index miss stands when the chain read fails.
+      }
+    }
     return record.status === 404 ? { kind: "missing" } : { kind: "unavailable" };
   }
 

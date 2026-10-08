@@ -1,6 +1,6 @@
 # Transmuter API
 
-Fastify read-model API over MySQL, with Redis in front of hot coin queries, a local media store for logos, and an indexer worker that fills the catalog from Factory/EOL logs.
+Fastify read-model API over MySQL, with Redis in front of hot coin queries, Cloudflare R2 for logos and metadata JSON, and an indexer worker that fills the catalog from Factory/EOL logs.
 
 The database is a rebuildable cache of the Factory registry. It is not the source of truth for balances, backing, or payouts.
 
@@ -14,8 +14,8 @@ The database is a rebuildable cache of the Factory registry. It is not the sourc
 | `GET` | `/coins/:mint/chart` | `{ points: [{ t, priceUsd, volumeUsd }] }` |
 | `GET` | `/users/:wallet/created` | Launches whose `creator` matches the wallet |
 | `GET` | `/users/:wallet/held` | Intersect `mint`/`amount` query params with known EOL mints. Amounts come from the client (`getTokenAccountsByOwner`). |
-| `POST` | `/media` | Multipart `file`. PNG/JPEG/WebP/SVG/JSON, max 2MB. Returns `{ id, url }` for Metaplex `uri`. |
-| `GET` | `/media/:id` | Stored bytes |
+| `POST` | `/media` | Multipart `file`. PNG/JPEG/WebP/SVG/JSON, max 2MB. Returns `{ id, url }` for Metaplex `uri`. With `R2_*` set, `url` is `https://media.transmuter.net/<id>.<ext>`. |
+| `GET` | `/media/:id` | Stored bytes. R2 objects are also fetched by the public URL wallets use. |
 | `POST` | `/webhooks/helius` | Chain ingest. Requires `Authorization` matching `HELIUS_WEBHOOK_SECRET`. |
 
 Wallet address is identity. There is no auth/user table. `profiles` exists in MySQL for optional off-chain prefs keyed by pubkey; no profile HTTP routes in this step.
@@ -38,7 +38,9 @@ pnpm test
 pnpm typecheck
 ```
 
-Point the Launchpad at this API with `NEXT_PUBLIC_API_URL` (this machine: `http://localhost:3010`, because `:3001` is taken) so logo uploads go to `POST /media`. CORS allows `FRONTEND_ORIGIN` (this machine: `http://localhost:3003`).
+Point the Launchpad at this API with `NEXT_PUBLIC_API_URL` (this machine: `http://localhost:3010`, because `:3001` is taken). The browser posts logos to the site's `/api/media`, and that route forwards them here. CORS allows `FRONTEND_ORIGIN` (this machine: `http://localhost:3003`).
+
+Set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, and `R2_PUBLIC_URL` to store logos and metadata JSON on Cloudflare R2. The returned URL is what wallets fetch. Without those variables the API keeps files under `MEDIA_DIR`.
 
 ## Indexer
 

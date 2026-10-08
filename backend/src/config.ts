@@ -8,6 +8,7 @@ export type AppConfig = {
   databaseUrl: string | null;
   redisUrl: string | null;
   mediaDir: string;
+  r2: R2Config | null;
   cacheTtlSeconds: number;
   solanaRpcUrl: string | null;
   solanaWsUrl: string | null;
@@ -17,6 +18,14 @@ export type AppConfig = {
   csolMint: string | null;
   cbtcMint: string | null;
   indexerFromSlot: bigint;
+};
+
+export type R2Config = {
+  accountId: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucket: string;
+  publicUrl: string;
 };
 
 function optional(value: string | undefined): string | null {
@@ -31,6 +40,16 @@ function frontendOrigins(value: string | null): string | string[] {
     .filter(Boolean);
   if (origins.length === 0) return "http://localhost:3000";
   return origins.length === 1 ? origins[0] : origins;
+}
+
+function r2Config(env: Record<string, string | undefined>): R2Config | null {
+  const accountId = optional(env.R2_ACCOUNT_ID);
+  const accessKeyId = optional(env.R2_ACCESS_KEY_ID);
+  const secretAccessKey = optional(env.R2_SECRET_ACCESS_KEY);
+  const bucket = optional(env.R2_BUCKET);
+  const publicUrl = optional(env.R2_PUBLIC_URL);
+  if (!accountId || !accessKeyId || !secretAccessKey || !bucket || !publicUrl) return null;
+  return { accountId, accessKeyId, secretAccessKey, bucket, publicUrl: publicUrl.replace(/\/$/, "") };
 }
 
 export function resolveConfig(env: Record<string, string | undefined> = process.env): AppConfig {
@@ -48,6 +67,7 @@ export function resolveConfig(env: Record<string, string | undefined> = process.
     databaseUrl: optional(env.DATABASE_URL),
     redisUrl: optional(env.REDIS_URL),
     mediaDir: optional(env.MEDIA_DIR) ?? ".data/media",
+    r2: r2Config(env),
     cacheTtlSeconds: Number.isFinite(ttl) && ttl >= 0 ? ttl : 15,
     solanaRpcUrl,
     solanaWsUrl: optional(env.SOLANA_WS_URL),

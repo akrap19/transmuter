@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { dataUrlToUpload, resolveMediaEndpoint, uploadMedia } from "./media";
+import { dataUrlToUpload, resolveMediaEndpoint, upstreamMediaUrl, uploadMedia } from "./media";
 
 describe("resolveMediaEndpoint", () => {
   it("uses the read API when there is no browser origin (SSR)", () => {
@@ -25,6 +25,15 @@ describe("resolveMediaEndpoint", () => {
 
   it("defaults to /api/media when NEXT_PUBLIC_API_URL is unset", () => {
     expect(resolveMediaEndpoint({}, null)).toBe("/api/media");
+  });
+});
+
+describe("upstreamMediaUrl", () => {
+  it("points same-origin uploads at the API media route", () => {
+    expect(upstreamMediaUrl({ NEXT_PUBLIC_API_URL: "http://localhost:3010" })).toBe(
+      "http://localhost:3010/media",
+    );
+    expect(upstreamMediaUrl({})).toBeNull();
   });
 });
 

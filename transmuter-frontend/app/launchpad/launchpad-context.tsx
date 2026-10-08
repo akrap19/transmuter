@@ -40,6 +40,17 @@ export function LaunchpadProvider({ children }: { children: ReactNode }) {
     if (pending) dispatch({ type: "RESUME_WIRE", pending });
   }, []);
 
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      const storage = browserSession();
+      if (storage && loadPendingWire(storage)) return;
+      dispatch({ type: "DISMISS_LAUNCHED" });
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [dispatch]);
+
   const setField = useCallback(<K extends keyof LaunchpadState>(field: K, value: LaunchpadState[K]) => {
     dispatch({ type: "SET_FIELD", field, value });
   }, []);

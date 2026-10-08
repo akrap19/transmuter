@@ -75,3 +75,7 @@ export function buildWireChecklist(input: {
 export function nextWireStep(steps: WireChecklistItem[]): WireChecklistItem | null {
   return steps.find((step) => step.state === "next" || step.state === "failed") ?? null;
 }
+
+export function wiringComplete(steps: WireChecklistItem[]): boolean {
+  return steps.length > 0 && steps.every((step) => step.state === "done");
+}

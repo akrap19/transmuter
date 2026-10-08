@@ -11,6 +11,7 @@ import {
   WIRE_VESTING,
   buildWireChecklist,
   nextWireStep,
+  wiringComplete,
 } from "./wire-plan";
 
 const BASE =
@@ -94,5 +95,22 @@ describe("buildWireChecklist", () => {
     expect(staking?.state).toBe("failed");
     expect(staking?.error).toBe("The wallet does not have enough SOL to pay the fee.");
     expect(nextWireStep(steps)?.id).toBe("staking");
+  });
+
+  it("marks the sale open only when every included step is done", () => {
+    const open = buildWireChecklist({
+      requiredMask: BASE,
+      wiredMask: BASE,
+      treasuryAtaExists: true,
+    });
+    const partial = buildWireChecklist({
+      requiredMask: BASE,
+      wiredMask: WIRE_EOL,
+      treasuryAtaExists: false,
+    });
+
+    expect(wiringComplete(open)).toBe(true);
+    expect(wiringComplete(partial)).toBe(false);
+    expect(wiringComplete([])).toBe(false);
   });
 });

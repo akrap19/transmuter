@@ -4,7 +4,7 @@ import { AnchorProvider } from "@coral-xyz/anchor";
 import { useAnchorWallet, useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Keypair, PublicKey, type Transaction, type VersionedTransaction } from "@solana/web3.js";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { browserSession, clearMintSecret, loadMintSecret } from "@/lib/launchpad/mint-secret";
+import { browserSession, clearMintSecret, clearPendingWire, loadMintSecret } from "@/lib/launchpad/mint-secret";
 import { buildWireUnits, submitWireBatch, submitWireStep, type FactoryWireClient } from "@/lib/launchpad/submit-wire";
 import { planWireBatches } from "@/lib/launchpad/wire-batches";
 import { prepareWireStep, type WireLaunch } from "@/lib/launchpad/wire-accounts";
@@ -12,6 +12,7 @@ import {
   WIRE_EOL,
   buildWireChecklist,
   nextWireStep,
+  wiringComplete,
   type WireChecklistItem,
   type WireStepId,
 } from "@/lib/launchpad/wire-plan";
@@ -97,6 +98,10 @@ export function useWireLaunch() {
           failedStep: failed?.step,
           failure: failed?.message,
         });
+        if (wiringComplete(checklist)) {
+          const storage = browserSession();
+          if (storage) clearPendingWire(storage);
+        }
         setSteps(checklist);
         setProgress({ done: checklist.filter((step) => step.state === "done").length, total: checklist.length });
         setError(null);

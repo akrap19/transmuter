@@ -14,6 +14,7 @@ import { createRpcLogSource, fetchChainTx, getMultipleAccounts, type RpcFetch } 
 import { syncFactoryLaunches } from "./indexer/sync-launches.ts";
 import { startIndexerWorker } from "./indexer/worker.ts";
 import { createFileMediaStore } from "./media/files.ts";
+import { createR2MediaStore, createS3R2Client } from "./media/r2.ts";
 
 if (existsSync(".env")) {
   process.loadEnvFile(".env");
@@ -75,7 +76,9 @@ const app = await buildApp({
   cacheTtlSeconds: config.cacheTtlSeconds,
   publicUrl: config.publicUrl,
   frontendOrigin: config.frontendOrigin,
-  media: createFileMediaStore({ origin: config.publicUrl, dir: config.mediaDir }),
+  media: config.r2
+    ? createR2MediaStore({ publicUrl: config.r2.publicUrl, client: createS3R2Client(config.r2) })
+    : createFileMediaStore({ origin: config.publicUrl, dir: config.mediaDir }),
   indexer,
   webhookSecret: config.heliusWebhookSecret ?? undefined,
 });
@@ -98,6 +101,7 @@ process.on("SIGTERM", () => {
 
 await app.listen({ host: config.host, port: config.port });
 console.info(`transmuter-api listening on ${config.publicUrl}`);
+console.info(config.r2 ? `media store: r2 ${config.r2.publicUrl}` : "media store: local");
 
 const worker = await startIndexerWorker({
   indexer,

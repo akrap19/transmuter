@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { flushSync } from "react-dom";
 import { createPortal } from "react-dom";
 import { browserSession, clearMintSecret, clearPendingWire } from "@/lib/launchpad/mint-secret";
 import { coinPath } from "@/lib/routes";
@@ -33,13 +34,25 @@ export function WireModal() {
     void runAll();
   }, [canStart, running, runAll]);
 
-  function abandon() {
+  function clearLaunchSession() {
     const storage = browserSession();
-    if (storage) {
-      if (state.launchId != null) clearMintSecret(storage, state.launchId);
-      clearPendingWire(storage);
-    }
+    if (!storage) return;
+    if (state.launchId != null) clearMintSecret(storage, state.launchId);
+    clearPendingWire(storage);
+  }
+
+  function abandon() {
+    clearLaunchSession();
     dispatch({ type: "RESET" });
+  }
+
+  function leaveToToken() {
+    clearLaunchSession();
+    // Runs after the link has started navigation, so the click is not cancelled.
+    // Commit the reset before Next caches this page, so coming back does not reopen the modal.
+    flushSync(() => {
+      dispatch({ type: "RESET" });
+    });
   }
 
   const tokenHref = state.launchedMint && wire.saleOpen ? coinPath(state.launchedMint) : null;
@@ -115,7 +128,7 @@ export function WireModal() {
             </button>
           ) : null}
           {tokenHref ? (
-            <Link href={tokenHref} className="btn btn-outline">
+            <Link href={tokenHref} className="btn btn-outline" onNavigate={leaveToToken}>
               View Token Page →
             </Link>
           ) : null}

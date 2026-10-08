@@ -46,7 +46,6 @@ export function ReviewStep() {
       <LaunchDeployBar
         busy={busy}
         connected={connected}
-        status={state.launchStatus}
         missing={missing}
         onBack={() => goToStep(4)}
         onLaunch={handleLaunch}

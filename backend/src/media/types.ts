@@ -12,8 +12,8 @@ export type StoredMedia = {
 };
 
 export type MediaStore = {
-  save: (file: MediaUpload) => SavedMedia;
-  read: (id: string) => StoredMedia | null;
+  save: (file: MediaUpload) => SavedMedia | Promise<SavedMedia>;
+  read: (id: string) => StoredMedia | null | Promise<StoredMedia | null>;
 };
 
 export const MAX_MEDIA_BYTES = 2 * 1024 * 1024;

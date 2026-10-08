@@ -109,4 +109,22 @@ describe("list/detail cache", () => {
     expect(res.statusCode).toBe(200);
     expect(res.json().total).toBe(1);
   });
+
+  it("does not cache a missing coin, so a launch indexed a moment later is visible", async () => {
+    const catalog = mutableCatalog([]);
+    app = await buildApp({
+      catalog,
+      cache: createMemoryCache(),
+      cacheTtlSeconds: 60,
+      publicUrl: "http://localhost:3001",
+    });
+
+    const missing = await app.inject({ method: "GET", url: "/coins/MintAUR111111111111111111111111111111111" });
+    catalog.replace([coin("AUR", 100)]);
+    const found = await app.inject({ method: "GET", url: "/coins/MintAUR111111111111111111111111111111111" });
+
+    expect(missing.statusCode).toBe(404);
+    expect(found.statusCode).toBe(200);
+    expect(found.json().symbol).toBe("AUR");
+  });
 });

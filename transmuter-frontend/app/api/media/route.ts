@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { NextResponse } from "next/server";
+import { upstreamMediaUrl } from "@/lib/launchpad/media";
 import { createFileMediaStore } from "@/lib/launchpad/media-store";
 
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -20,6 +21,17 @@ function store(origin: string) {
 
 export async function POST(request: Request) {
   const form = await request.formData();
+  const upstream = upstreamMediaUrl();
+  if (upstream) {
+    const forwarded = await fetch(upstream, { method: "POST", body: form });
+    const body = (await forwarded.json().catch(() => ({ error: "upload failed" }))) as {
+      url?: string;
+      id?: string;
+      error?: string;
+    };
+    return NextResponse.json(body, { status: forwarded.status });
+  }
+
   const file = form.get("file");
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "file is required" }, { status: 400 });

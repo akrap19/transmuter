@@ -92,6 +92,34 @@ describe("loadCoinDetail", () => {
     await expect(loadCoinDetail(MINT, { fetchFn: missing, env: ENV })).resolves.toEqual({ kind: "missing" });
     await expect(loadCoinDetail(MINT, { fetchFn: down, env: ENV })).resolves.toEqual({ kind: "unavailable" });
   });
+
+  it("shows the factory launch when the index has not caught it yet", async () => {
+    const fetchFn = vi.fn().mockResolvedValue(jsonResponse({ error: "not found" }, 404));
+    const readChain = vi.fn().mockResolvedValue(
+      detailFromApi({ ...HELIX, description: "On chain", socials: HELIX.socials, chart: [] }, []),
+    );
+    const readLive = vi.fn().mockResolvedValue({
+      status: "sale",
+      saleProgressBps: 0,
+      sale: {
+        capUsdc: 1000,
+        raisedUsdc: 0,
+        remainingUsdc: 1000,
+        priceUsd: 0.1,
+        closesAt: 1_800_000_000,
+        depositsOpen: true,
+        myDepositUsdc: 0,
+      },
+    });
+
+    const loaded = await loadCoinDetail(MINT, { fetchFn, env: ENV, readChain, readLive });
+
+    expect(loaded.kind).toBe("coin");
+    if (loaded.kind !== "coin") return;
+    expect(loaded.source).toBe("chain");
+    expect(loaded.detail.name).toBe("Helix");
+    expect(loaded.detail.sale?.capUsdc).toBe(1000);
+  });
 });
 
 describe("mergeLiveDetail", () => {
