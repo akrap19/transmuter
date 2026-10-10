@@ -7,10 +7,20 @@ import type { ChartPoint, CoinDetail, CoinQuery, CoinQueryResult, CoinSocials, T
 
 export type CatalogSource = "api" | "sample";
 
+type BackingOverlay = {
+  treasury: TreasurySnapshot;
+  backingRatioBps: number | null;
+  priceUsd?: number | null;
+  marketCapUsd?: number | null;
+  holderCount?: number | null;
+};
+
 type LoadOptions = {
   fetchFn?: typeof fetch;
   env?: Record<string, string | undefined>;
   readLive?: (mint: string) => Promise<LiveSaleView | null>;
+  /** Treasury dollars for the first paint, so a refresh does not wait on the browser RPC. */
+  readBacking?: (mint: string) => Promise<BackingOverlay | null>;
   /** Factory account read used when the index has not caught the launch yet. */
   readChain?: (mint: string) => Promise<CoinDetail | null>;
 };
@@ -45,17 +55,18 @@ export type LoadedCoin =
   | { kind: "unavailable" };
 
 export async function loadCoinDetail(mint: string, options: LoadOptions = {}): Promise<LoadedCoin> {
-  const [record, chart, live] = await Promise.all([
+  const [record, chart, live, backing] = await Promise.all([
     fetchCoinRecord(mint, options),
     fetchCoinChart(mint, options),
     options.readLive ? options.readLive(mint).catch(() => null) : Promise.resolve(null),
+    options.readBacking ? options.readBacking(mint).catch(() => null) : Promise.resolve(null),
   ]);
 
   if (!record.ok) {
     if (record.status === 404 && options.readChain) {
       try {
         const chain = await options.readChain(mint);
-        if (chain) return { kind: "coin", detail: mergeLiveDetail(chain, live), source: "chain" };
+        if (chain) return { kind: "coin", detail: mergeBacking(mergeLiveDetail(chain, live), backing), source: "chain" };
       } catch {
         // The index miss stands when the chain read fails.
       }
@@ -64,7 +75,7 @@ export async function loadCoinDetail(mint: string, options: LoadOptions = {}): P
   }
 
   const points = chart.ok ? chart.data : record.data.chart;
-  const detail = mergeLiveDetail(detailFromApi(record.data, points), live);
+  const detail = mergeBacking(mergeLiveDetail(detailFromApi(record.data, points), live), backing);
   return { kind: "coin", detail, source: "api" };
 }
 
@@ -92,6 +103,7 @@ export function mergeBacking(
     backingRatioBps: number | null;
     priceUsd?: number | null;
     marketCapUsd?: number | null;
+    holderCount?: number | null;
   } | null,
 ): CoinDetail {
   if (!backing) return detail;
@@ -101,6 +113,7 @@ export function mergeBacking(
     backingRatioBps: backing.backingRatioBps ?? detail.backingRatioBps,
     priceUsd: backing.priceUsd ?? detail.priceUsd,
     marketCapUsd: backing.marketCapUsd ?? detail.marketCapUsd,
+    holderCount: backing.holderCount ?? detail.holderCount,
   };
 }
 

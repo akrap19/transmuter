@@ -322,6 +322,10 @@
           "writable": true
         },
         {
+          "name": "protocol_revenue_wallet",
+          "writable": true
+        },
+        {
           "name": "dex_program"
         },
         {
@@ -893,6 +897,119 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "init_fee_route",
+      "docs": [
+        "Record the transfer-fee legs and the backing basket. The factory config",
+        "signs, so a crank cannot invent a split. Called once per coin."
+      ],
+      "discriminator": [
+        87,
+        182,
+        110,
+        14,
+        133,
+        77,
+        227,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "factory",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_route",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  114,
+                  111,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "fee_lp_bps",
+          "type": "u16"
+        },
+        {
+          "name": "fee_treasury_bps",
+          "type": "u16"
+        },
+        {
+          "name": "fee_ctoken_bps",
+          "type": "u16"
+        },
+        {
+          "name": "fee_protocol_bps",
+          "type": "u16"
+        },
+        {
+          "name": "fee_creator_bps",
+          "type": "u16"
+        },
+        {
+          "name": "fee_burn_bps",
+          "type": "u16"
+        },
+        {
+          "name": "basket",
+          "type": {
+            "array": [
+              "u16",
+              4
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "init_vaults",
@@ -1809,6 +1926,210 @@
       "args": []
     },
     {
+      "name": "settle_transfer_fees",
+      "docs": [
+        "Collect Token-2022 withheld transfer fees and pay each leg.",
+        "LP tokens go to the LP vault. The treasury leg is swapped to USDC.",
+        "The cToken leg is swapped to SOL and split across the basket: SOL and BTC",
+        "stay in those cToken reserves, Gold and S&P go to their fee sinks.",
+        "The protocol leg is swapped to SOL and paid to the protocol wallet.",
+        "`sources` (remaining accounts) are the token accounts holding withheld fees."
+      ],
+      "discriminator": [
+        19,
+        39,
+        212,
+        110,
+        176,
+        192,
+        63,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          },
+          "relations": [
+            "fee_route"
+          ]
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "mint_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_vault",
+          "writable": true
+        },
+        {
+          "name": "lp_token_vault",
+          "writable": true
+        },
+        {
+          "name": "treasury_usdc",
+          "writable": true
+        },
+        {
+          "name": "scratch_usdc",
+          "docs": [
+            "Scratch USDC account. The sale vault is empty after finalize."
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_route",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  114,
+                  111,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "Config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dex_program"
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "pool_vault_a",
+          "writable": true
+        },
+        {
+          "name": "pool_vault_b",
+          "writable": true
+        },
+        {
+          "name": "pool_mint_a"
+        },
+        {
+          "name": "pool_mint_b"
+        },
+        {
+          "name": "native_pool",
+          "writable": true
+        },
+        {
+          "name": "native_vault",
+          "writable": true
+        },
+        {
+          "name": "ctoken_program",
+          "address": "GqWdDqeD8EJARnqtv1DKTBUStkGFR5stKRHmHMuuGru4"
+        },
+        {
+          "name": "ctoken_mint"
+        },
+        {
+          "name": "cbtc_mint"
+        },
+        {
+          "name": "csol_reserve",
+          "writable": true
+        },
+        {
+          "name": "cbtc_reserve",
+          "writable": true
+        },
+        {
+          "name": "gold_sink",
+          "writable": true
+        },
+        {
+          "name": "spx_sink",
+          "writable": true
+        },
+        {
+          "name": "protocol_revenue_wallet",
+          "writable": true
+        },
+        {
+          "name": "creator_ata",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "usdc_program"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "snapshot_oracle",
       "docs": [
         "Permissionless Pyth (or mock_pyth) snapshot. Stale / wide-confidence",
@@ -1984,6 +2305,19 @@
         173,
         21,
         227
+      ]
+    },
+    {
+      "name": "FeeRoute",
+      "discriminator": [
+        184,
+        229,
+        186,
+        237,
+        83,
+        86,
+        240,
+        211
       ]
     },
     {
@@ -2298,6 +2632,16 @@
       "code": 6040,
       "name": "StakeRecord",
       "msg": "stake account is not a staking record"
+    },
+    {
+      "code": 6041,
+      "name": "Fee",
+      "msg": "transfer fee split does not match the mint"
+    },
+    {
+      "code": 6042,
+      "name": "BackingBasket",
+      "msg": "backing basket weights must sum to 100%"
     }
   ],
   "types": [
@@ -2621,6 +2965,55 @@
           {
             "name": "claimed",
             "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeRoute",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_lp_bps",
+            "type": "u16"
+          },
+          {
+            "name": "fee_treasury_bps",
+            "type": "u16"
+          },
+          {
+            "name": "fee_ctoken_bps",
+            "type": "u16"
+          },
+          {
+            "name": "fee_protocol_bps",
+            "type": "u16"
+          },
+          {
+            "name": "fee_creator_bps",
+            "type": "u16"
+          },
+          {
+            "name": "fee_burn_bps",
+            "type": "u16"
+          },
+          {
+            "name": "basket",
+            "type": {
+              "array": [
+                "u16",
+                4
+              ]
+            }
           },
           {
             "name": "bump",

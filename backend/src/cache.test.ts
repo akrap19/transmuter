@@ -16,6 +16,7 @@ function coin(symbol: string, launchedAt: number): IndexedCoin {
     symbol,
     creator: "Creator11111111111111111111111111111111111",
     backing: "cSOL",
+    backingBasket: null,
     status: "active",
     priceUsd: 1,
     marketCapUsd: 1000,

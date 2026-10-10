@@ -192,6 +192,75 @@ pub fn bps_of(amount: u64, bps: u16) -> u64 {
     ((amount as u128).saturating_mul(bps as u128) / BPS) as u64
 }
 
+/// Shares of a harvested transfer fee. `legs` is
+/// `[lp, treasury, ctoken, protocol, creator, burn]` and those weights are the
+/// fee's own basis points (they sum to the mint's transfer-fee rate). Floors
+/// each leg; the leftover token goes to protocol.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FeeShares {
+    pub lp: u64,
+    pub treasury: u64,
+    pub ctoken: u64,
+    pub protocol: u64,
+    pub creator: u64,
+    pub burn: u64,
+}
+
+pub fn split_transfer_fee(amount: u64, legs: [u16; 6]) -> FeeShares {
+    let sum = legs.iter().fold(0u64, |acc, leg| acc.saturating_add(*leg as u64));
+    if amount == 0 || sum == 0 {
+        return FeeShares {
+            lp: 0,
+            treasury: 0,
+            ctoken: 0,
+            protocol: 0,
+            creator: 0,
+            burn: 0,
+        };
+    }
+    let part = |weight: u16| ((amount as u128) * (weight as u128) / (sum as u128)) as u64;
+    let mut shares = FeeShares {
+        lp: part(legs[0]),
+        treasury: part(legs[1]),
+        ctoken: part(legs[2]),
+        protocol: part(legs[3]),
+        creator: part(legs[4]),
+        burn: part(legs[5]),
+    };
+    let assigned = shares
+        .lp
+        .saturating_add(shares.treasury)
+        .saturating_add(shares.ctoken)
+        .saturating_add(shares.protocol)
+        .saturating_add(shares.creator)
+        .saturating_add(shares.burn);
+    shares.protocol = shares.protocol.saturating_add(amount.saturating_sub(assigned));
+    shares
+}
+
+/// Split the cToken-reserve slice of a fee across `[SOL, BTC, GOLD, S&P]`.
+/// Weights are basis points of the basket (sum 10_000). The leftover unit stays
+/// on the first leg that has weight, which is SOL whenever SOL is in the basket.
+pub fn split_basket(amount: u64, weights: [u16; 4]) -> [u64; 4] {
+    let sum = weights.iter().fold(0u64, |acc, w| acc.saturating_add(*w as u64));
+    if amount == 0 || sum == 0 {
+        return [0; 4];
+    }
+    let mut legs = [0u64; 4];
+    let mut assigned = 0u64;
+    for (i, weight) in weights.iter().enumerate() {
+        legs[i] = ((amount as u128) * (*weight as u128) / (sum as u128)) as u64;
+        assigned = assigned.saturating_add(legs[i]);
+    }
+    let rest = amount.saturating_sub(assigned);
+    if rest > 0 {
+        if let Some(i) = weights.iter().position(|weight| *weight > 0) {
+            legs[i] = legs[i].saturating_add(rest);
+        }
+    }
+    legs
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -299,5 +368,28 @@ mod tests {
     fn backing_read_counts_unconverted_usdc() {
         assert_eq!(treasury_value(0, 1_000, 50), 1_050);
         assert_eq!(treasury_value(500, 0, 0), 500);
+    }
+
+    #[test]
+    fn transfer_fee_split_uses_the_leg_weights_and_gives_the_remainder_to_protocol() {
+        // 10_000 withheld tokens, default legs 15/20/10/15 (sum 60).
+        let shares = split_transfer_fee(10_000, [15, 20, 10, 15, 0, 0]);
+        assert_eq!(shares.lp, 2_500);
+        assert_eq!(shares.treasury, 3_333);
+        assert_eq!(shares.ctoken, 1_666);
+        assert_eq!(shares.creator, 0);
+        assert_eq!(shares.burn, 0);
+        assert_eq!(shares.protocol, 2_501);
+        assert_eq!(
+            shares.lp + shares.treasury + shares.ctoken + shares.protocol + shares.creator + shares.burn,
+            10_000
+        );
+    }
+
+    #[test]
+    fn ctoken_fee_slice_follows_the_basket_and_keeps_the_remainder_on_sol() {
+        // 1_666 tokens of the cToken slice. Basket 50% SOL, 0 BTC, 25% gold, 25% S&P.
+        let legs = split_basket(1_666, [5_000, 0, 2_500, 2_500]);
+        assert_eq!(legs, [834, 0, 416, 416]);
     }
 }

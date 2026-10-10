@@ -50,6 +50,14 @@ export function homePageGraph(input: { name: string; description: string }) {
         url: absoluteUrl("/"),
         name: siteName,
         publisher: { "@id": organizationId },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: `${absoluteUrl("/coins")}?q={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
       },
       webPageNode({
         path: "/",
@@ -121,6 +129,26 @@ export function glossaryDefinedTermSet(terms: GlossaryTerm[]) {
       url: `${glossaryUrl}#${term.id}`,
       inDefinedTermSet: { "@id": termSetId },
     })),
+  };
+}
+
+export function coinPageGraph(input: { mint: string; name: string; description: string }) {
+  const path = `/coins/${input.mint}`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      organizationNode(),
+      webPageNode({
+        path,
+        name: input.name,
+        description: input.description,
+      }),
+      breadcrumbList([
+        { name: siteName, path: "/" },
+        { name: "All coins", path: "/coins" },
+        { name: input.name, path },
+      ]),
+    ],
   };
 }
 

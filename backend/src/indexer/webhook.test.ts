@@ -41,6 +41,7 @@ const helix: LaunchHydration = {
   symbol: "HLX",
   creator: creator.base58,
   backing: "cSOL",
+  backingBasket: null,
   status: "sale",
   metadataUri: null,
   logoUrl: null,

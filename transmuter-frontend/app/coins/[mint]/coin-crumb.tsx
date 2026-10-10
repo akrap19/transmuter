@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CoinGuide } from "@/components/catalog/coin-guide";
 
 export function CoinCrumb({ href }: { href: string }) {
   return (
@@ -7,6 +8,7 @@ export function CoinCrumb({ href }: { href: string }) {
         <span aria-hidden="true">←</span>
         All coins
       </Link>
+      <CoinGuide />
     </nav>
   );
 }

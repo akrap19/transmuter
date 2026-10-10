@@ -81,8 +81,22 @@ describe("launchReviewSections", () => {
 
   it("keeps backing and fees, and leaves sale window with tokenomics", () => {
     const backing = rows("Backing");
-    expect(backing["Backing cToken"]).toBeTruthy();
+    expect(backing["Backing basket"]).toBe("Solana 100%");
+    expect(backing["Total"]).toBe("100%");
+    expect(backing["Backing"]).toBeUndefined();
     expect(backing["Mint to Scale band"]).toBe("7% open · 20% close");
+
+    const short = rows("Backing", {
+      ...initialLaunchpadState,
+      backingBasket: [
+        { asset: "SOL", weight: 40 },
+        { asset: "BTC", weight: 10 },
+        { asset: "GOLD", weight: 0 },
+        { asset: "SPX", weight: 0 },
+      ],
+    });
+    expect(short["Total"]).toBe("50%");
+    expect(short["Backing"]).toBe("Overall backing must be 100%.");
     expect(backing["Gov. Vote Window"]).toBe("48h");
     expect(backing["Sale Window"]).toBeUndefined();
 
@@ -92,6 +106,9 @@ describe("launchReviewSections", () => {
       fees: { ...initialLaunchpadState.fees, burnFee: 0.05 },
     });
     expect(fees["Total TX Fee"]).toBe("0.60%");
+    expect(fees["→ Reserve"]).toBe("0.10%");
+    expect(fees["→ Gold"]).toBeUndefined();
+    expect(fees["→ S&P"]).toBeUndefined();
     expect(fees["Burn Fee"]).toBe("0.05%");
     expect(fees["Creator Fee"]).toBe("Off");
   });

@@ -4,7 +4,7 @@ import { CoinSocials } from "@/app/coins/[mint]/coin-socials";
 import { CoinStats } from "@/app/coins/[mint]/coin-stats";
 import { CoinAvatar } from "@/components/catalog/coin-avatar";
 import { CoinStatus } from "@/components/catalog/coin-status";
-import { formatBps, formatUsd } from "@/lib/catalog/format";
+import { formatBackingBasket, formatBps, formatUsd } from "@/lib/catalog/format";
 import { explorerAddressUrl, shortenAddress } from "@/lib/solana/config";
 import type { CoinDetail } from "@/lib/catalog/types";
 
@@ -68,7 +68,7 @@ export function OverviewPanel({
               </a>
             ),
           },
-          { label: "Backing", value: coin.backing },
+          { label: "Backing", value: formatBackingBasket(coin.backingBasket, coin.backing) },
         ]}
       />
     </section>

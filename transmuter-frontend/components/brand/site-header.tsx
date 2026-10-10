@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/brand/brand-mark";
+import { LearnMenu } from "@/components/brand/learn-menu";
 import { WalletButton } from "@/components/solana/wallet-button";
-import { headerLinks } from "@/lib/marketing/nav";
+import { headerPrimaryLinks } from "@/lib/marketing/nav";
 import { isActivePath, routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +50,7 @@ export function SiteHeader() {
         <span />
       </button>
       <nav className={cn("site-nav", open && "open")} data-nav="">
-        {headerLinks.map((link) => {
+        {headerPrimaryLinks.map((link) => {
           const current = !link.href.includes("#") && isActivePath(pathname, link.href);
 
           return (
@@ -58,6 +59,7 @@ export function SiteHeader() {
             </Link>
           );
         })}
+        <LearnMenu onNavigate={() => setOpen(false)} />
         <Link className="nav-cta" href={routes.access} onClick={() => setOpen(false)}>
           Beta testing
         </Link>

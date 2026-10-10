@@ -323,6 +323,99 @@ export type TransmuterFactory = {
       ]
     },
     {
+      "name": "initBackingFeeSinks",
+      "docs": [
+        "Create the Gold and S&P fee sinks once. Later fee settles pay lamports into them."
+      ],
+      "discriminator": [
+        250,
+        104,
+        254,
+        198,
+        109,
+        141,
+        133,
+        109
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "goldSink",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  97,
+                  99,
+                  107,
+                  105,
+                  110,
+                  103,
+                  95,
+                  102,
+                  101,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  111,
+                  108,
+                  100
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "spxSink",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  97,
+                  99,
+                  107,
+                  105,
+                  110,
+                  103,
+                  95,
+                  102,
+                  101,
+                  101
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  112,
+                  120
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initialize",
       "discriminator": [
         175,
@@ -430,6 +523,145 @@ export type TransmuterFactory = {
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "syncFeeRoute",
+      "docs": [
+        "Store the launch basket and the default fee split on the coin's fee route.",
+        "The factory PDA signs, so a crank can open the route without the factory key."
+      ],
+      "discriminator": [
+        55,
+        140,
+        33,
+        128,
+        101,
+        4,
+        60,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "factory",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  99,
+                  116,
+                  111,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "launch",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  117,
+                  110,
+                  99,
+                  104
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "launch.id",
+                "account": "launch"
+              }
+            ]
+          }
+        },
+        {
+          "name": "eolConfig",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "launch.mint",
+                "account": "launch"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                185,
+                90,
+                170,
+                48,
+                94,
+                106,
+                6,
+                126,
+                132,
+                77,
+                22,
+                181,
+                28,
+                140,
+                127,
+                108,
+                59,
+                127,
+                239,
+                231,
+                195,
+                87,
+                122,
+                184,
+                4,
+                229,
+                94,
+                183,
+                141,
+                107,
+                168,
+                137
+              ]
+            }
+          }
+        },
+        {
+          "name": "feeRoute",
+          "writable": true
+        },
+        {
+          "name": "eolProgram",
+          "address": "DUYcHygp6rTdf3XY49ewhEyzpUg2QEfWECPTu5ucpaXJ"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "syncOutcome",
@@ -1055,6 +1287,85 @@ export type TransmuterFactory = {
       "args": []
     },
     {
+      "name": "wireRaydiumPools",
+      "docs": [
+        "Record the public-devnet Raydium USDC/WSOL pool as both swap venues.",
+        "Does not create a mock pool. Idempotent once both pool bits are set."
+      ],
+      "discriminator": [
+        61,
+        230,
+        168,
+        70,
+        182,
+        83,
+        49,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "factory",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  99,
+                  116,
+                  111,
+                  114,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "launch",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  97,
+                  117,
+                  110,
+                  99,
+                  104
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "launch.id",
+                "account": "launch"
+              }
+            ]
+          }
+        },
+        {
+          "name": "usdcMint"
+        },
+        {
+          "name": "wsolMint"
+        },
+        {
+          "name": "pool"
+        },
+        {
+          "name": "dexProgram"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "wireRegister",
       "discriminator": [
         10,
@@ -1506,6 +1817,19 @@ export type TransmuterFactory = {
       ]
     },
     {
+      "name": "feeSink",
+      "discriminator": [
+        110,
+        191,
+        131,
+        210,
+        224,
+        32,
+        150,
+        197
+      ]
+    },
+    {
       "name": "investorListing",
       "discriminator": [
         157,
@@ -1623,116 +1947,152 @@ export type TransmuterFactory = {
     },
     {
       "code": 6012,
+      "name": "backingBasket",
+      "msg": "backing basket legs must be canonical and sum to 100%"
+    },
+    {
+      "code": 6013,
       "name": "lpSplit",
       "msg": "lp split invalid"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "fee",
       "msg": "transfer fee / split invalid"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "reservePct",
       "msg": "reserve-mint bounds"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "reserveGap",
       "msg": "reserve-mint gap"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "reserveVoteWindow",
       "msg": "reserve-mint vote window"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "schedule",
       "msg": "vesting schedule"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "saleWindow",
       "msg": "sale window must be 1–60 days"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "fallbackSame",
       "msg": "fallback cToken equals backing"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "backingWhitelist",
       "msg": "backing cToken is not whitelisted"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "fallbackWhitelist",
       "msg": "fallback cToken is not whitelisted"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "infeasible",
       "msg": "launch is infeasible at snapshotted g/L"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "minRaise",
       "msg": "targetRaise below minRaise"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "fixedRaise",
       "msg": "FIXED salePrice * salePct * supply != targetRaise"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "teamRecipient",
       "msg": "team recipient required"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "daoUnset",
       "msg": "dao contract required"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "mint",
       "msg": "mint mismatch"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "badStatus",
       "msg": "bad launch status"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "needEol",
       "msg": "EOL must be wired first"
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "vestingNotRequired",
       "msg": "vesting is not required for this launch"
     },
     {
-      "code": 6031,
+      "code": 6032,
       "name": "escrowNotRequired",
       "msg": "escrow is not required for this launch"
     },
     {
-      "code": 6032,
+      "code": 6033,
       "name": "notWired",
       "msg": "wiring incomplete; SALE is unreachable"
     },
     {
-      "code": 6033,
+      "code": 6034,
       "name": "overflow",
       "msg": "overflow"
+    },
+    {
+      "code": 6035,
+      "name": "badDex",
+      "msg": "pool venue is not the Raydium USDC/WSOL pool"
+    },
+    {
+      "code": 6036,
+      "name": "poolWired",
+      "msg": "a pool is already wired"
     }
   ],
   "types": [
+    {
+      "name": "backingLeg",
+      "docs": [
+        "One treasury-backing leg: which reserve asset, and its share of backing in bps.",
+        "Weights across the basket sum to 10_000 (100%). Asset kinds are the canonical",
+        "`BACKING_ASSET_*` discriminants (SOL, BTC, GOLD, S&P)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "assetKind",
+            "type": "u8"
+          },
+          {
+            "name": "weightBps",
+            "type": "u16"
+          }
+        ]
+      }
+    },
     {
       "name": "cTokenListing",
       "type": {
@@ -2189,6 +2549,22 @@ export type TransmuterFactory = {
           {
             "name": "vestingSchedule",
             "type": "u8"
+          },
+          {
+            "name": "backingBasket",
+            "docs": [
+              "Treasury backing split across reserve assets, canonical order, weights sum to 10_000 bps."
+            ],
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "backingLeg"
+                  }
+                },
+                4
+              ]
+            }
           }
         ]
       }
@@ -2235,6 +2611,13 @@ export type TransmuterFactory = {
             "type": "u8"
           }
         ]
+      }
+    },
+    {
+      "name": "feeSink",
+      "type": {
+        "kind": "struct",
+        "fields": []
       }
     },
     {
@@ -2441,6 +2824,23 @@ export type TransmuterFactory = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "backingBasket",
+            "docs": [
+              "Treasury backing split across reserve assets (canonical order, weights sum to 10_000 bps).",
+              "Appended last so the read-model byte decoder stays stable for older fields."
+            ],
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "backingLeg"
+                  }
+                },
+                4
+              ]
+            }
           }
         ]
       }

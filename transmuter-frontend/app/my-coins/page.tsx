@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import "@/app/brand/wallet.css";
 import { parsePreviewFlag, searchParamsFromRecord } from "@/lib/catalog/search-params";
+import { routes } from "@/lib/routes";
+import { marketingPageMetadata } from "@/lib/seo/page-metadata";
 import { MyCoinsView } from "./my-coins-view";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = marketingPageMetadata({
+  path: routes.myCoins,
   title: "My Coins",
   description: "Launches you created on Transmuter and EOL tokens you hold.",
-};
+  index: false,
+});
 
 type MyCoinsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

@@ -5,27 +5,28 @@ export type SiteLink = {
   href: string;
 };
 
-export const headerLinks: SiteLink[] = [
-  { label: "Lifecycle", href: `${routes.home}#lifecycle` },
+// Header shows the two app actions as top-level tabs, then collapses the
+// informational pages into a single "Learn" dropdown. The Beta testing CTA
+// and wallet are rendered separately in SiteHeader.
+export const headerPrimaryLinks: SiteLink[] = [
   { label: "Explore", href: routes.coins },
   { label: "Launchpad", href: routes.launchpad },
-  { label: "Holders", href: routes.holders },
-  { label: "Integrate", href: routes.integrate },
-  { label: "FAQ", href: routes.faq },
-  { label: "Glossary", href: routes.glossary },
-  { label: "Docs", href: routes.docs },
 ];
 
+export const learnMenu: { label: string; links: SiteLink[] } = {
+  label: "Learn",
+  links: [
+    { label: "Lifecycle", href: `${routes.home}#lifecycle` },
+    { label: "Holders", href: routes.holders },
+    { label: "FAQ", href: routes.faq },
+    { label: "Glossary", href: routes.glossary },
+    { label: "Docs", href: routes.docs },
+    { label: "Integrate", href: routes.integrate },
+  ],
+};
+
+// Footer columns mirror the same taxonomy as the header.
 export const footerColumns: { title: string; links: SiteLink[] }[] = [
-  {
-    title: "Product",
-    links: [
-      { label: "Lifecycle", href: `${routes.home}#lifecycle` },
-      { label: "FAQ", href: routes.faq },
-      { label: "Glossary", href: routes.glossary },
-      { label: "Docs", href: routes.docs },
-    ],
-  },
   {
     title: "App",
     links: [
@@ -33,7 +34,16 @@ export const footerColumns: { title: string; links: SiteLink[] }[] = [
       { label: "Launchpad", href: routes.launchpad },
       { label: "My Coins", href: routes.myCoins },
       { label: "Portfolio", href: routes.portfolio },
+    ],
+  },
+  {
+    title: "Learn",
+    links: [
+      { label: "Lifecycle", href: `${routes.home}#lifecycle` },
       { label: "Holders", href: routes.holders },
+      { label: "FAQ", href: routes.faq },
+      { label: "Glossary", href: routes.glossary },
+      { label: "Docs", href: routes.docs },
     ],
   },
   {

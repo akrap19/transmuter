@@ -1,4 +1,5 @@
 import { fallbackCtoken, resolveCtokens } from "./ctokens";
+import { DEFAULT_BACKING_BASKET, type BackingLeg } from "./backing-basket";
 
 export type SaleType = "fixed" | "dutch" | "overflow";
 
@@ -113,6 +114,8 @@ export type LaunchpadState = {
   showInvestors: boolean;
   vesting: VestingPreset;
   selectedCToken: CToken;
+  /** How treasury backing is split across reserve assets. Weights sum to 100. */
+  backingBasket: BackingLeg[];
   autoMintTrigger: number;
   autoMintDeactivate: number;
   voteWindow: number;
@@ -195,6 +198,7 @@ export const initialLaunchpadState: LaunchpadState = {
   showInvestors: false,
   vesting: "None",
   selectedCToken: CTOKENS[0],
+  backingBasket: DEFAULT_BACKING_BASKET.map((leg) => ({ ...leg })),
   autoMintTrigger: 7,
   autoMintDeactivate: 20,
   voteWindow: 48,

@@ -1,10 +1,13 @@
-import { teamEmail } from "@/lib/routes";
+import { externalLinks, teamEmail } from "@/lib/routes";
 
 /** Canonical production host (SEO pack). Override for previews via env if needed. */
 export const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://www.transmuter.net";
 
 export const siteName = "Transmuter";
+
+/** X profile used in cards and Organization `sameAs`. */
+export const twitterSite = "@TransmuterTMI";
 
 export const themeColor = "#06060a";
 
@@ -38,14 +41,20 @@ export function organizationNode() {
     logo: assetUrl("/logo.png"),
     email: teamEmail,
     description: organizationDescription,
+    sameAs: [externalLinks.twitter],
   };
 }
 
-export const marketingSitemapPaths = [
+/** Public URLs search engines should crawl. Wallet dashboards stay out of this list. */
+export const indexableStaticPaths = [
   "/",
   "/faq",
   "/glossary",
   "/integrate",
   "/holders",
   "/access",
+  "/coins",
+  "/launchpad",
+  "/docs",
+  "/contact",
 ] as const;

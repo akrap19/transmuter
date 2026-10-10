@@ -10,6 +10,7 @@ function coin(partial: Partial<CoinListItem> & Pick<CoinListItem, "mint" | "name
     symbol: partial.symbol ?? partial.name.slice(0, 4).toUpperCase(),
     creator: CREATOR_A,
     backing: "cSOL",
+    backingBasket: null,
     priceUsd: 1,
     marketCapUsd: 1000,
     backingRatioBps: 1800,

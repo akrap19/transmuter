@@ -35,6 +35,7 @@ const nextConfig: NextConfig = {
       { source: "/og-image.png", destination: "/opengraph-image" },
       { source: "/apple-touch-icon.png", destination: "/apple-icon" },
       { source: "/favicon.ico", destination: "/icon" },
+      { source: "/logo.png", destination: "/apple-icon" },
     ];
   },
   async redirects() {

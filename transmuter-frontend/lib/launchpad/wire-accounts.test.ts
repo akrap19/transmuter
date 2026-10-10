@@ -1,4 +1,5 @@
-import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { raydiumPoolKeys } from "@/lib/solana/raydium-cpmm";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { describe, expect, it } from "vitest";
 import { PROGRAM_IDS } from "@/lib/solana/program-ids";
@@ -106,20 +107,20 @@ describe("prepareWireStep", () => {
     expect(escrow.accounts.dao.equals(row.dao)).toBe(true);
     expect(escrow.signers).toEqual([generated[3]]);
 
+    const raydiumPool = raydiumPoolKeys(row.usdcMint, NATIVE_MINT).poolState;
     const usdcPool = prepareWireStep("poolUsdc", row, options);
-    expect(usdcPool.accounts.pool.equals(pda(PROGRAM_IDS.mockDex, Buffer.from("pool"), row.mint.toBuffer(), row.usdcMint.toBuffer()))).toBe(true);
-    expect(usdcPool.accounts.dexProgram.equals(new PublicKey(PROGRAM_IDS.mockDex))).toBe(true);
-    expect(usdcPool.accounts.tokenProgramA.equals(TOKEN_2022_PROGRAM_ID)).toBe(true);
-    expect(usdcPool.accounts.tokenProgramB.equals(TOKEN_PROGRAM_ID)).toBe(true);
-    expect(usdcPool.signers).toEqual([generated[4], generated[5]]);
+    expect(usdcPool.method).toBe("wireRaydiumPools");
+    expect(usdcPool.accounts.pool.equals(raydiumPool)).toBe(true);
+    expect(usdcPool.signers).toEqual([]);
 
     const solPool = prepareWireStep("poolSol", row, options);
-    expect(solPool.accounts.nativePool.equals(pda(PROGRAM_IDS.mockDex, Buffer.from("native"), row.usdcMint.toBuffer()))).toBe(true);
-    expect(solPool.signers).toEqual([generated[6]]);
+    expect(solPool.method).toBe("wireRaydiumPools");
+    expect(solPool.accounts.pool.equals(raydiumPool)).toBe(true);
+    expect(solPool.signers).toEqual([]);
 
     const vaults = prepareWireStep("vaults", row, options);
     expect(vaults.method).toBe("wireVaults");
-    expect(vaults.signers).toEqual(generated.slice(7, 13));
+    expect(vaults.signers).toEqual(generated.slice(4, 10));
     expect(vaults.accounts.tokenProgram.equals(TOKEN_2022_PROGRAM_ID)).toBe(true);
     expect(vaults.accounts.usdcProgram.equals(TOKEN_PROGRAM_ID)).toBe(true);
   });

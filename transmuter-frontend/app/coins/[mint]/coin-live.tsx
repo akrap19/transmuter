@@ -30,7 +30,8 @@ export function CoinLive({ detail, backHref }: { detail: CoinDetail; backHref: s
     reloadHolder();
   };
   const coin = mergeHolder(mergeBacking(mergeLiveDetail(detail, live), view), holder);
-  const treasuryPhase = treasurySectionState(coin.status, settled, view != null);
+  const treasuryKnown = view != null || coin.treasury.backingValueUsd > 0 || coin.treasury.unconvertedUsdc > 0;
+  const treasuryPhase = treasuryKnown ? "ready" : treasurySectionState(coin.status, settled, false);
   const chain = holder?.chain ?? null;
   const offers = holder?.offers ?? { openVote: false, executeVote: false };
   const postOffers = (view?.offers ?? []).filter((kind) => kind !== "finalize");
@@ -40,7 +41,7 @@ export function CoinLive({ detail, backHref }: { detail: CoinDetail; backHref: s
 
   return (
     <>
-      <OverviewPanel coin={coin} treasury={view ? "shown" : "pending"} backHref={backHref} />
+      <OverviewPanel coin={coin} treasury={treasuryKnown ? "shown" : "pending"} backHref={backHref} />
       <section className="coin-body section-shell">
         <SalePanel coin={coin} depositKnown={depositKnown} finalize={finalizeSlot} onSaleChange={refresh} />
         <PostSalePanel offers={postOffers} note={postNote} chain={view?.chain ?? null} onConfirmed={refresh} />

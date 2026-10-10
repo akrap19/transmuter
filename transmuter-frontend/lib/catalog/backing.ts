@@ -38,7 +38,7 @@ export function oracleToUsdcAtoms(price: bigint, expo: number): bigint | null {
 
 /**
  * Backing in USD is cToken and leftover SOL marked at the oracle, plus unconverted USDC
- * (treasury vault and escrow). A missing oracle still counts the USDC.
+ * (sale vault, treasury vault, and escrow). A missing oracle still counts the USDC.
  */
 export function backingFromChain(input: BackingInput): BackingView {
   const solUsd = oracleToUsdcAtoms(input.oraclePrice, input.oracleExpo);
@@ -60,15 +60,17 @@ export function backingFromChain(input: BackingInput): BackingView {
     },
   });
   const fdvAtoms = usdcForTokens(input.totalSupplyAtoms, input.salePriceAtoms, input.decimals);
-  // Without an oracle mark the cToken/SOL cannot be priced, so the ratio would
-  // read a misleading 0% rather than "unknown". Report null in that case.
-  const unpriceable = solUsd == null && (input.ctokenAtoms > BigInt(0) || input.solResidueLamports > BigInt(0));
+  // cToken cannot be marked without an oracle, so a ratio that ignored it would
+  // understate a backed launch. USDC is already in dollars: a SOL residue with
+  // no price must not blank that figure.
+  const unpricedCtoken = solUsd == null && input.ctokenAtoms > BigInt(0);
   const priceUsd = input.salePriceAtoms > BigInt(0) ? atomsToNumber(input.salePriceAtoms, 6) : null;
-  const marketCapAtoms = usdcForTokens(input.circulatingAtoms, input.salePriceAtoms, input.decimals);
+  const capSupply = input.circulatingAtoms > BigInt(0) ? input.circulatingAtoms : input.totalSupplyAtoms;
+  const marketCapAtoms = usdcForTokens(capSupply, input.salePriceAtoms, input.decimals);
   return {
     treasury: { ...treasury, backingValueUsd: atomsToNumber(backingAtoms, 6) },
     backingRatioBps:
-      fdvAtoms > BigInt(0) && !unpriceable ? Number((backingAtoms * BigInt(10_000)) / fdvAtoms) : null,
+      fdvAtoms > BigInt(0) && !unpricedCtoken ? Number((backingAtoms * BigInt(10_000)) / fdvAtoms) : null,
     priceUsd,
     marketCapUsd: priceUsd == null ? null : atomsToNumber(marketCapAtoms, 6),
   };

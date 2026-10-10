@@ -2,10 +2,12 @@ import { existsSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
 import { Redis } from "ioredis";
 import { buildApp } from "./app.ts";
+import type { BackingLeg } from "./catalog/types.ts";
 import { createMemoryCache } from "./cache/memory.ts";
 import { createRedisCache } from "./cache/redis.ts";
 import { createPrismaCatalog } from "./catalog/prisma.ts";
 import { resolveConfig } from "./config.ts";
+import { syncCoinStats } from "./indexer/coin-stats.ts";
 import { createAccountHydrator } from "./indexer/hydrate.ts";
 import { createIndexer } from "./indexer/ingest.ts";
 import { createMemoryCursor, createMemoryWrites } from "./indexer/memory.ts";
@@ -52,6 +54,7 @@ if (config.indexerFromSlot > 0n && (await cursor.lastSlot()) === 0n) {
   await cursor.advanceTo(config.indexerFromSlot);
 }
 
+const basketCache = new Map<string, BackingLeg[] | null>();
 const backingMints: Record<string, string> = {};
 if (config.csolMint) backingMints[config.csolMint] = "cSOL";
 if (config.cbtcMint) backingMints[config.cbtcMint] = "cBTC";
@@ -119,7 +122,34 @@ const worker = await startIndexerWorker({
           programId: config.factoryProgramId,
           writes,
           backingMints,
+          basketCache,
         })
     : undefined,
+  syncStats:
+    config.solanaRpcUrl && prisma
+      ? async () => {
+          const rows = await prisma.launch.findMany({
+            select: { mint: true, eolConfig: true, priceUsd: true, marketCapUsd: true },
+          });
+          return syncCoinStats({
+            fetch: rpcFetch,
+            rpcUrl: config.solanaRpcUrl as string,
+            eolProgramId: config.eolProgramId,
+            launches: rows.flatMap((row) =>
+              row.eolConfig
+                ? [
+                    {
+                      mint: row.mint,
+                      eolConfig: row.eolConfig,
+                      priceUsd: row.priceUsd == null ? null : Number(row.priceUsd),
+                      marketCapUsd: row.marketCapUsd == null ? null : Number(row.marketCapUsd),
+                    },
+                  ]
+                : [],
+            ),
+            writes,
+          });
+        }
+      : undefined,
 });
 stopWorker = worker.stop;

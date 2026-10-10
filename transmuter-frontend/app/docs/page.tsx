@@ -3,16 +3,35 @@ import "@/app/brand/docs.css";
 import { DocsContent } from "@/app/docs/docs-content";
 import { DocsMobileNav } from "@/app/docs/docs-mobile-nav";
 import { DocsSidebar } from "@/app/docs/docs-sidebar";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
+import { routes } from "@/lib/routes";
+import { marketingPageGraph } from "@/lib/seo/json-ld";
+import { marketingPageMetadata } from "@/lib/seo/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Docs",
-  description:
-    "How Transmuter works: token types, reserve assets, launches, sales, escrow, fees, Mint to Scale, what happens when a project stops, and governance.",
-};
+const docsTitle = "How Transmuter works";
+const docsDescription =
+  "How Transmuter works: token types, reserve assets, launches, sales, escrow, fees, Mint to Scale, what happens when a project stops, and governance.";
+
+export const metadata: Metadata = marketingPageMetadata({
+  path: routes.docs,
+  title: docsTitle,
+  description: docsDescription,
+});
 
 export default function DocsPage() {
   return (
-    <div className="docs-page">
+    <main className="docs-page">
+      <JsonLdScript
+        data={marketingPageGraph({
+          path: routes.docs,
+          name: docsTitle,
+          description: docsDescription,
+          breadcrumbs: [
+            { name: "Transmuter", path: "/" },
+            { name: "Docs", path: routes.docs },
+          ],
+        })}
+      />
       <section className="subhero section-shell docs-hero">
         <p className="eyebrow">DOCUMENTATION</p>
         <h1>How Transmuter works</h1>
@@ -33,6 +52,6 @@ export default function DocsPage() {
         </div>
       </section>
       <DocsMobileNav />
-    </div>
+    </main>
   );
 }

@@ -35,6 +35,36 @@ pub const WIRE_DAO: u16 = 1 << 8;
 
 const FACTORY_RENT_BUFFER: u64 = 5_000_000_000;
 
+/// PDA seed for a launch's per-asset backing allocation vault.
+///
+/// Each basket leg gets a deterministic address derived from the launch mint and
+/// the asset kind: `[b"backing_vault", mint, &[asset_kind]]`. On devnet/testnet
+/// this vault only holds the earmarked funds for the leg (no real-world purchase);
+/// production converts the vault balance into the real asset (BTC / gold / S&P).
+pub const BACKING_VAULT_SEED: &[u8] = b"backing_vault";
+
+/// Deterministic address of a launch's allocation vault for one basket asset.
+pub fn backing_vault_pda(mint: &Pubkey, asset_kind: u8) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[BACKING_VAULT_SEED, mint.as_ref(), &[asset_kind]], &ID)
+}
+
+/// Fixed fee sinks for the Gold and S&P shares of the cToken reserve fee.
+/// Seeds `[b"backing_fee", b"gold"]` and `[b"backing_fee", b"spx"]`.
+/// Gold: `aXzFgSUX4522y575a8UkR3bv4EY1QRHpt1oJPvTS4vZ`
+/// S&P:  `FzEq621CLhNb5sS92sMYUakTyrWfbmZbDDKtUGHKtR7P`
+pub fn backing_fee_sink(asset: &[u8]) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[b"backing_fee", asset], &ID)
+}
+
+/// One treasury-backing leg: which reserve asset, and its share of backing in bps.
+/// Weights across the basket sum to 10_000 (100%). Asset kinds are the canonical
+/// `BACKING_ASSET_*` discriminants (SOL, BTC, GOLD, S&P).
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, InitSpace)]
+pub struct BackingLeg {
+    pub asset_kind: u8,
+    pub weight_bps: u16,
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct CreateLaunchParams {
     pub name: String,
@@ -72,6 +102,8 @@ pub struct CreateLaunchParams {
     pub fee_burn_bps: u16,
     pub forfeit_dest: u8,
     pub vesting_schedule: u8,
+    /// Treasury backing split across reserve assets, canonical order, weights sum to 10_000 bps.
+    pub backing_basket: [BackingLeg; BACKING_ASSET_COUNT],
 }
 
 #[program]
@@ -262,6 +294,7 @@ pub mod transmuter_factory {
             symbol: params.symbol,
             metadata_uri: params.metadata_uri,
             bump: ctx.bumps.launch,
+            backing_basket: params.backing_basket,
         });
         ctx.accounts.factory.total_launches = ctx
             .accounts
@@ -521,6 +554,31 @@ pub mod transmuter_factory {
         Ok(())
     }
 
+    /// Record the public-devnet Raydium USDC/WSOL pool as both swap venues.
+    /// Does not create a mock pool. Idempotent once both pool bits are set.
+    pub fn wire_raydium_pools(ctx: Context<WireRaydiumPools>) -> Result<()> {
+        let launch = &mut ctx.accounts.launch;
+        if launch.wired_mask & WIRE_POOL_USDC != 0 && launch.wired_mask & WIRE_POOL_SOL != 0 {
+            return Ok(());
+        }
+        require!(launch.wired_mask & WIRE_EOL != 0, FactoryError::NeedEol);
+        require!(
+            launch.wired_mask & (WIRE_POOL_USDC | WIRE_POOL_SOL) == 0,
+            FactoryError::PoolWired
+        );
+        require!(
+            ctx.accounts.dex_program.key() == Pubkey::from(RAYDIUM_CPMM_PROGRAM),
+            FactoryError::BadDex
+        );
+        let pool = raydium_usdc_wsol_pool(&ctx.accounts.factory.usdc_mint);
+        require_keys_eq!(ctx.accounts.pool.key(), pool, FactoryError::BadDex);
+        launch.pool_usdc = pool;
+        launch.pool_sol = pool;
+        apply_bit(launch, WIRE_POOL_USDC);
+        apply_bit(launch, WIRE_POOL_SOL);
+        Ok(())
+    }
+
     pub fn wire_vaults(ctx: Context<WireVaults>) -> Result<()> {
         let launch = &mut ctx.accounts.launch;
         if launch.wired_mask & WIRE_VAULTS != 0 {
@@ -583,6 +641,44 @@ pub mod transmuter_factory {
         } else if st == transmuter_eol_token::STATUS_VOIDED {
             launch.status = STATUS_VOIDED;
         }
+        Ok(())
+    }
+
+    /// Create the Gold and S&P fee sinks once. Later fee settles pay lamports into them.
+    pub fn init_backing_fee_sinks(_ctx: Context<InitBackingFeeSinks>) -> Result<()> {
+        Ok(())
+    }
+
+    /// Store the launch basket and the default fee split on the coin's fee route.
+    /// The factory PDA signs, so a crank can open the route without the factory key.
+    pub fn sync_fee_route(ctx: Context<SyncFeeRoute>) -> Result<()> {
+        let bump = [ctx.accounts.factory.bump];
+        let seeds: &[&[u8]] = &[b"factory", &bump];
+        let basket = ctx.accounts.launch.backing_basket;
+        transmuter_eol_token::cpi::init_fee_route(
+            CpiContext::new_with_signer(
+                ctx.accounts.eol_program.to_account_info(),
+                transmuter_eol_token::cpi::accounts::InitFeeRoute {
+                    factory: ctx.accounts.factory.to_account_info(),
+                    config: ctx.accounts.eol_config.to_account_info(),
+                    fee_route: ctx.accounts.fee_route.to_account_info(),
+                    system_program: ctx.accounts.system_program.to_account_info(),
+                },
+                &[seeds],
+            ),
+            FEE_LP_DEFAULT_BPS,
+            FEE_TREASURY_DEFAULT_BPS,
+            FEE_CTOKEN_RESERVE_BPS,
+            FEE_PROTOCOL_MIN_BPS,
+            0,
+            0,
+            [
+                basket[0].weight_bps,
+                basket[1].weight_bps,
+                basket[2].weight_bps,
+                basket[3].weight_bps,
+            ],
+        )?;
         Ok(())
     }
 }
@@ -674,6 +770,12 @@ fn validate_params(params: &CreateLaunchParams, factory: &FactoryConfig) -> Resu
         FactoryError::ReservePct
     );
     require!(schedule_kind_ok(params.vesting_schedule), FactoryError::Schedule);
+    let mut weights = [0u16; BACKING_ASSET_COUNT];
+    for (i, leg) in params.backing_basket.iter().enumerate() {
+        require!(leg.asset_kind == BACKING_ASSET_KINDS[i], FactoryError::BackingBasket);
+        weights[i] = leg.weight_bps;
+    }
+    require!(backing_basket_ok(&weights), FactoryError::BackingBasket);
     let now = Clock::get()?.unix_timestamp;
     let window = params.sale_end.saturating_sub(now);
     require!(
@@ -682,6 +784,22 @@ fn validate_params(params: &CreateLaunchParams, factory: &FactoryConfig) -> Resu
     );
     let _ = factory;
     Ok(())
+}
+
+/// Raydium CPMM pool PDA: `["pool", amm_config, token0, token1]` with mints ordered by bytes.
+pub fn raydium_usdc_wsol_pool(usdc: &Pubkey) -> Pubkey {
+    let wsol = Pubkey::from(WSOL_MINT);
+    let amm = Pubkey::from(RAYDIUM_CPMM_AMM_CONFIG);
+    let (token0, token1) = if usdc.to_bytes() < wsol.to_bytes() {
+        (*usdc, wsol)
+    } else {
+        (wsol, *usdc)
+    };
+    Pubkey::find_program_address(
+        &[b"pool", amm.as_ref(), token0.as_ref(), token1.as_ref()],
+        &Pubkey::from(RAYDIUM_CPMM_PROGRAM),
+    )
+    .0
 }
 
 fn apply_bit(launch: &mut Launch, bit: u16) {
@@ -776,6 +894,9 @@ pub struct Launch {
     #[max_len(200)]
     pub metadata_uri: String,
     pub bump: u8,
+    /// Treasury backing split across reserve assets (canonical order, weights sum to 10_000 bps).
+    /// Appended last so the read-model byte decoder stays stable for older fields.
+    pub backing_basket: [BackingLeg; BACKING_ASSET_COUNT],
 }
 
 #[account]
@@ -1108,6 +1229,25 @@ pub struct WirePoolSol<'info> {
 }
 
 #[derive(Accounts)]
+pub struct WireRaydiumPools<'info> {
+    pub cranker: Signer<'info>,
+    #[account(seeds = [b"factory"], bump = factory.bump)]
+    pub factory: Account<'info, FactoryConfig>,
+    #[account(mut, seeds = [b"launch", launch.id.to_le_bytes().as_ref()], bump = launch.bump)]
+    pub launch: Account<'info, Launch>,
+    /// CHECK: factory USDC mint. The pool PDA is derived from this key.
+    #[account(address = factory.usdc_mint)]
+    pub usdc_mint: UncheckedAccount<'info>,
+    /// CHECK: wrapped SOL mint.
+    #[account(address = Pubkey::from(WSOL_MINT))]
+    pub wsol_mint: UncheckedAccount<'info>,
+    /// CHECK: Raydium CPMM USDC/WSOL pool state.
+    pub pool: UncheckedAccount<'info>,
+    /// CHECK: Raydium CPMM program.
+    pub dex_program: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
 pub struct WireVaults<'info> {
     #[account(mut)]
     pub cranker: Signer<'info>,
@@ -1162,6 +1302,53 @@ pub struct SyncOutcome<'info> {
     pub eol_config: Account<'info, transmuter_eol_token::Config>,
 }
 
+#[derive(Accounts)]
+pub struct InitBackingFeeSinks<'info> {
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = 8,
+        seeds = [b"backing_fee".as_ref(), b"gold".as_ref()],
+        bump
+    )]
+    pub gold_sink: Account<'info, FeeSink>,
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = 8,
+        seeds = [b"backing_fee".as_ref(), b"spx".as_ref()],
+        bump
+    )]
+    pub spx_sink: Account<'info, FeeSink>,
+    pub system_program: Program<'info, System>,
+}
+
+#[account]
+pub struct FeeSink {}
+
+#[derive(Accounts)]
+pub struct SyncFeeRoute<'info> {
+    pub cranker: Signer<'info>,
+    #[account(mut, seeds = [b"factory"], bump = factory.bump)]
+    pub factory: Account<'info, FactoryConfig>,
+    #[account(seeds = [b"launch", launch.id.to_le_bytes().as_ref()], bump = launch.bump)]
+    pub launch: Account<'info, Launch>,
+    #[account(
+        seeds = [b"config", launch.mint.as_ref()],
+        bump,
+        seeds::program = transmuter_eol_token::ID,
+        constraint = eol_config.factory == factory.key() @ FactoryError::BadParams
+    )]
+    pub eol_config: Account<'info, transmuter_eol_token::Config>,
+    /// CHECK: created by the EOL init_fee_route CPI.
+    #[account(mut)]
+    pub fee_route: UncheckedAccount<'info>,
+    pub eol_program: Program<'info, TransmuterEolToken>,
+    pub system_program: Program<'info, System>,
+}
+
 #[error_code]
 pub enum FactoryError {
     #[msg("launch id does not match totalLaunches")]
@@ -1188,6 +1375,8 @@ pub enum FactoryError {
     DaoPct,
     #[msg("allocation percentages must sum to 100%")]
     AllocSum,
+    #[msg("backing basket legs must be canonical and sum to 100%")]
+    BackingBasket,
     #[msg("lp split invalid")]
     LpSplit,
     #[msg("transfer fee / split invalid")]
@@ -1232,4 +1421,22 @@ pub enum FactoryError {
     NotWired,
     #[msg("overflow")]
     Overflow,
+    #[msg("pool venue is not the Raydium USDC/WSOL pool")]
+    BadDex,
+    #[msg("a pool is already wired")]
+    PoolWired,
+}
+
+#[cfg(test)]
+mod pool_tests {
+    use super::*;
+
+    #[test]
+    fn raydium_pool_is_the_public_devnet_usdc_wsol_pool() {
+        let usdc = pubkey!("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
+        assert_eq!(
+            raydium_usdc_wsol_pool(&usdc).to_string(),
+            "2HyNe5a32uVoB4BybXCLak41QrejZLqF9hZM6KBMQ1V2"
+        );
+    }
 }

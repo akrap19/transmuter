@@ -107,10 +107,15 @@ function client() {
   const convert = vi.fn().mockReturnValue({ accounts });
   const seed = vi.fn().mockReturnValue({ accounts });
   const claim = vi.fn().mockReturnValue({ accounts });
+  const settle = vi.fn().mockReturnValue({ accounts });
   const syncOutcome = vi.fn().mockReturnValue({ accounts: syncAccounts });
-  const eol: EolPostSaleClient = { methods: { finalize, convertTreasury: convert, seedRaydiumLp: seed, claimTokens: claim } };
+  const initSinks = vi.fn().mockReturnValue({ accounts: syncAccounts });
+  const syncFee = vi.fn().mockReturnValue({ accounts: syncAccounts });
+  const eol: EolPostSaleClient = {
+    methods: { finalize, convertTreasury: convert, seedRaydiumLp: seed, claimTokens: claim, settleTransferFees: settle },
+  };
   const factory: FactoryOutcomeClient = {
-    methods: { syncOutcome },
+    methods: { syncOutcome, initBackingFeeSinks: initSinks, syncFeeRoute: syncFee },
     account: { mintIndex: { fetchNullable: vi.fn().mockResolvedValue({ launchId: { toString: () => "3" } }) } },
   };
   return { eol, factory, finalize, convert, seed, claim, accounts, syncOutcome };
@@ -126,6 +131,9 @@ function fixture(overrides: Partial<PostSaleChain> = {}): PostSaleChain {
     saleTokenVault: Keypair.generate().publicKey,
     lpTokenVault: Keypair.generate().publicKey,
     treasuryUsdc: Keypair.generate().publicKey,
+    protocolRevenueWallet: Keypair.generate().publicKey,
+    feeVault: Keypair.generate().publicKey,
+    fallbackCtoken: Keypair.generate().publicKey,
     poolVaultA: Keypair.generate().publicKey,
     poolVaultB: Keypair.generate().publicKey,
     nativeVault: Keypair.generate().publicKey,
@@ -141,6 +149,8 @@ function fixture(overrides: Partial<PostSaleChain> = {}): PostSaleChain {
     wsolAtaExists: true,
     lpSignerLamports: BigInt(3_000_000_000),
     poolsReady: true,
+    feeRouteExists: true,
+    launchId: BigInt(1),
     ...overrides,
   };
 }

@@ -80,4 +80,24 @@ describe("backingFromChain", () => {
     expect(view.priceUsd).toBe(0.07);
     expect(view.marketCapUsd).toBeCloseTo(7_000, 5);
   });
+
+  it("reports the USDC already in treasury when a SOL residue has no oracle price", () => {
+    const view = backingFromChain({
+      ctokenAtoms: BigInt(0),
+      unconvertedUsdcAtoms: BigInt(2_854_360),
+      solResidueLamports: BigInt(3_981_636),
+      oraclePrice: BigInt(0),
+      oracleExpo: 0,
+      circulatingAtoms: BigInt(0),
+      totalSupplyAtoms: BigInt(100_000_000_000),
+      salePriceAtoms: BigInt(57_142),
+      decimals: 9,
+      governedMintPctBps: 1_000,
+      pathAReady: false,
+      pathBActivated: false,
+    });
+
+    expect(view.treasury.backingValueUsd).toBeCloseTo(2.85436, 5);
+    expect(view.backingRatioBps).toBe(4995);
+  });
 });

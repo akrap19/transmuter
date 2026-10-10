@@ -10,32 +10,28 @@ export function DerivedPriceNote({ variant }: { variant: "hint" | "outcome" }) {
 
   if (variant === "hint") {
     if (L?.clampedUp) {
-      return (
-        <div className="small-note">
-          <strong>Raised to the minimum this configuration needs.</strong>
-        </div>
-      );
+      return <strong>Raised to the minimum this configuration needs.</strong>;
     }
     if (L?.minRaise === 0) {
       return (
-        <div className="small-note">
+        <>
           No escrow need, so there is no minimum: whatever you raise pairs the LP and the
           rest becomes treasury. <strong>Use minimum</strong> has nothing to snap to here.
-        </div>
+        </>
       );
     }
     return (
-      <div className="small-note">
+      <>
         Raise above the minimum to deepen the reserves.{" "}
         <strong>Use minimum</strong> snaps this back to the smallest raise that funds the
         launch.
-      </div>
+      </>
     );
   }
 
   if (!L || L.needRaise) {
     return (
-      <div id="derivedPriceNote" className="outcome-card">
+      <div id="derivedPriceNote" className="outcome-card is-placeholder">
         <div className="small-note outcome-foot">
           Enter a supply and a total target raise to price the launch.
         </div>

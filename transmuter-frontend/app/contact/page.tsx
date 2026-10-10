@@ -1,11 +1,18 @@
 import type { Metadata } from 'next'
-import { externalLinks, teamEmail } from '@/lib/routes'
+import { JsonLdScript } from '@/components/seo/json-ld-script'
+import { externalLinks, routes, teamEmail } from '@/lib/routes'
+import { marketingPageGraph } from '@/lib/seo/json-ld'
+import { marketingPageMetadata } from '@/lib/seo/page-metadata'
 
-export const metadata: Metadata = {
-	title: 'Contact',
-	description:
-		'Collaborators, partners, investors, and future team members building end of life infrastructure with Transmuter.'
-}
+const contactTitle = 'Contact'
+const contactDescription =
+	'Collaborators, partners, investors, and future team members building end of life infrastructure with Transmuter.'
+
+export const metadata: Metadata = marketingPageMetadata({
+	path: routes.contact,
+	title: contactTitle,
+	description: contactDescription
+})
 
 const roles = [
 	{
@@ -29,6 +36,17 @@ const roles = [
 export default function ContactPage() {
 	return (
 		<main>
+			<JsonLdScript
+				data={marketingPageGraph({
+					path: routes.contact,
+					name: contactTitle,
+					description: contactDescription,
+					breadcrumbs: [
+						{ name: 'Transmuter', path: '/' },
+						{ name: 'Contact', path: routes.contact }
+					]
+				})}
+			/>
 			<section className='subhero section-shell'>
 				<p className='eyebrow'>CONTACT</p>
 				<h1>Build it with us.</h1>

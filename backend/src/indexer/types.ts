@@ -1,4 +1,4 @@
-import type { ChartPoint, CoinSocials, LaunchStatus } from "../catalog/types.ts";
+import type { BackingLeg, ChartPoint, CoinSocials, LaunchStatus } from "../catalog/types.ts";
 
 export type TokenTransfer = {
   mint: string;
@@ -20,6 +20,7 @@ export type LaunchHydration = {
   symbol: string;
   creator: string;
   backing: string;
+  backingBasket: BackingLeg[] | null;
   status: LaunchStatus;
   metadataUri: string | null;
   logoUrl: string | null;

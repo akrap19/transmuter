@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { encodeBase58 } from "./base58.ts";
-import { createAccountHydrator, decodeLaunchAccount, LAUNCH_DISC, mapFactoryStatus } from "./hydrate.ts";
+import {
+  basketFromCreateInstruction,
+  CREATE_LAUNCH_DISC,
+  createAccountHydrator,
+  decodeLaunchAccount,
+  LAUNCH_DISC,
+  mapFactoryStatus,
+} from "./hydrate.ts";
 
 function pubkey(seed: number): { bytes: Buffer; base58: string } {
   const bytes = Buffer.alloc(32, seed);
@@ -25,6 +32,7 @@ function encodeLaunch(args: {
   name: string;
   symbol: string;
   metadataUri?: string;
+  basket?: Array<{ assetKind: number; weightBps: number }>;
 }): Buffer {
   const buf = Buffer.alloc(544);
   LAUNCH_DISC.copy(buf, 0);
@@ -35,13 +43,22 @@ function encodeLaunch(args: {
   buf.writeUInt8(args.status, 400);
   buf.writeBigInt64LE(args.timestamp, 405);
   buf.writeBigUInt64LE(args.targetRaise, 447);
-  return Buffer.concat([
+  const parts = [
     buf,
     encodeString(args.name),
     encodeString(args.symbol),
     encodeString(args.metadataUri ?? ""),
     Buffer.from([1]),
-  ]);
+  ];
+  if (args.basket) {
+    const legs = Buffer.alloc(args.basket.length * 3);
+    args.basket.forEach((leg, i) => {
+      legs.writeUInt8(leg.assetKind, i * 3);
+      legs.writeUInt16LE(leg.weightBps, i * 3 + 1);
+    });
+    parts.push(legs);
+  }
+  return Buffer.concat(parts);
 }
 
 describe("decodeLaunchAccount", () => {
@@ -61,6 +78,12 @@ describe("decodeLaunchAccount", () => {
       name: "Helix",
       symbol: "HLX",
       metadataUri: "https://cdn.example/hlx.json",
+      basket: [
+        { assetKind: 0, weightBps: 6000 },
+        { assetKind: 1, weightBps: 0 },
+        { assetKind: 2, weightBps: 3000 },
+        { assetKind: 3, weightBps: 1000 },
+      ],
     });
 
     expect(decodeLaunchAccount(data)).toEqual({
@@ -74,6 +97,12 @@ describe("decodeLaunchAccount", () => {
       name: "Helix",
       symbol: "HLX",
       metadataUri: "https://cdn.example/hlx.json",
+      backingBasket: [
+        { assetKind: 0, weightBps: 6000 },
+        { assetKind: 1, weightBps: 0 },
+        { assetKind: 2, weightBps: 3000 },
+        { assetKind: 3, weightBps: 1000 },
+      ],
     });
   });
 
@@ -93,6 +122,40 @@ describe("decodeLaunchAccount", () => {
       Buffer.from([1]),
     ]);
     expect(decodeLaunchAccount(legacy)?.metadataUri).toBe("");
+    expect(decodeLaunchAccount(legacy)?.backingBasket).toBeNull();
+  });
+
+  it("ignores zero padding where an older account has no basket field", () => {
+    const legacy = Buffer.concat([
+      (() => {
+        const buf = Buffer.alloc(544);
+        LAUNCH_DISC.copy(buf, 0);
+        pubkey(2).bytes.copy(buf, 48);
+        buf.writeUInt8(2, 400);
+        return buf;
+      })(),
+      encodeString("Legacy"),
+      encodeString("LGC"),
+      Buffer.from([1]),
+      Buffer.alloc(12),
+    ]);
+    expect(decodeLaunchAccount(legacy)?.backingBasket).toBeNull();
+  });
+
+  it("reads the basket from a create_launch instruction when the account did not store it", () => {
+    const name = encodeString("New backing test");
+    const symbol = encodeString("BCKNG");
+    const uri = encodeString("https://media.example/bckng.json");
+    const fixed = Buffer.alloc(1 + 1 + 8 + 8 + 8 + 2 * 7 + 8 + 8 + 2 + 8 * 6 + 2 * 7 + 1 + 1);
+    const basket = Buffer.from("004c0401280a02a00f03fc08", "hex");
+    const data = Buffer.concat([CREATE_LAUNCH_DISC, Buffer.alloc(8), name, symbol, uri, fixed, basket]);
+    expect(basketFromCreateInstruction(data)).toEqual([
+      { assetKind: 0, weightBps: 1100 },
+      { assetKind: 1, weightBps: 2600 },
+      { assetKind: 2, weightBps: 4000 },
+      { assetKind: 3, weightBps: 2300 },
+    ]);
+    expect(basketFromCreateInstruction(Buffer.alloc(32))).toBeNull();
   });
 
   it("returns null for accounts that are not Factory launches", () => {

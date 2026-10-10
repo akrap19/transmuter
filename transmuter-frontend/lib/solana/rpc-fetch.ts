@@ -32,11 +32,25 @@ async function readRpcBody(res: Response): Promise<RpcBody | null> {
 	}
 }
 
+function errorMessage(body: RpcBody | null): string {
+	return typeof body?.error?.message === 'string' ? body.error.message : ''
+}
+
+/**
+ * Public devnet rejects some methods (`getTokenLargestAccounts`) with HTTP 429
+ * "for a specific RPC call" while getAccountInfo on the same host still works.
+ * Cooling the host for that answer freezes the coin page for the whole cooldown.
+ */
+function isMethodBan(body: RpcBody | null): boolean {
+	return /specific RPC call/i.test(errorMessage(body))
+}
+
 /** A host answer web3.js cannot use: HTTP 429, or a JSON-RPC error whose id is not a string. */
 function shouldFailover(res: Response, body: RpcBody | null): boolean {
+	if (isMethodBan(body)) return true
 	if (res.status === 429) return true
 	if (!body?.error) return false
-	const message = typeof body.error.message === 'string' ? body.error.message : ''
+	const message = errorMessage(body)
 	if (body.error.code === 429 || /rate limit|too many requests/i.test(message)) return true
 	return typeof body.id !== 'string'
 }
@@ -119,7 +133,8 @@ export function createDevnetFailoverFetch(options?: {
 				cooledUntil.delete(endpoint)
 				return res
 			}
-			cooledUntil.set(endpoint, now() + cooldownMs)
+			// A banned method is not a host quota. Leave the host open for other calls.
+			if (!isMethodBan(body)) cooledUntil.set(endpoint, now() + cooldownMs)
 			const hasNext = index < order.length - 1
 			if (!hasNext) {
 				if (body?.error && typeof body.id !== 'string') {

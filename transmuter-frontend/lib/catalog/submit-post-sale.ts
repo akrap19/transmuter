@@ -7,8 +7,8 @@ import {
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { ComputeBudgetProgram, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { eolConfigPda } from "@/lib/solana/programs/eol-token";
-import { factoryMintIndexPda, launchPda } from "@/lib/solana/programs/factory";
+import { eolConfigPda, EOL_TOKEN_PROGRAM_ID } from "@/lib/solana/programs/eol-token";
+import { factoryMintIndexPda, factoryPda, launchPda } from "@/lib/solana/programs/factory";
 import type { AccountMeta } from "@/lib/solana/raydium-cpmm";
 import {
   ChainTransactionError,
@@ -17,7 +17,7 @@ import {
   type ConfirmedTransaction,
   type TransactionSigner,
 } from "@/lib/solana/tx";
-import { claimPlan, convertPlan, finalizePlan, seedRaydiumPlan, type PostSaleAccountsInput } from "./post-sale-accounts";
+import { claimPlan, convertPlan, feeRoutePda, finalizePlan, seedRaydiumPlan, settlePlan, type PostSaleAccountsInput } from "./post-sale-accounts";
 import { raydiumSeedAmounts, type PostSaleKind } from "./post-sale";
 
 const FINALIZE_CU = 1_400_000;
@@ -37,12 +37,15 @@ export type EolPostSaleClient = {
     convertTreasury: (maxIn: BN, minOut: BN) => IxBuilder;
     seedRaydiumLp: (amountToken: BN, amountQuote: BN) => IxBuilder;
     claimTokens: () => IxBuilder;
+    settleTransferFees: () => IxBuilder;
   };
 };
 
 export type FactoryOutcomeClient = {
   methods: {
     syncOutcome: () => IxBuilder;
+    initBackingFeeSinks: () => IxBuilder;
+    syncFeeRoute: () => IxBuilder;
   };
   account: {
     mintIndex: {
@@ -60,6 +63,8 @@ export type PostSaleChain = PostSaleAccountsInput & {
   wsolAtaExists: boolean;
   lpSignerLamports: bigint;
   poolsReady: boolean;
+  feeRouteExists: boolean;
+  launchId: bigint | null;
 };
 
 type TxConnection = Parameters<typeof signSendAndConfirm>[0]["connection"];
@@ -129,6 +134,10 @@ async function instructions(
     ];
   }
 
+  if (kind === "settleFees") {
+    return settleInstructions(chain, eol, factory);
+  }
+
   const seed = raydiumSeedAmounts(chain);
   const leg = kind === "seedRaydiumUsdc" ? seed.usdc : seed.wsol;
   const quoteMint = kind === "seedRaydiumUsdc" ? chain.usdcMint : NATIVE_MINT;
@@ -148,6 +157,60 @@ async function instructions(
     plan.remaining,
   );
   return [...fundLpSigner(chain, plan.lpSigner), ...wsolPrelude(chain), ...built];
+}
+
+async function settleInstructions(
+  chain: PostSaleChain,
+  eol: EolPostSaleClient,
+  factory?: FactoryOutcomeClient,
+): Promise<Transaction["instructions"]> {
+  if (!factory) throw new ChainTransactionError("Factory client is required to settle transfer fees.");
+  const plan = settlePlan(chain);
+  const steps: Transaction["instructions"] = [
+    ...(chain.venue === "raydium" ? wsolPrelude(chain) : []),
+    createAssociatedTokenAccountIdempotentInstruction(
+      chain.cranker,
+      plan.holderAta,
+      chain.cranker,
+      chain.mint,
+      TOKEN_2022_PROGRAM_ID,
+    ),
+    ...(await compile(
+      factory.methods.initBackingFeeSinks(),
+      {
+        payer: chain.cranker,
+        goldSink: plan.accounts.goldSink,
+        spxSink: plan.accounts.spxSink,
+        systemProgram: SystemProgram.programId,
+      },
+      [],
+    )),
+  ];
+  if (!chain.feeRouteExists) {
+    if (chain.launchId == null) throw new ChainTransactionError("This mint is not in the Factory index.");
+    steps.push(
+      ...(await compile(
+        factory.methods.syncFeeRoute(),
+        {
+          cranker: chain.cranker,
+          factory: factoryPda(),
+          launch: launchPda(chain.launchId),
+          eolConfig: eolConfigPda(chain.mint),
+          feeRoute: feeRoutePda(chain.mint),
+          eolProgram: EOL_TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        },
+        [],
+      )),
+    );
+  }
+  steps.push(
+    ...(await compile(eol.methods.settleTransferFees(), plan.accounts, [
+      ...plan.remaining,
+      { pubkey: plan.holderAta, isSigner: false, isWritable: true },
+    ])),
+  );
+  return steps;
 }
 
 async function syncOutcomeIx(factory: FactoryOutcomeClient | undefined, chain: PostSaleChain): Promise<Transaction["instructions"]> {

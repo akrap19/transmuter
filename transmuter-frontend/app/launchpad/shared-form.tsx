@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldHint } from "./field-hint";
 import { useLaunchpad } from "./launchpad-context";
 
 export function ToggleRow({
@@ -15,16 +16,27 @@ export function ToggleRow({
   const on = state.toggles[toggleKey];
 
   return (
-    <button
-      type="button"
-      className="toggle-row"
-      onClick={() => toggleFeature(toggleKey)}
-    >
-      <div className="toggle-info">
-        <div className="toggle-name">{name}</div>
-        <div className="toggle-desc">{desc}</div>
+    <div className="toggle-row">
+      <div className="toggle-name">
+        <button
+          type="button"
+          className="toggle-name-hit"
+          aria-pressed={on}
+          onClick={() => toggleFeature(toggleKey)}
+        >
+          {name}
+        </button>
+        <FieldHint label={`About ${name}`}>{desc}</FieldHint>
       </div>
-      <div className={`toggle${on ? " on" : ""}`} />
-    </button>
+      <button
+        type="button"
+        className="toggle-switch"
+        aria-label={name}
+        aria-pressed={on}
+        onClick={() => toggleFeature(toggleKey)}
+      >
+        <span className={`toggle${on ? " on" : ""}`} />
+      </button>
+    </div>
   );
 }

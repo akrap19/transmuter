@@ -110,6 +110,7 @@ function toRow(launch: LaunchRecord) {
     symbol: launch.symbol,
     creator: launch.creator,
     backing: launch.backing,
+    backingBasket: launch.backingBasket,
     status: launch.status,
     metadataUri: launch.metadataUri,
     logoUrl: launch.logoUrl,

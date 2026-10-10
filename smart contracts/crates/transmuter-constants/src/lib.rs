@@ -102,6 +102,36 @@ pub const SALE_TYPE_FIXED: u8 = 0;
 /// Forfeit surplus destination. Treasury only; to-LP is illegal.
 pub const FORFEIT_DEST_TREASURY: u8 = 0;
 
+/// Treasury backing basket. A launch splits its backing across these reserve
+/// assets; the leg weights are set by the creator and must sum to 100% (bps).
+/// SOL and BTC settle into live cToken reserves. GOLD and S&P settle into a
+/// dedicated per-asset allocation vault that only holds the earmarked funds on
+/// devnet/testnet; production converts that vault into the real-world asset.
+pub const BACKING_ASSET_SOL: u8 = 0;
+pub const BACKING_ASSET_BTC: u8 = 1;
+pub const BACKING_ASSET_GOLD: u8 = 2;
+pub const BACKING_ASSET_SPX: u8 = 3;
+/// Number of basket legs stored on every launch (one per supported asset).
+pub const BACKING_ASSET_COUNT: usize = 4;
+/// Canonical basket order. A launch's legs must appear in exactly this order.
+pub const BACKING_ASSET_KINDS: [u8; BACKING_ASSET_COUNT] =
+    [BACKING_ASSET_SOL, BACKING_ASSET_BTC, BACKING_ASSET_GOLD, BACKING_ASSET_SPX];
+
+/// True when `kind` settles into a live cToken reserve (SOL, BTC) rather than a
+/// testnet allocation vault (GOLD, S&P).
+pub const fn backing_asset_is_ctoken(kind: u8) -> bool {
+    kind == BACKING_ASSET_SOL || kind == BACKING_ASSET_BTC
+}
+
+/// Validate a basket: canonical order and weights summing to exactly 100%.
+pub fn backing_basket_ok(weights_bps: &[u16; BACKING_ASSET_COUNT]) -> bool {
+    let mut sum: u32 = 0;
+    for w in weights_bps.iter() {
+        sum += *w as u32;
+    }
+    sum as u64 == BPS_DENOM
+}
+
 pub const REDEMPTION_TREASURY_FEE_BPS: u16 = 35;
 pub const REDEMPTION_REVENUE_FEE_BPS: u16 = 15;
 
@@ -215,6 +245,19 @@ mod tests {
         assert!(community_vote_type(VOTE_LIQ_DAO));
         assert!(!community_vote_type(VOTE_SENSITIVE));
         assert!(!community_vote_type(VOTE_EMERGENCY));
+        assert_eq!(BACKING_ASSET_COUNT, 4);
+        assert_eq!(
+            BACKING_ASSET_KINDS,
+            [BACKING_ASSET_SOL, BACKING_ASSET_BTC, BACKING_ASSET_GOLD, BACKING_ASSET_SPX]
+        );
+        assert!(backing_asset_is_ctoken(BACKING_ASSET_SOL));
+        assert!(backing_asset_is_ctoken(BACKING_ASSET_BTC));
+        assert!(!backing_asset_is_ctoken(BACKING_ASSET_GOLD));
+        assert!(!backing_asset_is_ctoken(BACKING_ASSET_SPX));
+        assert!(backing_basket_ok(&[10_000, 0, 0, 0]));
+        assert!(backing_basket_ok(&[2_000, 4_000, 3_000, 1_000]));
+        assert!(!backing_basket_ok(&[5_000, 0, 0, 0]));
+        assert!(!backing_basket_ok(&[10_000, 1, 0, 0]));
         let prefix = decode_registry_config_prefix(&padded_registry_prefix()).unwrap();
         assert_eq!(prefix.ambassador_count, 0);
         assert!(prefix.genesis_locked);

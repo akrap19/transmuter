@@ -1,3 +1,4 @@
+import { activeLegs, assetMeta, basketIsComplete, basketTotal } from "./backing-basket";
 import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE } from "./fee-calculator";
 import { formatMcap, formatNum, formatPrice } from "./launch-solver";
 import { formatSaleWindow } from "./map-create-launch";
@@ -10,6 +11,7 @@ export type ReviewRowModel = {
   value: string;
   logo?: boolean;
   stacked?: boolean;
+  error?: boolean;
 };
 
 export type ReviewSectionModel = {
@@ -113,14 +115,27 @@ function tokenomicsRows(state: LaunchpadState, solve: LaunchSolveResult | null):
 }
 
 function backingRows(state: LaunchpadState): ReviewRowModel[] {
-  return [
-    { label: "Backing cToken", value: state.selectedCToken.name },
+  const legs = activeLegs(state.backingBasket);
+  const total = basketTotal(state.backingBasket);
+  const complete = basketIsComplete(state.backingBasket);
+  const basketValue = legs.length
+    ? legs.map((leg) => `${assetMeta(leg.asset).label} ${leg.weight}%`).join(" · ")
+    : "—";
+  const rows: ReviewRowModel[] = [
+    { label: "Backing basket", value: basketValue, stacked: true },
+    { label: "Total", value: `${total}%`, error: !complete },
+  ];
+  if (!complete) {
+    rows.push({ label: "Backing", value: "Overall backing must be 100%.", error: true, stacked: true });
+  }
+  rows.push(
     {
       label: "Mint to Scale band",
       value: `${state.autoMintTrigger}% open · ${state.autoMintDeactivate}% close`,
     },
     { label: "Gov. Vote Window", value: `${state.voteWindow}h` },
-  ];
+  );
+  return rows;
 }
 
 function feeRows(state: LaunchpadState): ReviewRowModel[] {
@@ -128,7 +143,7 @@ function feeRows(state: LaunchpadState): ReviewRowModel[] {
     { label: "Total TX Fee", value: `${state.fees.totalFee.toFixed(2)}%` },
     { label: "→ LP", value: `${state.fees.lpFee.toFixed(2)}%` },
     { label: "→ Treasury", value: `${state.fees.treasuryFee.toFixed(2)}%` },
-    { label: "→ cToken reserve", value: `${CTOKEN_RESERVE_FEE.toFixed(2)}%` },
+    { label: "→ Reserve", value: `${CTOKEN_RESERVE_FEE.toFixed(2)}%` },
     { label: "→ Protocol", value: `${PROTOCOL_FEE.toFixed(2)}%` },
     { label: "Burn Fee", value: state.toggles.burnFee ? `${state.fees.burnFee.toFixed(2)}%` : "Off" },
     { label: "Creator Fee", value: state.toggles.creatorFee ? `${state.fees.creatorFee.toFixed(2)}%` : "Off" },

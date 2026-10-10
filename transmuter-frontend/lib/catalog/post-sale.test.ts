@@ -43,7 +43,7 @@ describe("postSaleOffers", () => {
           lpUsdcShareBps: 5_000,
         }),
       ),
-    ).toEqual(["convertTreasury", "seedRaydiumUsdc", "seedRaydiumWsol", "claimTokens"]);
+    ).toEqual(["convertTreasury", "seedRaydiumUsdc", "seedRaydiumWsol", "claimTokens", "settleFees"]);
   });
 
   it("hides conversion after it is done, seed legs with an empty side, and a claim that was already taken", () => {
@@ -60,7 +60,7 @@ describe("postSaleOffers", () => {
           lpUsdcShareBps: 5_000,
         }),
       ),
-    ).toEqual([]);
+    ).toEqual(["settleFees"]);
     expect(raydiumSeedAmounts({ lpTokenAtoms: BigInt(1_000), saleUsdcAtoms: BigInt(9), wsolAtoms: BigInt(4), lpUsdcShareBps: 2_500 })).toEqual({
       usdc: { token: BigInt(250), quote: BigInt(9) },
       wsol: { token: BigInt(750), quote: BigInt(4) },

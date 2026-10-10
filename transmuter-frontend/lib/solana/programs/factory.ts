@@ -28,3 +28,12 @@ export function factoryCtokenPda(mint: PublicKey): PublicKey {
 export function factoryMintIndexPda(mint: PublicKey): PublicKey {
 	return findPda(FACTORY_PROGRAM_ID, Buffer.from('mint'), mint.toBuffer())
 }
+
+/**
+ * Deterministic address of a launch's per-asset backing allocation vault.
+ * Mirrors the Factory `backing_vault_pda` seeds: [b"backing_vault", mint, &[asset_kind]].
+ * On devnet/testnet this holds the earmarked funds for the leg; production converts it.
+ */
+export function backingVaultPda(mint: PublicKey, assetKind: number): PublicKey {
+	return findPda(FACTORY_PROGRAM_ID, Buffer.from('backing_vault'), mint.toBuffer(), Buffer.from([assetKind]))
+}

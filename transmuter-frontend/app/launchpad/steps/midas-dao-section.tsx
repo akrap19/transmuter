@@ -1,5 +1,6 @@
 "use client";
 
+import { FieldHint } from "../field-hint";
 import { ToggleRow } from "../shared-form";
 import { useLaunchpad } from "../launchpad-context";
 
@@ -28,6 +29,10 @@ export function MidasDaoSection() {
           <div className="field">
             <label className="field-label">
               % of Supply for DAO Airdrop <span className="badge">Opt-in</span>
+              <FieldHint label="About DAO airdrop supply">
+                Deposited to the DAO pool and paid proportionally to MIDAS token stakers. This value carries over
+                automatically to your supply allocation.
+              </FieldHint>
             </label>
             <div className="input-wrap">
               <input
@@ -39,10 +44,6 @@ export function MidasDaoSection() {
                 onChange={(event) => onDaoPctChange(event.target.value)}
               />
               <span className="input-suffix">%</span>
-            </div>
-            <div className="small-note">
-              Deposited to the DAO pool and paid proportionally to MIDAS token stakers. This value carries over
-              automatically to your supply allocation.
             </div>
           </div>
         </div>

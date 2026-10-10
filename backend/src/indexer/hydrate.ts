@@ -1,4 +1,4 @@
-import type { LaunchStatus } from "../catalog/types.ts";
+import type { BackingLeg, LaunchStatus } from "../catalog/types.ts";
 import { encodeBase58 } from "./base58.ts";
 import { resolveLaunchMetadata, type JsonFetch } from "./metadata.ts";
 import type { LaunchHydrateInput, LaunchHydration, LaunchHydrator } from "./types.ts";
@@ -7,6 +7,11 @@ export const LAUNCH_DISC = Buffer.from([144, 51, 51, 163, 206, 85, 213, 38]);
 
 /** Matches `METADATA_URI_MAX_LEN` in the Factory program. */
 export const METADATA_URI_MAX_LEN = 200;
+
+/** Matches `BACKING_ASSET_COUNT` in `transmuter-constants`. */
+export const BACKING_ASSET_COUNT = 4;
+/** On-chain `BackingLeg` size: asset_kind (u8) + weight_bps (u16). */
+const BACKING_LEG_BYTES = 3;
 
 const FACTORY_STATUS: Record<number, LaunchStatus> = {
   0: "created",
@@ -27,6 +32,7 @@ export type DecodedLaunch = {
   name: string;
   symbol: string;
   metadataUri: string;
+  backingBasket: BackingLeg[] | null;
 };
 
 export function mapFactoryStatus(value: number): LaunchStatus | null {
@@ -50,6 +56,52 @@ function readString(
   return { value: data.subarray(start, end).toString("utf8"), next: end };
 }
 
+/** `create_launch` discriminator. The basket is the last field of its params. */
+export const CREATE_LAUNCH_DISC = Buffer.from([239, 223, 255, 134, 39, 121, 127, 62]);
+
+/**
+ * Fixed `CreateLaunchParams` bytes after the three strings and before the basket:
+ * decimals, sale type, prices and supply, the bps splits, escrow and sale window,
+ * reserve-mint fields, fees, forfeit dest, vesting schedule.
+ */
+const PARAMS_BEFORE_BASKET = 1 + 1 + 8 + 8 + 8 + 2 * 7 + 8 + 8 + 2 + 8 * 6 + 2 * 7 + 1 + 1;
+
+/**
+ * Backing basket: four legs of `{ asset_kind: u8, weight_bps: u16 }` in canonical
+ * order, weights summing to 10_000. Missing bytes, zero padding on older accounts,
+ * and any other mix are null.
+ */
+function readBackingBasket(data: Buffer, offset: number): BackingLeg[] | null {
+  const end = offset + BACKING_ASSET_COUNT * BACKING_LEG_BYTES;
+  if (offset < 0 || end > data.length) return null;
+  const legs: BackingLeg[] = [];
+  let sum = 0;
+  for (let i = 0; i < BACKING_ASSET_COUNT; i++) {
+    const base = offset + i * BACKING_LEG_BYTES;
+    const assetKind = data.readUInt8(base);
+    const weightBps = data.readUInt16LE(base + 1);
+    if (assetKind !== i) return null;
+    legs.push({ assetKind, weightBps });
+    sum += weightBps;
+  }
+  return sum === 10_000 ? legs : null;
+}
+
+/** Basket from a `create_launch` instruction. Older programs accept the param and do not store it. */
+export function basketFromCreateInstruction(data: Uint8Array): BackingLeg[] | null {
+  const buf = Buffer.from(data);
+  if (buf.length < 16 || !buf.subarray(0, 8).equals(CREATE_LAUNCH_DISC)) return null;
+  let offset = 16;
+  for (let i = 0; i < 3; i++) {
+    if (offset + 4 > buf.length) return null;
+    const length = buf.readUInt32LE(offset);
+    const end = offset + 4 + length;
+    if (length > METADATA_URI_MAX_LEN || end > buf.length) return null;
+    offset = end;
+  }
+  return readBackingBasket(buf, offset + PARAMS_BEFORE_BASKET);
+}
+
 export function decodeLaunchAccount(data: Uint8Array): DecodedLaunch | null {
   const buf = Buffer.from(data);
   if (buf.length < 548) return null;
@@ -63,6 +115,8 @@ export function decodeLaunchAccount(data: Uint8Array): DecodedLaunch | null {
   // Appended after `symbol` in the Factory `Launch` account. Older accounts
   // created before this field was added simply have no bytes here → "".
   const metadata = readString(buf, symbol.next, METADATA_URI_MAX_LEN);
+  // After metadata comes `bump` (u8), then the fixed-size backing basket.
+  const backingBasket = metadata ? readBackingBasket(buf, metadata.next + 1) : null;
   return {
     mint: readPubkey(buf, 48),
     creator: readPubkey(buf, 16),
@@ -74,6 +128,7 @@ export function decodeLaunchAccount(data: Uint8Array): DecodedLaunch | null {
     name: name.value,
     symbol: symbol.value,
     metadataUri: metadata?.value ?? "",
+    backingBasket,
   };
 }
 
@@ -107,6 +162,7 @@ export function createAccountHydrator(reader: AccountReader): LaunchHydrator {
           launchedAt: decoded.launchedAt || input.blockTime || 0,
           eolConfig: decoded.eolConfig,
           targetRaiseUsdc: decoded.targetRaiseUsdc,
+          backingBasket: decoded.backingBasket,
         };
       }
       return null;

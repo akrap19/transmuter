@@ -4,14 +4,27 @@ import { CatalogBanner } from "@/components/catalog/catalog-banner";
 import { CatalogEmpty } from "@/components/catalog/catalog-empty";
 import { ExploreToolbar } from "@/components/catalog/explore-toolbar";
 import { InfiniteCoinGrid } from "@/components/catalog/infinite-coin-grid";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { explorePageQuery } from "@/lib/catalog/explore-page";
 import { loadCoinList } from "@/lib/catalog/load-catalog";
-import { parseCoinSearchParams, searchParamsFromRecord, serializeCoinQuery } from "@/lib/catalog/search-params";
+import { coinQueryHasFilters, parseCoinSearchParams, searchParamsFromRecord, serializeCoinQuery } from "@/lib/catalog/search-params";
+import { routes } from "@/lib/routes";
+import { marketingPageGraph } from "@/lib/seo/json-ld";
+import { marketingPageMetadata } from "@/lib/seo/page-metadata";
 
-export const metadata: Metadata = {
-  title: "Explore",
-  description: "Browse every Transmuter launch, including VOIDED sales. Search, sort, and filter the indexed Factory registry.",
-};
+const exploreTitle = "All coins";
+const exploreDescription =
+  "Browse every Factory-registered launch on Transmuter, including live sales and VOIDED tokens. Search and check the contract before you trade.";
+
+export async function generateMetadata({ searchParams }: ExplorePageProps): Promise<Metadata> {
+  const query = parseCoinSearchParams(searchParamsFromRecord(await searchParams));
+  return marketingPageMetadata({
+    path: routes.coins,
+    title: exploreTitle,
+    description: exploreDescription,
+    index: !coinQueryHasFilters(query),
+  });
+}
 
 type ExplorePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -25,6 +38,17 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 
   return (
     <main className="explore-page">
+      <JsonLdScript
+        data={marketingPageGraph({
+          path: routes.coins,
+          name: exploreTitle,
+          description: exploreDescription,
+          breadcrumbs: [
+            { name: "Transmuter", path: "/" },
+            { name: "All coins", path: routes.coins },
+          ],
+        })}
+      />
       <section className="subhero section-shell explore-hero">
         <p className="eyebrow">EXPLORE</p>
         <h1>All coins</h1>

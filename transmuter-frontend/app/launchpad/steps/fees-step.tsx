@@ -3,27 +3,26 @@
 import type { ReactNode } from "react";
 import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE, PUBLISHED_MIN_TOTAL_FEE, feeSegmentPct } from "@/lib/launchpad/fee-calculator";
 import type { FeeChangeSource } from "@/lib/launchpad/fee-calculator";
+import { FieldHint } from "../field-hint";
 import { ToggleRow } from "../shared-form";
 import { useLaunchpad } from "../launchpad-context";
 
 export function FeesStep() {
   const { state, goToStep, updateFees } = useLaunchpad();
-  const { fees, selectedCToken } = state;
+  const { fees } = state;
 
   return (
     <div className={`step-panel panel${state.currentStep === 4 ? " active" : ""}`}>
-      <div className="panel-title"><div className="dot" />Transaction Fee Configuration</div>
-      <p className="step-intro">
-        Set the total transfer fee and how it splits. Protocol revenue ({PROTOCOL_FEE.toFixed(2)}%) and
-        the cToken reserve contribution ({CTOKEN_RESERVE_FEE.toFixed(2)}%) are fixed — a combined
-        minimum of {(PROTOCOL_FEE + CTOKEN_RESERVE_FEE).toFixed(2)}%. You choose how the rest splits
-        between the liquidity pool and the treasury, each at least 0.10%. Redeeming tracks this same
-        fee, so exiting is never cheaper than selling.
-      </p>
-
-      <div className="section-title">
+      <div className="panel-title">
         <div className="dot" />
-        Fee split
+        Transaction Fee Configuration
+        <FieldHint label="About transaction fees">
+          Set the total transfer fee and how it splits. Protocol revenue ({PROTOCOL_FEE.toFixed(2)}%) and
+          the reserve contribution ({CTOKEN_RESERVE_FEE.toFixed(2)}%) are fixed — a combined
+          minimum of {(PROTOCOL_FEE + CTOKEN_RESERVE_FEE).toFixed(2)}%. You choose how the rest splits
+          between the liquidity pool and the treasury, each at least 0.10%. Redeeming tracks this same
+          fee, so exiting is never cheaper than selling.
+        </FieldHint>
       </div>
 
       <RangeField
@@ -33,7 +32,12 @@ export function FeesStep() {
         min={PUBLISHED_MIN_TOTAL_FEE}
         step={0.05}
         onChange={(v) => updateFees(undefined, v)}
-        note={`0.50% to 2.00%. 0.60% is the recommended default. Protocol ${PROTOCOL_FEE.toFixed(2)}% and cToken reserve ${CTOKEN_RESERVE_FEE.toFixed(2)}% are fixed. LP and treasury are at least 0.10% each.`}
+        note={`0.50% to 2.00%. 0.60% is the recommended default. Protocol ${PROTOCOL_FEE.toFixed(2)}% and reserve ${CTOKEN_RESERVE_FEE.toFixed(2)}% are fixed. LP and treasury are at least 0.10% each.`}
+        warning={fees.totalFee > 1 ? (
+          <div className="fee-budget-warning">
+            A total fee over 1% is not recommended, unless you know what you&apos;re doing.
+          </div>
+        ) : null}
       />
 
       <FixedFee
@@ -50,13 +54,12 @@ export function FeesStep() {
       <FixedFee
         label={
           <>
-            cToken reserve <span className="fee-ctoken-badge">{selectedCToken.name}</span>{" "}
-            <span className="fee-fixed-badge">Fixed</span>
+            Reserve <span className="fee-fixed-badge">Fixed</span>
           </>
         }
         value={CTOKEN_RESERVE_FEE}
         green
-        note={`Fixed ${CTOKEN_RESERVE_FEE.toFixed(2)}% — swapped into the backing cToken reserve at settlement. A NonTransferable cToken has no market, so this is not a buyback.`}
+        note={`Fixed ${CTOKEN_RESERVE_FEE.toFixed(2)}%. SOL and BTC stay in the cToken reserve. The Gold and S&P shares of this fee go to their fee addresses.`}
       />
 
       <AdjustableFee
@@ -80,7 +83,7 @@ export function FeesStep() {
         max={fees.treasuryMax}
         changed="treasury"
         gold
-        note="Swapped into your backing cToken at settlement and held as treasury. Minimum 0.10%."
+        note="Swapped into your backing reserve at settlement and held as treasury. Minimum 0.10%."
         warning={fees.feeWarning ? (
           <div id="treasuryFeeWarning" className="fee-budget-warning">
             {fees.feeGap > 0
@@ -161,7 +164,10 @@ function RangeField({
   return (
     <div className={`slider-section${disabled ? " is-fixed" : ""}`}>
       <div className="slider-header">
-        <span className="slider-label">{label}</span>
+        <span className="slider-label">
+          {label}
+          {note ? <FieldHint label="About this fee">{note}</FieldHint> : null}
+        </span>
         <span className={`slider-value${valueClass}`}>{value.toFixed(2)}%</span>
       </div>
       <input
@@ -174,7 +180,6 @@ function RangeField({
         disabled={disabled}
         onChange={(e) => onChange?.(parseFloat(e.target.value))}
       />
-      {note && <div className="small-note">{note}</div>}
       {warning}
     </div>
   );
@@ -270,7 +275,7 @@ function FeeBreakdownVisual() {
     { short: "LP", label: "Liquidity pool", pct: fees.lpFee, color: "rgba(255, 216, 127, 0.95)" },
     { short: "TREASURY", label: "Treasury", pct: fees.treasuryFee, color: "rgba(234, 179, 84, 0.9)" },
     { short: "PROTOCOL", label: "Protocol revenue", pct: PROTOCOL_FEE, color: "rgba(201, 146, 58, 0.95)" },
-    { short: "RESERVE", label: "cToken reserve", pct: CTOKEN_RESERVE_FEE, color: "rgba(243, 214, 154, 0.8)" },
+    { short: "RESERVE", label: "Reserve", pct: CTOKEN_RESERVE_FEE, color: "rgba(243, 214, 154, 0.8)" },
     { short: "BURN", label: "Burn", pct: state.toggles.burnFee ? fees.burnFee : 0, color: "rgba(255, 255, 255, 0.45)" },
     { short: "CREATOR", label: "Creator", pct: state.toggles.creatorFee ? fees.creatorFee : 0, color: "rgba(229, 182, 84, 0.4)" },
   ];

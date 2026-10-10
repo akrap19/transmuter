@@ -5,6 +5,7 @@ import { WalletReadyState } from '@solana/wallet-adapter-base'
 import { useWallet, type Wallet } from '@solana/wallet-adapter-react'
 import { ChevronDown, Wallet as WalletIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DevnetGuideItem } from '@/components/solana/devnet-guide'
 import { WalletList } from '@/components/solana/wallet-list'
 import { WalletChip, WalletUserMenu } from '@/components/solana/wallet-user'
 import { shortenAddress, solanaNetworkName } from '@/lib/solana/config'
@@ -87,6 +88,12 @@ export function WalletButton({ className, variant = 'default' }: WalletButtonPro
 				) : (
 					<WalletList wallets={wallets} onSelect={handleSelect} />
 				)}
+				{solanaNetworkName === 'devnet' ? (
+					<>
+						<span className='wallet-menu-divider' role='separator' />
+						<DevnetGuideItem />
+					</>
+				) : null}
 			</div>
 		</div>
 	)

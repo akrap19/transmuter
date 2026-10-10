@@ -1,6 +1,7 @@
 "use client";
 
 import { LP_ALLOC_MIN } from "@/lib/launchpad/floors";
+import { FieldHint } from "../field-hint";
 import { useLaunchpad } from "../launchpad-context";
 
 export function AllocationSection({ total }: { total: number }) {
@@ -14,10 +15,10 @@ export function AllocationSection({ total }: { total: number }) {
       <div className="section-title">
         <div className="dot" />
         Supply allocation
+        <FieldHint label="About supply allocation">
+          Allocate your initial token supply across different pools. Total must equal 100%.
+        </FieldHint>
       </div>
-      <p className="step-intro">
-        Allocate your initial token supply across different pools. Total must equal 100%.
-      </p>
       <div className="alloc-section">
         <AllocSlider keyName="allocLP" label="Liquidity pool" min={LP_ALLOC_MIN} max={45} changed="lp" />
         <AllocSlider

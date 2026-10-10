@@ -1,4 +1,11 @@
-import { LAUNCH_STATUSES, type ChartPoint, type CoinListItem, type IndexedCoin, type LaunchStatus } from "./types.ts";
+import {
+  LAUNCH_STATUSES,
+  type BackingLeg,
+  type ChartPoint,
+  type CoinListItem,
+  type IndexedCoin,
+  type LaunchStatus,
+} from "./types.ts";
 
 export type LaunchRow = {
   mint: string;
@@ -6,6 +13,7 @@ export type LaunchRow = {
   symbol: string;
   creator: string;
   backing: string;
+  backingBasket: unknown;
   status: string;
   metadataUri: string | null;
   logoUrl: string | null;
@@ -41,6 +49,19 @@ function toNumber(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/** JSON column → typed basket legs; null for pre-basket launches or malformed data. */
+function toBackingBasket(value: unknown): BackingLeg[] | null {
+  if (!Array.isArray(value)) return null;
+  const legs: BackingLeg[] = [];
+  for (const entry of value) {
+    const leg = entry as { assetKind?: unknown; weightBps?: unknown } | null;
+    if (leg && typeof leg.assetKind === "number" && typeof leg.weightBps === "number") {
+      legs.push({ assetKind: leg.assetKind, weightBps: leg.weightBps });
+    }
+  }
+  return legs.length > 0 ? legs : null;
+}
+
 export function toListItem(row: LaunchRow): CoinListItem {
   return {
     mint: row.mint,
@@ -48,6 +69,7 @@ export function toListItem(row: LaunchRow): CoinListItem {
     symbol: row.symbol,
     creator: row.creator,
     backing: row.backing,
+    backingBasket: toBackingBasket(row.backingBasket),
     status: asStatus(row.status),
     priceUsd: toNumber(row.priceUsd),
     marketCapUsd: toNumber(row.marketCapUsd),

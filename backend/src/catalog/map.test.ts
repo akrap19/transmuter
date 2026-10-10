@@ -7,6 +7,10 @@ const row = {
   symbol: "HLX",
   creator: "Creator11111111111111111111111111111111111",
   backing: "cSOL",
+  backingBasket: [
+    { assetKind: 0, weightBps: 6000 },
+    { assetKind: 2, weightBps: 4000 },
+  ],
   status: "active",
   metadataUri: "https://cdn.example/helix.json",
   logoUrl: "https://cdn.example/helix.png",
@@ -31,6 +35,10 @@ describe("launch row mapping", () => {
       symbol: "HLX",
       creator: "Creator11111111111111111111111111111111111",
       backing: "cSOL",
+      backingBasket: [
+        { assetKind: 0, weightBps: 6000 },
+        { assetKind: 2, weightBps: 4000 },
+      ],
       status: "active",
       priceUsd: 2.15,
       marketCapUsd: 860000,

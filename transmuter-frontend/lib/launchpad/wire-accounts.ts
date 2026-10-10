@@ -1,4 +1,5 @@
-import { getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { RAYDIUM_CPMM_PROGRAM_ID, raydiumPoolKeys } from "@/lib/solana/raydium-cpmm";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { findPda } from "@/lib/solana/pda";
 import { PROGRAM_IDS } from "@/lib/solana/program-ids";
@@ -10,7 +11,6 @@ import { stakingConfigPda } from "@/lib/solana/programs/staking";
 import { vestingConfigPda, vestingEntryPda } from "@/lib/solana/programs/vesting";
 import { WIRE_ESCROW, WIRE_VESTING, type WireStepId } from "./wire-plan";
 
-const MOCK_DEX_PROGRAM_ID = new PublicKey(PROGRAM_IDS.mockDex);
 const CTOKEN_PROGRAM_ID = new PublicKey(PROGRAM_IDS.ctoken);
 const EOL_PROGRAM_ID = new PublicKey(PROGRAM_IDS.eolToken);
 const STAKING_PROGRAM_ID = new PublicKey(PROGRAM_IDS.staking);
@@ -26,6 +26,7 @@ export type WireMethod =
   | "wireDao"
   | "wirePoolUsdc"
   | "wirePoolSol"
+  | "wireRaydiumPools"
   | "wireVaults";
 
 export type WireLaunch = {
@@ -151,35 +152,9 @@ export function prepareWireStep(step: WireStepId, launch: WireLaunch, options: P
       });
     case "dao":
       return factoryStep(step, "wireDao", [], base);
-    case "poolUsdc": {
-      const [vaultA, vaultB] = take(options, 2);
-      return factoryStep(step, "wirePoolUsdc", [vaultA, vaultB], {
-        ...base,
-        eolConfig: derived.eolConfig,
-        mint: launch.mint,
-        usdcMint: launch.usdcMint,
-        pool: derived.pool,
-        vaultA: vaultA.publicKey,
-        vaultB: vaultB.publicKey,
-        dexProgram: MOCK_DEX_PROGRAM_ID,
-        tokenProgramA: TOKEN_2022_PROGRAM_ID,
-        tokenProgramB: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-      });
-    }
-    case "poolSol": {
-      const [vaultUsdc] = take(options, 1);
-      return factoryStep(step, "wirePoolSol", [vaultUsdc], {
-        ...base,
-        eolConfig: derived.eolConfig,
-        usdcMint: launch.usdcMint,
-        nativePool: derived.nativePool,
-        vaultUsdc: vaultUsdc.publicKey,
-        dexProgram: MOCK_DEX_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-      });
-    }
+    case "poolUsdc":
+    case "poolSol":
+      return raydiumPoolStep(step, launch, base);
     case "vaults": {
       const [saleUsdc, saleToken, lpToken, teamToken, treasuryUsdc, feeVault] = take(options, 6);
       return factoryStep(step, "wireVaults", [saleUsdc, saleToken, lpToken, teamToken, treasuryUsdc, feeVault], {
@@ -202,6 +177,20 @@ export function prepareWireStep(step: WireStepId, launch: WireLaunch, options: P
       });
     }
   }
+}
+
+function raydiumPoolStep(
+  step: WireStepId,
+  launch: WireLaunch,
+  base: { cranker: PublicKey; factory: PublicKey; launch: PublicKey },
+): PreparedWireStep {
+  return factoryStep(step, "wireRaydiumPools", [], {
+    ...base,
+    usdcMint: launch.usdcMint,
+    wsolMint: NATIVE_MINT,
+    pool: raydiumPoolKeys(launch.usdcMint, NATIVE_MINT).poolState,
+    dexProgram: RAYDIUM_CPMM_PROGRAM_ID,
+  });
 }
 
 function factoryStep(
@@ -229,8 +218,6 @@ function derive(launch: WireLaunch) {
     ctokenTreasury: getAssociatedTokenAddressSync(launch.backingCtoken, eolConfig, true, TOKEN_2022_PROGRAM_ID),
     ctokenConfig,
     eolRecord: findPda(CTOKEN_PROGRAM_ID, Buffer.from("eol"), ctokenConfig.toBuffer(), launch.mint.toBuffer()),
-    pool: findPda(MOCK_DEX_PROGRAM_ID, Buffer.from("pool"), launch.mint.toBuffer(), launch.usdcMint.toBuffer()),
-    nativePool: findPda(MOCK_DEX_PROGRAM_ID, Buffer.from("native"), launch.usdcMint.toBuffer()),
   };
 }
 

@@ -1,6 +1,12 @@
 import type { LaunchStatus } from "./types";
 
-export type PostSaleKind = "finalize" | "convertTreasury" | "seedRaydiumUsdc" | "seedRaydiumWsol" | "claimTokens";
+export type PostSaleKind =
+  | "finalize"
+  | "convertTreasury"
+  | "seedRaydiumUsdc"
+  | "seedRaydiumWsol"
+  | "claimTokens"
+  | "settleFees";
 
 export type RaydiumSeed = {
   usdc: { token: bigint; quote: bigint };
@@ -35,6 +41,7 @@ export function postSaleOffers(input: PostSaleInput): PostSaleKind[] {
     if (seed.wsol.token > BigInt(0) && seed.wsol.quote > BigInt(0)) offers.push("seedRaydiumWsol");
   }
   if (input.status === "active" && !input.claimed && input.depositAtoms > BigInt(0)) offers.push("claimTokens");
+  if (input.status === "active") offers.push("settleFees");
   return offers;
 }
 

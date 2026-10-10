@@ -12,6 +12,7 @@ import {
   getMint,
   getTransferFeeConfig,
   mintTo,
+  transferChecked,
 } from "@solana/spl-token";
 import {
   ComputeBudgetProgram,
@@ -121,22 +122,13 @@ describe("eol token", () => {
     ).to.equal(FOUNDER.LIQUIDATION_FEE_BPS);
   });
 
-  async function createCtoken() {
+  async function createCtoken(protocolKp: Keypair) {
     const mintKp = Keypair.generate();
-    const protocolKp = Keypair.generate();
     const mint = mintKp.publicKey;
     const [mintAuthority] = mintAuthorityPda(ctoken.programId, mint);
     const [config] = pda([Buffer.from("config"), mint.toBuffer()], ctoken.programId);
     const [reserve] = pda([Buffer.from("reserve"), mint.toBuffer()], ctoken.programId);
     const [revenuePot] = pda([Buffer.from("revenue"), mint.toBuffer()], ctoken.programId);
-    const fund = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: payer.publicKey,
-        toPubkey: protocolKp.publicKey,
-        lamports: LAMPORTS_PER_SOL / 50,
-      }),
-    );
-    await sendAndConfirmTransaction(connection, fund, [payer]);
     await ctoken.methods
       .initialize(DECIMALS)
       .accounts({
@@ -179,7 +171,7 @@ describe("eol token", () => {
     );
 
     let cs = withCtoken
-      ? await createCtoken()
+      ? await createCtoken(protocolKp)
       : {
           mint: Keypair.generate().publicKey,
           mintAuthority: Keypair.generate().publicKey,
@@ -479,6 +471,7 @@ describe("eol token", () => {
       cranker: payer.publicKey,
       config: l.config,
       treasuryUsdc: l.treasuryUsdc,
+      protocolRevenueWallet: l.protocolKp.publicKey,
       dexProgram: dex.programId,
       nativePool: l.nativePool,
       nativeVault: l.nativeVault,
@@ -829,6 +822,168 @@ describe("eol token", () => {
         await getAccount(connection, l.userUsdc, undefined, TOKEN_PROGRAM_ID)
       ).amount;
       expect(userUsdcAfter >= userUsdcBefore).to.equal(true);
+    });
+
+    it("settles withheld transfer fees into LP, treasury, cToken reserves, gold, S&P, and protocol", async () => {
+      const factory = anchor.workspace.TransmuterFactory as Program;
+      const [goldSink] = pda(
+        [Buffer.from("backing_fee"), Buffer.from("gold")],
+        factory.programId,
+      );
+      const [spxSink] = pda(
+        [Buffer.from("backing_fee"), Buffer.from("spx")],
+        factory.programId,
+      );
+      await factory.methods
+        .initBackingFeeSinks()
+        .accounts({
+          payer: payer.publicKey,
+          goldSink,
+          spxSink,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      const [feeRoute] = pda(
+        [Buffer.from("fee_route"), l.mint.toBuffer()],
+        eol.programId,
+      );
+      await eol.methods
+        .initFeeRoute(
+          FOUNDER.FEE_LP_DEFAULT_BPS,
+          FOUNDER.FEE_TREASURY_DEFAULT_BPS,
+          FOUNDER.FEE_CTOKEN_RESERVE_BPS,
+          FOUNDER.FEE_PROTOCOL_MIN_BPS,
+          0,
+          0,
+          [5000, 0, 2500, 2500],
+        )
+        .accounts({
+          factory: payer.publicKey,
+          config: l.config,
+          feeRoute,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      const heldNow = await getAccount(connection, userEol, undefined, TOKEN_2022_PROGRAM_ID);
+      if (heldNow.amount < 10_000n * SCALE) {
+        await eol.methods
+          .claimTokens()
+          .accounts({
+            depositor: payer.publicKey,
+            config: l.config,
+            saleTokenVault: l.saleToken,
+            destination: userEol,
+            mint: l.mint,
+            deposit: l.depositPda,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+          })
+          .rpc();
+      }
+
+      const recipient = Keypair.generate();
+      const dest = await createAssociatedTokenAccount(
+        connection,
+        payer,
+        l.mint,
+        recipient.publicKey,
+        undefined,
+        TOKEN_2022_PROGRAM_ID,
+      );
+      const send = 10_000n * SCALE;
+      // The transfer fee stays at 0 until two epochs after finalize. Deposit the
+      // fee pot directly so the split can be checked on a fresh local validator.
+      await transferChecked(
+        connection,
+        payer,
+        userEol,
+        l.mint,
+        l.feeVault,
+        payer,
+        send,
+        DECIMALS,
+        undefined,
+        undefined,
+        TOKEN_2022_PROGRAM_ID,
+      );
+      await transferChecked(
+        connection,
+        payer,
+        userEol,
+        l.mint,
+        dest,
+        payer,
+        send,
+        DECIMALS,
+        undefined,
+        undefined,
+        TOKEN_2022_PROGRAM_ID,
+      );
+
+      const lpBefore = (
+        await getAccount(connection, l.lpToken, undefined, TOKEN_2022_PROGRAM_ID)
+      ).amount;
+      const treasuryBefore = (
+        await getAccount(connection, l.treasuryUsdc, undefined, TOKEN_PROGRAM_ID)
+      ).amount;
+      const csolBefore = await connection.getBalance(l.cs.reserve);
+      const goldBefore = await connection.getBalance(goldSink);
+      const spxBefore = await connection.getBalance(spxSink);
+      const protocolBefore = await connection.getBalance(l.protocolKp.publicKey);
+
+      await eol.methods
+        .settleTransferFees()
+        .accounts({
+          cranker: payer.publicKey,
+          config: l.config,
+          mint: l.mint,
+          mintAuthority: l.mintAuthority,
+          feeVault: l.feeVault,
+          lpTokenVault: l.lpToken,
+          treasuryUsdc: l.treasuryUsdc,
+          scratchUsdc: l.saleUsdc,
+          feeRoute,
+          dexProgram: dex.programId,
+          pool: l.poolUsdc,
+          poolVaultA: l.poolVaultA,
+          poolVaultB: l.poolVaultB,
+          poolMintA: l.mint,
+          poolMintB: l.usdc,
+          nativePool: l.nativePool,
+          nativeVault: l.nativeVault,
+          ctokenProgram: ctoken.programId,
+          ctokenMint: l.cs.mint,
+          cbtcMint: l.cs.mint,
+          csolReserve: l.cs.reserve,
+          cbtcReserve: payer.publicKey,
+          goldSink,
+          spxSink,
+          protocolRevenueWallet: l.protocolKp.publicKey,
+          creatorAta: dest,
+          tokenProgram: TOKEN_2022_PROGRAM_ID,
+          usdcProgram: TOKEN_PROGRAM_ID,
+        })
+        .remainingAccounts([
+          { pubkey: userEol, isWritable: true, isSigner: false },
+        ])
+        .preInstructions([cu])
+        .rpc();
+
+      const lpAfter = (
+        await getAccount(connection, l.lpToken, undefined, TOKEN_2022_PROGRAM_ID)
+      ).amount;
+      const treasuryAfter = (
+        await getAccount(connection, l.treasuryUsdc, undefined, TOKEN_PROGRAM_ID)
+      ).amount;
+      expect(lpAfter > lpBefore).to.equal(true);
+      expect(treasuryAfter > treasuryBefore).to.equal(true);
+      expect(await connection.getBalance(l.cs.reserve)).to.be.greaterThan(csolBefore);
+      expect(await connection.getBalance(goldSink)).to.be.greaterThan(goldBefore);
+      expect(await connection.getBalance(spxSink)).to.be.greaterThan(spxBefore);
+      expect(await connection.getBalance(l.protocolKp.publicKey)).to.be.greaterThan(
+        protocolBefore,
+      );
     });
 
     it("reserve mint Path A (duration) then Path B at creator-set %", async () => {

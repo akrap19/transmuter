@@ -328,6 +328,10 @@ export type TransmuterEolToken = {
           "writable": true
         },
         {
+          "name": "protocolRevenueWallet",
+          "writable": true
+        },
+        {
           "name": "dexProgram"
         },
         {
@@ -899,6 +903,119 @@ export type TransmuterEolToken = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "initFeeRoute",
+      "docs": [
+        "Record the transfer-fee legs and the backing basket. The factory config",
+        "signs, so a crank cannot invent a split. Called once per coin."
+      ],
+      "discriminator": [
+        87,
+        182,
+        110,
+        14,
+        133,
+        77,
+        227,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "factory",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "feeRoute",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  114,
+                  111,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "feeLpBps",
+          "type": "u16"
+        },
+        {
+          "name": "feeTreasuryBps",
+          "type": "u16"
+        },
+        {
+          "name": "feeCtokenBps",
+          "type": "u16"
+        },
+        {
+          "name": "feeProtocolBps",
+          "type": "u16"
+        },
+        {
+          "name": "feeCreatorBps",
+          "type": "u16"
+        },
+        {
+          "name": "feeBurnBps",
+          "type": "u16"
+        },
+        {
+          "name": "basket",
+          "type": {
+            "array": [
+              "u16",
+              4
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "initVaults",
@@ -1815,6 +1932,210 @@ export type TransmuterEolToken = {
       "args": []
     },
     {
+      "name": "settleTransferFees",
+      "docs": [
+        "Collect Token-2022 withheld transfer fees and pay each leg.",
+        "LP tokens go to the LP vault. The treasury leg is swapped to USDC.",
+        "The cToken leg is swapped to SOL and split across the basket: SOL and BTC",
+        "stay in those cToken reserves, Gold and S&P go to their fee sinks.",
+        "The protocol leg is swapped to SOL and paid to the protocol wallet.",
+        "`sources` (remaining accounts) are the token accounts holding withheld fees."
+      ],
+      "discriminator": [
+        19,
+        39,
+        212,
+        110,
+        176,
+        192,
+        63,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "config"
+              }
+            ]
+          },
+          "relations": [
+            "feeRoute"
+          ]
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "mintAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "feeVault",
+          "writable": true
+        },
+        {
+          "name": "lpTokenVault",
+          "writable": true
+        },
+        {
+          "name": "treasuryUsdc",
+          "writable": true
+        },
+        {
+          "name": "scratchUsdc",
+          "docs": [
+            "Scratch USDC account. The sale vault is empty after finalize."
+          ],
+          "writable": true
+        },
+        {
+          "name": "feeRoute",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  101,
+                  101,
+                  95,
+                  114,
+                  111,
+                  117,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "config"
+              }
+            ]
+          }
+        },
+        {
+          "name": "dexProgram"
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "poolVaultA",
+          "writable": true
+        },
+        {
+          "name": "poolVaultB",
+          "writable": true
+        },
+        {
+          "name": "poolMintA"
+        },
+        {
+          "name": "poolMintB"
+        },
+        {
+          "name": "nativePool",
+          "writable": true
+        },
+        {
+          "name": "nativeVault",
+          "writable": true
+        },
+        {
+          "name": "ctokenProgram",
+          "address": "GqWdDqeD8EJARnqtv1DKTBUStkGFR5stKRHmHMuuGru4"
+        },
+        {
+          "name": "ctokenMint"
+        },
+        {
+          "name": "cbtcMint"
+        },
+        {
+          "name": "csolReserve",
+          "writable": true
+        },
+        {
+          "name": "cbtcReserve",
+          "writable": true
+        },
+        {
+          "name": "goldSink",
+          "writable": true
+        },
+        {
+          "name": "spxSink",
+          "writable": true
+        },
+        {
+          "name": "protocolRevenueWallet",
+          "writable": true
+        },
+        {
+          "name": "creatorAta",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "usdcProgram"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "snapshotOracle",
       "docs": [
         "Permissionless Pyth (or mock_pyth) snapshot. Stale / wide-confidence",
@@ -1990,6 +2311,19 @@ export type TransmuterEolToken = {
         173,
         21,
         227
+      ]
+    },
+    {
+      "name": "feeRoute",
+      "discriminator": [
+        184,
+        229,
+        186,
+        237,
+        83,
+        86,
+        240,
+        211
       ]
     },
     {
@@ -2304,6 +2638,16 @@ export type TransmuterEolToken = {
       "code": 6040,
       "name": "stakeRecord",
       "msg": "stake account is not a staking record"
+    },
+    {
+      "code": 6041,
+      "name": "fee",
+      "msg": "transfer fee split does not match the mint"
+    },
+    {
+      "code": 6042,
+      "name": "backingBasket",
+      "msg": "backing basket weights must sum to 100%"
     }
   ],
   "types": [
@@ -2627,6 +2971,55 @@ export type TransmuterEolToken = {
           {
             "name": "claimed",
             "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "feeRoute",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "name": "feeLpBps",
+            "type": "u16"
+          },
+          {
+            "name": "feeTreasuryBps",
+            "type": "u16"
+          },
+          {
+            "name": "feeCtokenBps",
+            "type": "u16"
+          },
+          {
+            "name": "feeProtocolBps",
+            "type": "u16"
+          },
+          {
+            "name": "feeCreatorBps",
+            "type": "u16"
+          },
+          {
+            "name": "feeBurnBps",
+            "type": "u16"
+          },
+          {
+            "name": "basket",
+            "type": {
+              "array": [
+                "u16",
+                4
+              ]
+            }
           },
           {
             "name": "bump",

@@ -85,6 +85,37 @@ describe("loadCoinDetail", () => {
     expect(calls).toEqual([`http://api.test/coins/${MINT}`, `http://api.test/coins/${MINT}/chart`]);
   });
 
+  it("paints treasury dollars from the backing read before the browser catches up", async () => {
+    const fetchFn = (async (url: string) => {
+      if (url.endsWith("/chart")) return jsonResponse({ points: [] });
+      return jsonResponse(HELIX);
+    }) as unknown as typeof fetch;
+    const readBacking = vi.fn().mockResolvedValue({
+      treasury: {
+        cTokenAmount: 0,
+        unconvertedUsdc: 2.85,
+        cTokenPriceUsd: 0,
+        circulatingSupply: 100,
+        backingValueUsd: 2.85,
+        redemptionRatio: 0,
+        reserveMint: { pathAReady: false, pathBActivated: false, governedPct: 10, mintsThisYear: 0, yearlyCap: 3 },
+      },
+      backingRatioBps: 4995,
+      priceUsd: 0.057142,
+      marketCapUsd: 5.71,
+    });
+
+    const loaded = await loadCoinDetail(MINT, { fetchFn, env: ENV, readBacking });
+
+    expect(loaded.kind).toBe("coin");
+    if (loaded.kind !== "coin") return;
+    expect(loaded.detail.treasury.unconvertedUsdc).toBe(2.85);
+    expect(loaded.detail.treasury.backingValueUsd).toBe(2.85);
+    expect(loaded.detail.backingRatioBps).toBe(4995);
+    expect(loaded.detail.priceUsd).toBe(0.057142);
+    expect(loaded.detail.holderCount).toBe(12);
+  });
+
   it("distinguishes a missing mint from an API outage", async () => {
     const missing = vi.fn().mockResolvedValue(jsonResponse({ error: "not found" }, 404));
     const down = vi.fn().mockRejectedValue(new Error("offline"));
@@ -150,11 +181,13 @@ describe("mergeBacking", () => {
       redemptionRatio: 0.002,
     };
 
-    const merged = mergeBacking(detail, { treasury, backingRatioBps: 5000 });
+    const merged = mergeBacking(detail, { treasury, backingRatioBps: 5000, holderCount: 4 });
 
     expect(merged.treasury.unconvertedUsdc).toBe(7);
     expect(merged.treasury.backingValueUsd).toBe(10);
     expect(merged.backingRatioBps).toBe(5000);
+    expect(merged.holderCount).toBe(4);
+    expect(mergeBacking(detail, null).holderCount).toBe(12);
     expect(mergeBacking(detail, null).treasury.unconvertedUsdc).toBe(0);
   });
 });

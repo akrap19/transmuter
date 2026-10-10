@@ -5,7 +5,7 @@ import { eolConfigPda, eolDepositPda, eolLpSignerPda } from "@/lib/solana/progra
 import { raydiumPoolKeys } from "@/lib/solana/raydium-cpmm";
 import { backingFromChain } from "./backing";
 import { chainAmount, liveStatus, type ChainAmount } from "./live-sale";
-import { mockNativePoolPda, mockPoolPda, readMockPoolVaults, readNativePoolVault } from "./post-sale-accounts";
+import { feeRoutePda, mockNativePoolPda, mockPoolPda, readMockPoolVaults, readNativePoolVault } from "./post-sale-accounts";
 import { postSaleNote, postSaleOffers } from "./post-sale";
 import type { PostSaleChain } from "./submit-post-sale";
 
@@ -19,6 +19,8 @@ export type EolPostSaleConfig = {
   saleTokenVault: PublicKey;
   lpTokenVault: PublicKey;
   treasuryUsdc: PublicKey;
+  protocolRevenueWallet: PublicKey;
+  feeVault: PublicKey;
   ctokenTreasury: PublicKey;
   usdcMint: PublicKey;
   ctokenMint: PublicKey;
@@ -35,11 +37,12 @@ export type EolPostSaleConfig = {
   governedMintPctBps: number;
   rmAllowanceOpen: boolean;
   rmGovOpen: boolean;
+  teamTokenVault?: PublicKey;
 };
 
 export type PostSaleReaders = {
   config: AccountFetcher<EolPostSaleConfig>;
-  launch: AccountFetcher<{ poolUsdc: PublicKey }>;
+  launch: AccountFetcher<{ poolUsdc: PublicKey; fallbackCtoken?: PublicKey }>;
   mintIndex: AccountFetcher<{ launchId: { toString(): string } }>;
   deposit: AccountFetcher<{ amount: ChainAmount; claimed: boolean }>;
   escrow: AccountFetcher<{ vault: PublicKey }>;
@@ -47,6 +50,8 @@ export type PostSaleReaders = {
   tokenAmount: (address: PublicKey) => Promise<bigint>;
   lamports: (address: PublicKey) => Promise<bigint>;
   mintSupply: (address: PublicKey) => Promise<bigint>;
+  /** Buyers and token holders. Omitted in tests that only care about the sale. */
+  holders?: (config: PublicKey, mint: PublicKey, vaults: PublicKey[]) => Promise<number>;
 };
 
 export async function readPostSale(
@@ -61,14 +66,24 @@ export async function readPostSale(
   const status = liveStatus(null, Number(config.status));
   if (!status) return null;
 
-  const wsolAta = getAssociatedTokenAddressSync(NATIVE_MINT, eolConfigPda(mint), true, TOKEN_PROGRAM_ID);
+  const configAddress = eolConfigPda(mint);
+  const wsolAta = getAssociatedTokenAddressSync(NATIVE_MINT, configAddress, true, TOKEN_PROGRAM_ID);
+  const tokenVaults = [config.saleTokenVault, config.lpTokenVault, config.teamTokenVault].filter(
+    (key): key is PublicKey => key instanceof PublicKey,
+  );
   // The launch lookup and every config-derived read only need the config and the
   // mint, so issue them together. With the batching connection they collapse into
   // one getMultipleAccounts instead of waiting on each other round trip by round trip.
+  const poolPda = mockPoolPda(mint, config.usdcMint);
+  const nativePda = mockNativePoolPda(config.usdcMint);
   const launchPromise = readFactoryLaunchByMint({ launch: readers.launch, mintIndex: readers.mintIndex }, mint);
+  // Holder listing is a program scan. It must not sit in front of the treasury figures.
+  const holderPromise = readers.holders
+    ? readers.holders(configAddress, mint, tokenVaults).catch(() => null)
+    : Promise.resolve(null);
   const corePromise = Promise.all([
     readers.accountData(wsolAta),
-    wallet ? readers.deposit.fetchNullable(eolDepositPda(eolConfigPda(mint), wallet)) : Promise.resolve(null),
+    wallet ? readers.deposit.fetchNullable(eolDepositPda(configAddress, wallet)) : Promise.resolve(null),
     isSet(config.escrow) ? readers.escrow.fetchNullable(config.escrow) : Promise.resolve(null),
     readers.tokenAmount(config.treasuryUsdc),
     readers.tokenAmount(config.ctokenTreasury),
@@ -77,26 +92,35 @@ export async function readPostSale(
     readers.tokenAmount(wsolAta),
     readers.mintSupply(mint),
     readers.lamports(eolLpSignerPda(mint)),
+    readers.accountData(poolPda),
+    readers.accountData(nativePda),
   ]);
   const [launch, core] = await Promise.all([launchPromise, corePromise]);
-  const [wsolData, deposit, escrow, treasuryUsdc, ctokenAtoms, lpTokenAtoms, saleUsdcAtoms, wsolAtoms, supply, lpLamports] =
-    core;
+  const holderCount = await holderPromise;
+  const [
+    wsolData,
+    deposit,
+    escrow,
+    treasuryUsdc,
+    ctokenAtoms,
+    lpTokenAtoms,
+    saleUsdcAtoms,
+    wsolAtoms,
+    supply,
+    lpLamports,
+    poolData,
+    nativeData,
+  ] = core;
 
   const cpmm = raydiumPoolKeys(config.usdcMint, NATIVE_MINT).poolState;
   const venue = launch?.account.poolUsdc.equals(cpmm) ? "raydium" : "mock";
-  const poolPda = mockPoolPda(mint, config.usdcMint);
-  const nativePda = mockNativePoolPda(config.usdcMint);
-  const [poolData, nativeData] = await Promise.all([
-    venue === "mock" ? readers.accountData(poolPda) : Promise.resolve(null),
-    venue === "mock" ? readers.accountData(nativePda) : Promise.resolve(null),
-  ]);
-  const vaults = poolData ? readMockPoolVaults(poolData) : null;
-  const nativeVault = nativeData ? readNativePoolVault(nativeData) : null;
+  const vaults = venue === "mock" && poolData ? readMockPoolVaults(poolData) : null;
+  const nativeVault = venue === "mock" && nativeData ? readNativePoolVault(nativeData) : null;
 
   const depositAtoms = deposit ? chainAmount(deposit.amount) : BigInt(0);
   const backing = backingFromChain({
     ctokenAtoms,
-    unconvertedUsdcAtoms: treasuryUsdc + chainAmount(config.escrowUsdc),
+    unconvertedUsdcAtoms: treasuryUsdc + chainAmount(config.escrowUsdc) + saleUsdcAtoms,
     solResidueLamports: chainAmount(config.solResidue),
     oraclePrice: chainAmount(config.oraclePrice),
     oracleExpo: Number(config.oracleExpo),
@@ -125,6 +149,7 @@ export async function readPostSale(
     decimals: Number(config.decimals),
   };
   const offers = postSaleOffers(input);
+  const feeRoute = await readers.accountData(feeRoutePda(mint));
   const chain: PostSaleChain = {
     cranker: wallet ?? PublicKey.default,
     mint,
@@ -134,6 +159,9 @@ export async function readPostSale(
     saleTokenVault: config.saleTokenVault,
     lpTokenVault: config.lpTokenVault,
     treasuryUsdc: config.treasuryUsdc,
+    protocolRevenueWallet: config.protocolRevenueWallet,
+    feeVault: config.feeVault,
+    fallbackCtoken: launch?.account.fallbackCtoken ?? config.ctokenMint,
     poolVaultA: vaults?.vaultA ?? SystemProgram.programId,
     poolVaultB: vaults?.vaultB ?? SystemProgram.programId,
     nativeVault: nativeVault ?? SystemProgram.programId,
@@ -145,9 +173,11 @@ export async function readPostSale(
     wsolAtaExists: wsolData != null,
     lpSignerLamports: lpLamports,
     poolsReady: venue === "raydium" || (vaults != null && nativeVault != null),
+    feeRouteExists: feeRoute != null,
+    launchId: launch?.launchId ?? null,
   };
 
-  return { offers, note: postSaleNote(status, offers), chain, ...backing };
+  return { offers, note: postSaleNote(status, offers), chain, holderCount, ...backing };
 }
 
 function isSet(key: PublicKey): boolean {

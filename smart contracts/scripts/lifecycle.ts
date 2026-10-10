@@ -1032,6 +1032,7 @@ export async function runLifecycle(
     cranker: payer.publicKey,
     config,
     treasuryUsdc: treasuryUsdc.publicKey,
+    protocolRevenueWallet: protocolKp.publicKey,
     dexProgram: cpmm ? RAYDIUM_CPMM : dex.programId,
     nativePool: cpmm ? cpmm.poolState : nativePool,
     nativeVault: cpmm ? cpmm.usdcVault : nativeVault,

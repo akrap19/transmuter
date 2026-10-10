@@ -6,6 +6,7 @@ import {
   claimPlan,
   convertPlan,
   finalizePlan,
+  settlePlan,
   mockNativePoolPda,
   mockPoolPda,
   readMockPoolVaults,
@@ -21,6 +22,8 @@ const saleUsdc = Keypair.generate().publicKey;
 const saleToken = Keypair.generate().publicKey;
 const lpToken = Keypair.generate().publicKey;
 const treasuryUsdc = Keypair.generate().publicKey;
+const protocol = Keypair.generate().publicKey;
+const feeVault = Keypair.generate().publicKey;
 const vaultA = Keypair.generate().publicKey;
 const vaultB = Keypair.generate().publicKey;
 const nativeVault = Keypair.generate().publicKey;
@@ -55,6 +58,7 @@ describe("post-sale accounts", () => {
     const plan = convertPlan(base({ venue: "mock", escrow: SystemProgram.programId, vesting: SystemProgram.programId }));
     expect(plan.maxIn).toBe("18446744073709551615");
     expect(plan.minOut).toBe("1");
+    expect(plan.accounts.protocolRevenueWallet.equals(protocol)).toBe(true);
     expect(plan.accounts.ctokenMint.equals(ctoken)).toBe(true);
     expect(plan.accounts.dexProgram.toBase58()).toBe(PROGRAM_IDS.mockDex);
     expect(plan.accounts.nativePool.equals(mockNativePoolPda(usdc))).toBe(true);
@@ -78,6 +82,18 @@ describe("post-sale accounts", () => {
     expect(finalized.remaining[0]?.pubkey.toBase58()).toBe("7rQ1QFNosMkUCuh7Z7fPbTHvh73b68sQYdirycEzJVuw");
     expect(converted.accounts.nativePool.equals(finalized.accounts.poolUsdc)).toBe(true);
     expect(converted.remaining).toHaveLength(8);
+  });
+
+  it("settles Raydium transfer fees through the EOL/USDC pool and the USDC/WSOL pool", () => {
+    const input = base({ venue: "raydium", escrow: SystemProgram.programId, vesting: SystemProgram.programId });
+    const plan = settlePlan(input);
+    const converted = convertPlan(input);
+    expect(plan.accounts.dexProgram.equals(converted.accounts.dexProgram)).toBe(true);
+    expect(plan.accounts.nativePool.equals(converted.accounts.nativePool)).toBe(true);
+    expect(plan.accounts.poolMintA.equals(mint)).toBe(true);
+    expect(plan.accounts.poolMintB.equals(usdc)).toBe(true);
+    expect(plan.remaining.slice(0, 8)).toEqual(converted.remaining);
+    expect(plan.remaining).toHaveLength(9);
   });
 
   it("seeds a Raydium CPMM pool with the published devnet authority", () => {
@@ -108,6 +124,9 @@ function base(extra: { venue: "mock" | "raydium"; escrow: PublicKey; vesting: Pu
     saleTokenVault: saleToken,
     lpTokenVault: lpToken,
     treasuryUsdc,
+    protocolRevenueWallet: protocol,
+    feeVault,
+    fallbackCtoken: ctoken,
     poolVaultA: vaultA,
     poolVaultB: vaultB,
     nativeVault,

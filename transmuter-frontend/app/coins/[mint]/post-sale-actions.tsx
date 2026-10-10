@@ -11,6 +11,7 @@ const LABELS: Record<PostSaleKind, string> = {
   seedRaydiumUsdc: "Seed EOL/USDC pool",
   seedRaydiumWsol: "Seed EOL/SOL pool",
   claimTokens: "Claim tokens",
+  settleFees: "Settle transfer fees",
 };
 
 export function PostSaleActions({

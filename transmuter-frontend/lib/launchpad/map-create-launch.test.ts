@@ -106,6 +106,12 @@ describe("mapLaunchpadToCreateLaunch", () => {
     expect(params.vestingSchedule).toBe(2);
     expect(params.feeCtokenBps).toBe(Math.round(CTOKEN_RESERVE_FEE * 100));
     expect(params.feeProtocolBps).toBe(Math.round(PROTOCOL_FEE * 100));
+    expect(params.backingBasket).toEqual([
+      { assetKind: 0, weightBps: 10000 },
+      { assetKind: 1, weightBps: 0 },
+      { assetKind: 2, weightBps: 0 },
+      { assetKind: 3, weightBps: 0 },
+    ]);
 
     expect(accounts.backingCtoken.toBase58()).toBe(CSOL);
     expect(accounts.fallbackCtoken.toBase58()).toBe(CBTC);
@@ -113,6 +119,41 @@ describe("mapLaunchpadToCreateLaunch", () => {
     expect(accounts.daoContract.toBase58()).toBe(DAO);
     expect(accounts.backingListing).toBeInstanceOf(PublicKey);
     expect(accounts.fallbackListing).toBeInstanceOf(PublicKey);
+  });
+
+  it("maps a multi-asset backing basket and picks the heavier live cToken as primary", () => {
+    const { params, accounts } = map(
+      launchState({
+        backingBasket: [
+          { asset: "SOL", weight: 20 },
+          { asset: "BTC", weight: 40 },
+          { asset: "GOLD", weight: 30 },
+          { asset: "SPX", weight: 10 },
+        ],
+      }),
+    );
+    expect(params.backingBasket).toEqual([
+      { assetKind: 0, weightBps: 2000 },
+      { assetKind: 1, weightBps: 4000 },
+      { assetKind: 2, weightBps: 3000 },
+      { assetKind: 3, weightBps: 1000 },
+    ]);
+    // BTC carries the heavier live-cToken weight → primary cBTC, fallback cSOL.
+    expect(accounts.backingCtoken.toBase58()).toBe(CBTC);
+    expect(accounts.fallbackCtoken.toBase58()).toBe(CSOL);
+  });
+
+  it("rejects a backing basket that does not total 100%", () => {
+    const broken = launchState({
+      backingBasket: [
+        { asset: "SOL", weight: 50 },
+        { asset: "BTC", weight: 0 },
+        { asset: "GOLD", weight: 0 },
+        { asset: "SPX", weight: 0 },
+      ],
+    });
+    expect(() => map(broken)).toThrow(/basket must total 100%/);
+    expect(launchMissingLabels(broken)).toContain("overall backing must be 100%");
   });
 
   it("converts a day-count sale window and vesting presets to chain units", () => {

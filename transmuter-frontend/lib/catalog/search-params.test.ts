@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   coinPathWithExplore,
+  coinQueryHasFilters,
   explorePathFromCoinSearch,
   parseCoinSearchParams,
   parsePreviewFlag,
@@ -21,6 +22,12 @@ describe("parseCoinSearchParams", () => {
       dir: "asc",
       backing: "cSOL",
     });
+  });
+
+  it("treats search, status, sort, and backing as filters", () => {
+    expect(coinQueryHasFilters({})).toBe(false);
+    expect(coinQueryHasFilters(parseCoinSearchParams(new URLSearchParams("q=helix")))).toBe(true);
+    expect(coinQueryHasFilters(parseCoinSearchParams(new URLSearchParams("sort=nope")))).toBe(false);
   });
 
   it("ignores unknown statuses and sort fields", () => {

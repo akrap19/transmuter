@@ -1,8 +1,16 @@
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE } from "./fee-calculator";
-import { fallbackCtoken } from "./ctokens";
 import { solveFromState } from "./launch-solver";
+import {
+  BACKING_ASSETS,
+  assetMeta,
+  basketTotal,
+  fallbackBackingAsset,
+  primaryBackingAsset,
+  type BackingAsset,
+  type BackingLeg,
+} from "./backing-basket";
 import { factoryCtokenPda } from "@/lib/solana/programs/factory";
 import type { CToken, LaunchpadState, VestingPreset } from "./types";
 
@@ -26,6 +34,9 @@ const VESTING_KIND: Record<Exclude<VestingPreset, "Custom">, number> = {
 };
 
 export const METADATA_URI_MAX_LEN = 200;
+
+/** On-chain basket leg: asset discriminant + weight in bps (weights sum to 10_000). */
+export type MappedBackingLeg = { assetKind: number; weightBps: number };
 
 export type MapCreateLaunchInput = {
   state: LaunchpadState;
@@ -71,6 +82,8 @@ export type MappedCreateLaunchParams = {
   feeBurnBps: number;
   forfeitDest: number;
   vestingSchedule: number;
+  /** Treasury backing split across reserve assets. Canonical order, weights sum to 10_000 bps. */
+  backingBasket: MappedBackingLeg[];
 };
 
 export type MappedCreateLaunchAccounts = {
@@ -120,6 +133,13 @@ export function launchValidationIssues(state: LaunchpadState): string[] {
   }
   if (saleBps + lpBps + teamBps + investorBps + daoBps !== 10_000) {
     issues.push("allocations must sum to 100%");
+  }
+
+  if (basketTotal(state.backingBasket) !== 100) {
+    issues.push("backing basket must total 100%");
+  }
+  if (state.backingBasket.every((leg) => leg.weight <= 0)) {
+    issues.push("pick at least one backing asset");
   }
 
   const solve = solveFromState(state);
@@ -180,6 +200,14 @@ export function launchMissingLabels(state: LaunchpadState): string[] {
     }
     if (issue === "allocations must sum to 100%") {
       labels.push("an allocation that totals 100%");
+      continue;
+    }
+    if (issue === "backing basket must total 100%") {
+      labels.push("overall backing must be 100%");
+      continue;
+    }
+    if (issue === "pick at least one backing asset") {
+      labels.push("at least one backing asset");
       continue;
     }
     if (issue === "launch is not feasible") {
@@ -260,10 +288,13 @@ export function mapLaunchpadToCreateLaunch(input: MapCreateLaunchInput): {
   const transferFeeBps =
     feeLpBps + feeTreasuryBps + feeCtokenBps + feeProtocolBps + feeCreatorBps + feeBurnBps;
 
-  const backing = resolveSelected(state.selectedCToken, whitelist);
-  const fallback = fallbackCtoken(backing, whitelist);
+  const backing = ctokenForAsset(primaryBackingAsset(state.backingBasket), whitelist);
+  const fallback = ctokenForAsset(fallbackBackingAsset(state.backingBasket), whitelist);
   if (!backing.mint || !fallback.mint) {
     throw new Error("cToken whitelist mints are not configured");
+  }
+  if (backing.mint === fallback.mint) {
+    throw new Error("backing and fallback cToken must differ");
   }
   const backingCtoken = new PublicKey(backing.mint);
   const fallbackCtokenPk = new PublicKey(fallback.mint);
@@ -308,6 +339,7 @@ export function mapLaunchpadToCreateLaunch(input: MapCreateLaunchInput): {
       feeBurnBps,
       forfeitDest: 0,
       vestingSchedule: VESTING_KIND[state.vesting],
+      backingBasket: mapBackingBasket(state.backingBasket),
     },
     accounts: {
       backingCtoken,
@@ -358,8 +390,22 @@ function bn(n: bigint | number): BN {
   return new BN(n.toString());
 }
 
-function resolveSelected(selected: CToken, whitelist: CToken[]): CToken {
-  return whitelist.find((token) => token.name === selected.name) ?? selected;
+/** Whitelisted cToken that settles a given basket asset (SOL → cSOL, BTC → cBTC). */
+function ctokenForAsset(asset: BackingAsset, whitelist: CToken[]): CToken {
+  const name = assetMeta(asset).cToken;
+  const token = whitelist.find((t) => t.name === name);
+  if (!token) {
+    throw new Error(`cToken ${name} for ${asset} is not whitelisted`);
+  }
+  return token;
+}
+
+/** Canonical 4-leg basket in asset order, weights in bps summing to 10_000. */
+function mapBackingBasket(basket: BackingLeg[]): MappedBackingLeg[] {
+  return BACKING_ASSETS.map((meta) => ({
+    assetKind: meta.kind,
+    weightBps: (basket.find((leg) => leg.asset === meta.asset)?.weight ?? 0) * 100,
+  }));
 }
 
 export function decimalToAtomic(raw: string, decimals: number): bigint {

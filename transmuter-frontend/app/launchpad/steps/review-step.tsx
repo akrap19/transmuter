@@ -65,7 +65,7 @@ function ReviewBlock({ title, children }: { title: string; children: React.React
 
 function ReviewRow({ row, image }: { row: ReviewRowModel; image?: string | null }) {
   return (
-    <div className={`review-item${row.stacked ? " is-stacked" : ""}`}>
+    <div className={`review-item${row.stacked ? " is-stacked" : ""}${row.error ? " is-error" : ""}`}>
       <span className="review-item-label">{row.label}</span>
       <span className="review-item-value">
         {image ? (

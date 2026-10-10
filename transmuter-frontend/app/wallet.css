@@ -163,6 +163,13 @@
 	text-transform: lowercase;
 }
 
+.wallet-menu-divider {
+	display: block;
+	height: 1px;
+	margin: 6px 8px;
+	background: rgba(255, 255, 255, 0.08);
+}
+
 .wallet-install-go {
 	margin-left: auto;
 	flex-shrink: 0;
@@ -274,6 +281,308 @@
 
 .wallet-adapter-modal-button-close {
 	background: rgba(240, 194, 75, 0.08) !important;
+}
+
+.devnet-guide-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 2000;
+	background: rgba(6, 6, 10, 0.72);
+	backdrop-filter: blur(10px);
+}
+
+.devnet-guide-backdrop[data-state='open'] {
+	animation: devnet-fade 0.18s ease;
+}
+
+.devnet-guide {
+	position: fixed;
+	z-index: 2001;
+	top: 50%;
+	left: 50%;
+	width: min(680px, calc(100vw - 32px));
+	max-height: min(860px, calc(100dvh - 32px));
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	padding: 0;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 28px;
+	background:
+		radial-gradient(circle at 0 0, rgba(229, 182, 84, 0.14), transparent 42%),
+		radial-gradient(circle at 100% 0, rgba(139, 108, 255, 0.14), transparent 46%),
+		#0f0f16;
+	box-shadow:
+		0 30px 80px rgba(0, 0, 0, 0.55),
+		inset 0 1px 0 rgba(255, 255, 255, 0.05);
+	color: var(--text, #f7f4ec);
+	font-family: var(--font-inter), sans-serif;
+	text-align: left;
+	outline: none;
+	transform: translate(-50%, -50%);
+}
+
+.devnet-guide[data-state='open'] {
+	animation: devnet-rise 0.22s ease;
+}
+
+.devnet-guide-bar {
+	display: flex;
+	flex-shrink: 0;
+	justify-content: flex-end;
+	padding: 14px 14px 0;
+}
+
+.devnet-guide-x {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.04);
+	color: #d2d0d7;
+	cursor: pointer;
+}
+
+.devnet-guide-x:hover {
+	border-color: rgba(229, 182, 84, 0.45);
+	color: var(--gold, #e5b654);
+}
+
+.devnet-guide-kicker {
+	margin: 0;
+	color: var(--gold, #e5b654);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+}
+
+.devnet-guide-title {
+	margin: 8px 0 0;
+	color: var(--text, #f7f4ec);
+	font-family: var(--font-manrope), sans-serif;
+	font-size: clamp(28px, 4vw, 36px);
+	font-weight: 500;
+	letter-spacing: -0.03em;
+	line-height: 1.05;
+}
+
+.devnet-guide-lede,
+.devnet-guide-section p {
+	margin: 12px 0 0;
+	color: #b5b2bb;
+	font-size: 14.5px;
+	line-height: 1.65;
+}
+
+.devnet-guide-section {
+	margin-top: 22px;
+	padding-top: 18px;
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.devnet-guide-section h3 {
+	display: flex;
+	align-items: baseline;
+	gap: 10px;
+	margin: 0;
+	color: var(--text, #f7f4ec);
+	font-family: var(--font-manrope), sans-serif;
+	font-size: 16px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+}
+
+.devnet-guide-section h3 span {
+	color: var(--gold, #e5b654);
+	font-size: 11px;
+	letter-spacing: 0.14em;
+}
+
+.devnet-wallets {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.devnet-card {
+	min-width: 0;
+	padding: 14px 16px 16px;
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 18px;
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.devnet-card strong {
+	display: block;
+	margin: 0 0 8px;
+	color: var(--text, #f7f4ec);
+	font-family: var(--font-manrope), sans-serif;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.devnet-guide ol {
+	margin: 10px 0 0;
+	padding-left: 18px;
+	color: #b5b2bb;
+	font-size: 13px;
+	line-height: 1.55;
+	list-style: decimal;
+}
+
+.devnet-guide li::marker {
+	color: var(--gold, #e5b654);
+	font-weight: 600;
+}
+
+.devnet-guide li + li {
+	margin-top: 6px;
+}
+
+.devnet-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 14px;
+	color: var(--gold-light, #ffd782);
+	font-family: var(--font-manrope), sans-serif;
+	font-size: 13px;
+	font-weight: 600;
+	text-decoration: none;
+	border-bottom: 1px solid rgba(229, 182, 84, 0.4);
+	padding-bottom: 2px;
+}
+
+.devnet-link:hover {
+	color: var(--gold, #e5b654);
+	border-bottom-color: var(--gold, #e5b654);
+}
+
+.devnet-mint {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 12px;
+	padding: 8px 8px 8px 12px;
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 12px;
+	background: rgba(0, 0, 0, 0.28);
+}
+
+.devnet-mint code {
+	flex: 1;
+	min-width: 0;
+	color: #f2eee4;
+	font-size: 12px;
+	line-height: 1.4;
+	overflow-wrap: anywhere;
+}
+
+.devnet-mint button {
+	display: inline-flex;
+	flex-shrink: 0;
+	align-items: center;
+	gap: 6px;
+	padding: 7px 10px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.04);
+	color: #d2d0d7;
+	font-family: var(--font-inter), sans-serif;
+	font-size: 12px;
+	letter-spacing: 0;
+	text-transform: none;
+	cursor: pointer;
+}
+
+.devnet-mint button:hover {
+	border-color: rgba(229, 182, 84, 0.45);
+	color: var(--gold, #e5b654);
+}
+
+.devnet-guide-scroll {
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+	padding: 6px 28px 16px;
+}
+
+.devnet-guide-foot {
+	flex-shrink: 0;
+	padding: 18px 28px 22px;
+	background: #0f0f16;
+}
+
+.devnet-guide-done {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	min-height: 46px;
+	border: 0;
+	border-radius: 999px;
+	background: linear-gradient(105deg, #ffd87f, #eab354 52%, #f1c66f);
+	color: #111014;
+	font-family: var(--font-manrope), sans-serif;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 12px 38px rgba(229, 182, 84, 0.15);
+}
+
+.devnet-guide-done:hover {
+	background: linear-gradient(105deg, #ffe29a, #efbf66 52%, #f8d684);
+}
+
+@keyframes devnet-fade {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes devnet-rise {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -46%);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, -50%);
+	}
+}
+
+@media (max-width: 640px) {
+	.devnet-guide {
+		border-radius: 22px;
+	}
+
+	.devnet-guide-scroll {
+		padding: 4px 18px 14px;
+	}
+
+	.devnet-guide-foot {
+		padding: 16px 18px 18px;
+	}
+
+	.devnet-wallets {
+		grid-template-columns: 1fr;
+	}
+
+	.devnet-mint {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.devnet-mint button {
+		justify-content: center;
+	}
 }
 
 @media (max-width: 880px) {

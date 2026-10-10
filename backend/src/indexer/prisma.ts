@@ -1,6 +1,26 @@
-import type { Prisma, PrismaClient } from "@prisma/client";
-import type { ChartPoint, LaunchStatus } from "../catalog/types.ts";
+import { Prisma } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
+import type { BackingLeg, ChartPoint, LaunchStatus } from "../catalog/types.ts";
 import type { CursorStore, IndexWriteStore, LaunchRecord, TokenStats } from "./types.ts";
+
+/** The basket is stored as JSON; coerce the loose Prisma JSON value back to typed legs. */
+function asBackingBasket(value: unknown): BackingLeg[] | null {
+  if (!Array.isArray(value)) return null;
+  const legs: BackingLeg[] = [];
+  for (const entry of value) {
+    if (
+      entry && typeof entry === "object" &&
+      typeof (entry as { assetKind?: unknown }).assetKind === "number" &&
+      typeof (entry as { weightBps?: unknown }).weightBps === "number"
+    ) {
+      legs.push({
+        assetKind: (entry as { assetKind: number }).assetKind,
+        weightBps: (entry as { weightBps: number }).weightBps,
+      });
+    }
+  }
+  return legs.length > 0 ? legs : null;
+}
 
 function asNumber(value: unknown): number | null {
   if (value == null) return null;
@@ -14,6 +34,7 @@ function toRecord(row: {
   symbol: string;
   creator: string;
   backing: string;
+  backingBasket: unknown;
   status: string;
   metadataUri: string | null;
   logoUrl: string | null;
@@ -37,6 +58,7 @@ function toRecord(row: {
     symbol: row.symbol,
     creator: row.creator,
     backing: row.backing,
+    backingBasket: asBackingBasket(row.backingBasket),
     status: row.status as LaunchStatus,
     metadataUri: row.metadataUri,
     logoUrl: row.logoUrl,
@@ -65,6 +87,7 @@ function launchCreate(launch: LaunchRecord): Prisma.LaunchCreateInput {
     symbol: launch.symbol,
     creator: launch.creator,
     backing: launch.backing,
+    backingBasket: jsonBasket(launch.backingBasket),
     status: launch.status,
     metadataUri: launch.metadataUri,
     logoUrl: launch.logoUrl,
@@ -82,6 +105,11 @@ function launchCreate(launch: LaunchRecord): Prisma.LaunchCreateInput {
     saleProgressBps: launch.saleProgressBps,
     holderCount: launch.holderCount,
   };
+}
+
+/** Basket legs → Prisma JSON input, or the SQL JSON null sentinel when unset. */
+function jsonBasket(basket: BackingLeg[] | null): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+  return basket ? (basket as unknown as Prisma.InputJsonValue) : Prisma.JsonNull;
 }
 
 function launchUpdate(launch: LaunchRecord): Prisma.LaunchUpdateInput {
@@ -102,6 +130,7 @@ function launchUpdate(launch: LaunchRecord): Prisma.LaunchUpdateInput {
     eolConfig: launch.eolConfig,
     targetRaiseUsdc: launch.targetRaiseUsdc,
   };
+  if (launch.backingBasket) update.backingBasket = jsonBasket(launch.backingBasket);
   if (launch.priceUsd != null) update.priceUsd = launch.priceUsd;
   if (launch.marketCapUsd != null) update.marketCapUsd = launch.marketCapUsd;
   if (launch.backingRatioBps != null) update.backingRatioBps = launch.backingRatioBps;

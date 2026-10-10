@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import "@/app/brand/wallet.css";
 import { parsePreviewFlag, searchParamsFromRecord } from "@/lib/catalog/search-params";
+import { routes } from "@/lib/routes";
+import { marketingPageMetadata } from "@/lib/seo/page-metadata";
 import { PortfolioView } from "./portfolio-view";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = marketingPageMetadata({
+  path: routes.portfolio,
   title: "Portfolio",
   description: "Holdings, stakes, claimables, and open votes for the connected wallet.",
-};
+  index: false,
+});
 
 type PortfolioPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

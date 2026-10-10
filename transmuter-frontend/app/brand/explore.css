@@ -344,7 +344,7 @@ button.explore-more {
 
 .explore-card-metrics {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 16px 14px;
 	margin: 0;
 }
@@ -361,10 +361,82 @@ button.explore-more {
 	margin: 0;
 	color: var(--text);
 	font:
-		500 18px/1.2 var(--font-manrope),
+		500 16px/1.2 var(--font-manrope),
 		sans-serif;
 	letter-spacing: -0.02em;
-	overflow-wrap: anywhere;
+	white-space: nowrap;
+}
+
+.explore-card-mix {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding-bottom: 8px;
+}
+
+.explore-card-mix > p {
+	margin: 0;
+	color: #7c776e;
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	text-align: left;
+	text-transform: uppercase;
+}
+
+.explore-card-mix ol {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.explore-card-mix li {
+	position: relative;
+	min-width: 0;
+	padding-bottom: 9px;
+}
+
+.explore-card-mix li::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	height: 3px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.explore-card-mix span {
+	display: block;
+	overflow: hidden;
+	color: #8d877d;
+	font-size: 10px;
+	letter-spacing: 0.06em;
+	text-overflow: ellipsis;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.explore-card-mix ol strong {
+	display: block;
+	margin-top: 2px;
+	color: var(--text);
+	font:
+		500 15px/1.2 var(--font-manrope),
+		sans-serif;
+	letter-spacing: -0.02em;
+}
+
+.explore-card-mix i {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	height: 3px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, var(--gold-deep), var(--gold-light));
 }
 
 .explore-card-sale,

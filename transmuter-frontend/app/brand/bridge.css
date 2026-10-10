@@ -102,6 +102,180 @@ header.site-header .site-nav button.nav-cta.wallet-connect:hover {
 	box-shadow: 0 10px 34px rgba(229, 182, 84, 0.24);
 }
 
+/* "Learn" dropdown: a nav tab that reveals its menu on hover/focus, mirroring
+   the wallet dropdown (CSS reveal + animated --signal underline on each item). */
+.learn-dropdown {
+	position: relative;
+	display: inline-flex;
+}
+
+.learn-trigger {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	appearance: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #a6a4ad;
+	font-family: var(--font-inter), sans-serif;
+	font-size: 13px;
+	line-height: 1;
+	cursor: pointer;
+	transition: color 0.2s ease;
+}
+
+.learn-dropdown:hover .learn-trigger,
+.learn-dropdown:focus-within .learn-trigger,
+.learn-dropdown.is-open .learn-trigger,
+.learn-trigger.is-current {
+	color: var(--text);
+}
+
+.learn-chevron {
+	flex-shrink: 0;
+	opacity: 0.75;
+	transition: transform 0.2s ease;
+}
+
+.learn-dropdown:hover .learn-chevron,
+.learn-dropdown:focus-within .learn-chevron,
+.learn-dropdown.is-open .learn-chevron {
+	transform: rotate(180deg);
+}
+
+/* Dropdown panel, centered under the Learn tab. */
+.learn-menu {
+	position: absolute;
+	left: 50%;
+	top: calc(100% + 10px);
+	z-index: 120;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 200px;
+	padding: 8px;
+	border: 1px solid var(--tm-gold-line);
+	border-radius: 6px;
+	background: rgba(8, 9, 12, 0.96);
+	backdrop-filter: blur(12px);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transform: translate(-50%, 8px);
+	transition:
+		opacity 0.16s ease,
+		transform 0.16s ease,
+		visibility 0.16s ease;
+}
+
+/* Invisible bridge across the trigger→menu gap so hover doesn't drop. */
+.learn-menu::before {
+	content: '';
+	position: absolute;
+	top: -12px;
+	left: 0;
+	right: 0;
+	height: 12px;
+}
+
+.learn-dropdown:hover .learn-menu,
+.learn-dropdown:focus-within .learn-menu,
+.learn-dropdown.is-open .learn-menu {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transform: translate(-50%, 0);
+}
+
+.learn-menu-item {
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	padding: 10px 12px;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--tm-steel);
+	font-family: var(--tm-font-body), var(--font-inter), sans-serif;
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	line-height: 1.2;
+	text-transform: uppercase;
+	text-decoration: none;
+	outline: none;
+	transition:
+		background 0.2s,
+		color 0.2s;
+}
+
+.learn-menu .learn-menu-item:hover,
+.learn-menu .learn-menu-item:focus-visible {
+	background: rgba(240, 194, 75, 0.08);
+	color: var(--tm-gold);
+}
+
+.learn-menu-item.is-current {
+	color: var(--tm-gold);
+}
+
+/* Same gold wash + signal underline as the wallet menu items. */
+.learn-menu-item::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: auto;
+	bottom: 0;
+	width: 0;
+	height: 2px;
+	background: var(--signal);
+	pointer-events: none;
+	transition: width 0.28s ease;
+}
+
+.learn-menu .learn-menu-item:hover::after,
+.learn-menu .learn-menu-item:focus-visible::after {
+	width: 100%;
+	right: auto;
+}
+
+@media (max-width: 1180px) {
+	header.site-header nav.site-nav .learn-dropdown {
+		width: 100%;
+		flex-direction: column;
+	}
+
+	header.site-header nav.site-nav .learn-trigger {
+		justify-content: space-between;
+		padding: 8px 10px;
+	}
+
+	/* In the mobile drawer the menu expands inline (tap to toggle) instead of
+	   floating, so it never overlaps the CTA and wallet below it. */
+	header.site-header nav.site-nav .learn-menu {
+		position: static;
+		left: auto;
+		display: none;
+		width: 100%;
+		min-width: 0;
+		margin-top: 4px;
+		padding: 4px;
+		border-radius: 6px;
+		background: rgba(255, 255, 255, 0.03);
+		backdrop-filter: none;
+		box-shadow: none;
+		transform: none;
+	}
+
+	header.site-header nav.site-nav .learn-dropdown.is-open .learn-menu {
+		display: flex;
+		transform: none;
+	}
+}
+
 header.site-header .nav-wallet {
 	position: relative;
 	z-index: 2;

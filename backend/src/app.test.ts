@@ -11,6 +11,7 @@ function indexed(partial: Partial<IndexedCoin> & Pick<IndexedCoin, "mint" | "nam
     symbol: partial.symbol ?? partial.name.slice(0, 4).toUpperCase(),
     creator: CREATOR,
     backing: "cSOL",
+    backingBasket: null,
     priceUsd: 1,
     marketCapUsd: 1000,
     backingRatioBps: 1800,

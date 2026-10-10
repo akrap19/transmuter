@@ -6,6 +6,7 @@ import { syncAllocation } from "@/lib/launchpad/allocation-sync";
 import { type FeeChangeSource } from "@/lib/launchpad/fee-calculator";
 import { solveFromState } from "@/lib/launchpad/launch-solver";
 import { launchpadReducer, type LaunchpadAction } from "@/lib/launchpad/launchpad-reducer";
+import { type BackingAsset } from "@/lib/launchpad/backing-basket";
 import {
   initialLaunchpadState,
   type FeeState,
@@ -19,6 +20,7 @@ type LaunchpadContextValue = {
   setField: <K extends keyof LaunchpadState>(field: K, value: LaunchpadState[K]) => void;
   goToStep: (step: number) => void;
   toggleFeature: (key: ToggleKey) => void;
+  setBackingWeight: (asset: BackingAsset, weight: number) => void;
   syncAlloc: (changed: Parameters<typeof syncAllocation>[1]) => void;
   updateFees: (
     changed?: FeeChangeSource,
@@ -64,6 +66,10 @@ export function LaunchpadProvider({ children }: { children: ReactNode }) {
     dispatch({ type: "TOGGLE", key });
   }, []);
 
+  const setBackingWeight = useCallback((asset: BackingAsset, weight: number) => {
+    dispatch({ type: "SET_BACKING_WEIGHT", asset, weight });
+  }, []);
+
   const syncAlloc = useCallback((changed: Parameters<typeof syncAllocation>[1]) => {
     dispatch({ type: "SYNC_ALLOC", changed });
   }, []);
@@ -85,11 +91,12 @@ export function LaunchpadProvider({ children }: { children: ReactNode }) {
       setField,
       goToStep,
       toggleFeature,
+      setBackingWeight,
       syncAlloc,
       updateFees,
       launchSolve: launchSolveResult,
     }),
-    [state, setField, goToStep, toggleFeature, syncAlloc, updateFees, launchSolveResult],
+    [state, setField, goToStep, toggleFeature, setBackingWeight, syncAlloc, updateFees, launchSolveResult],
   );
 
   return <LaunchpadContext.Provider value={value}>{children}</LaunchpadContext.Provider>;

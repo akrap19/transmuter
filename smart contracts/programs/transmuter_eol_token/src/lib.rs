@@ -3,6 +3,10 @@ use anchor_lang::system_program::{self, CreateAccount, Transfer as SysTransfer};
 use anchor_spl::token_2022::spl_token_2022::extension::ExtensionType;
 use anchor_spl::token_2022::spl_token_2022::state::Mint as MintState;
 use anchor_spl::token_2022::Token2022;
+use anchor_spl::token_2022_extensions::transfer_fee::{
+    harvest_withheld_tokens_to_mint, withdraw_withheld_tokens_from_mint,
+    HarvestWithheldTokensToMint, WithdrawWithheldTokensFromMint,
+};
 use anchor_spl::token_2022_extensions::{
     metadata_pointer_initialize, token_metadata_initialize, transfer_fee_initialize,
     transfer_fee_set, MetadataPointerInitialize, TokenMetadataInitialize, TransferFeeInitialize,
@@ -13,7 +17,7 @@ use anchor_spl::token_interface::{
     SetAuthority, TokenAccount, TokenInterface, Transfer, TransferChecked,
 };
 use anchor_spl::token_2022::spl_token_2022::instruction::AuthorityType;
-use mock_dex::cpi::accounts::{AddLiquidity, SwapToSol};
+use mock_dex::cpi::accounts::{AddLiquidity, Swap, SwapToSol};
 use mock_dex::program::MockDex;
 use transmuter_constants::*;
 use transmuter_ctoken::cpi::accounts::MintForTreasury as CTokenMint;
@@ -24,9 +28,12 @@ use transmuter_oracle::{self, OracleError};
 
 mod math;
 use math::{
-    bps_of, coeff_g, coeff_l, eval_gates, project, sale_sold_out, tokens_for_usdc, usdc_for_tokens,
-    GateFail, GateInput,
+    bps_of, coeff_g, coeff_l, eval_gates, project, sale_sold_out, split_basket, split_transfer_fee,
+    tokens_for_usdc, usdc_for_tokens, GateFail, GateInput,
 };
+
+/// Factory program that owns the Gold and S&P fee-sink PDAs.
+const FACTORY_ID: Pubkey = pubkey!("5D3y69mm4wrz7VcGsagfvnrMorvLar7ZnZaLfd3uVcfV");
 
 declare_id!("DUYcHygp6rTdf3XY49ewhEyzpUg2QEfWECPTu5ucpaXJ");
 
@@ -716,6 +723,7 @@ pub mod transmuter_eol_token {
         let avail = ctx.accounts.treasury_usdc.amount;
         if avail == 0 && ctx.accounts.config.sol_residue == 0 {
             ctx.accounts.config.convert_done = true;
+            flush_protocol_premium(&ctx)?;
             return Ok(());
         }
         let chunk = max_in.min(avail).min(ctx.accounts.config.convert_chunk);
@@ -827,6 +835,214 @@ pub mod transmuter_eol_token {
                 }
             }
         }
+        flush_protocol_premium(&ctx)?;
+        Ok(())
+    }
+
+    /// Record the transfer-fee legs and the backing basket. The factory config
+    /// signs, so a crank cannot invent a split. Called once per coin.
+    pub fn init_fee_route(
+        ctx: Context<InitFeeRoute>,
+        fee_lp_bps: u16,
+        fee_treasury_bps: u16,
+        fee_ctoken_bps: u16,
+        fee_protocol_bps: u16,
+        fee_creator_bps: u16,
+        fee_burn_bps: u16,
+        basket: [u16; 4],
+    ) -> Result<()> {
+        let legs = [
+            fee_lp_bps,
+            fee_treasury_bps,
+            fee_ctoken_bps,
+            fee_protocol_bps,
+            fee_creator_bps,
+            fee_burn_bps,
+        ];
+        require!(fee_legs_ok(&legs, ctx.accounts.config.transfer_fee_bps), EolError::Fee);
+        require!(basket_ok(&basket), EolError::BackingBasket);
+        let route = &mut ctx.accounts.fee_route;
+        route.config = ctx.accounts.config.key();
+        route.fee_lp_bps = fee_lp_bps;
+        route.fee_treasury_bps = fee_treasury_bps;
+        route.fee_ctoken_bps = fee_ctoken_bps;
+        route.fee_protocol_bps = fee_protocol_bps;
+        route.fee_creator_bps = fee_creator_bps;
+        route.fee_burn_bps = fee_burn_bps;
+        route.basket = basket;
+        route.bump = ctx.bumps.fee_route;
+        Ok(())
+    }
+
+    /// Collect Token-2022 withheld transfer fees and pay each leg.
+    /// LP tokens go to the LP vault. The treasury leg is swapped to USDC.
+    /// The cToken leg is swapped to SOL and split across the basket: SOL and BTC
+    /// stay in those cToken reserves, Gold and S&P go to their fee sinks.
+    /// The protocol leg is swapped to SOL and paid to the protocol wallet.
+    /// `sources` (remaining accounts) are the token accounts holding withheld fees.
+    pub fn settle_transfer_fees<'a>(
+        ctx: Context<'_, '_, 'a, 'a, SettleTransferFees<'a>>,
+    ) -> Result<()> {
+        require!(ctx.accounts.config.status == STATUS_ACTIVE, EolError::WrongStatus);
+        let raydium = is_raydium_cpmm(&ctx.accounts.dex_program.key());
+        require!(
+            is_mock_dex(&ctx.accounts.dex_program.key()) || raydium,
+            EolError::BadDex
+        );
+        // Raydium swaps use a fixed prefix (the convert USDC/WSOL accounts, plus
+        // the EOL/USDC observation). Everything after that is a fee source.
+        let source_from = if raydium {
+            require!(ctx.remaining_accounts.len() >= 9, EolError::BadDex);
+            9
+        } else {
+            0
+        };
+        let mint = ctx.accounts.config.mint;
+        let bump = ctx.accounts.config.bump;
+        let bump_seed = [bump];
+        let seeds: &[&[u8]] = &[b"config", mint.as_ref(), &bump_seed];
+
+        let sources = ctx.remaining_accounts[source_from..].to_vec();
+        if !sources.is_empty() {
+            harvest_withheld_tokens_to_mint(
+                CpiContext::new(
+                    ctx.accounts.token_program.to_account_info(),
+                    HarvestWithheldTokensToMint {
+                        token_program_id: ctx.accounts.token_program.to_account_info(),
+                        mint: ctx.accounts.mint.to_account_info(),
+                    },
+                ),
+                sources,
+            )?;
+        }
+        withdraw_withheld_tokens_from_mint(CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            WithdrawWithheldTokensFromMint {
+                token_program_id: ctx.accounts.token_program.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+                destination: ctx.accounts.fee_vault.to_account_info(),
+                authority: ctx.accounts.mint_authority.to_account_info(),
+            },
+            &[&[b"mint_authority", mint.as_ref(), &[ctx.bumps.mint_authority]]],
+        ))?;
+        ctx.accounts.fee_vault.reload()?;
+        // Pay the whole pot: tokens just withdrawn from the mint, plus any fee
+        // tokens already sitting in the vault. Token-2022 only starts withholding
+        // two epochs after the fee is turned on, so a crank before that still
+        // settles whatever the vault already holds.
+        let received = ctx.accounts.fee_vault.amount;
+        if received == 0 {
+            return Ok(());
+        }
+        ctx.accounts.config.pending_protocol = 0;
+
+        let route = &ctx.accounts.fee_route;
+        let shares = split_transfer_fee(
+            received,
+            [
+                route.fee_lp_bps,
+                route.fee_treasury_bps,
+                route.fee_ctoken_bps,
+                route.fee_protocol_bps,
+                route.fee_creator_bps,
+                route.fee_burn_bps,
+            ],
+        );
+        // Distribution transfers must not withhold a second fee.
+        set_transfer_fee(&ctx, 0)?;
+
+        if shares.lp > 0 {
+            signed_transfer_checked(
+                &ctx.accounts.token_program,
+                &ctx.accounts.fee_vault.to_account_info(),
+                &ctx.accounts.lp_token_vault.to_account_info(),
+                &ctx.accounts.config.to_account_info(),
+                &ctx.accounts.mint.to_account_info(),
+                shares.lp,
+                ctx.accounts.mint.decimals,
+                &mint,
+                bump,
+            )?;
+        }
+        if shares.burn > 0 {
+            let burn_seeds: &[&[u8]] = &[b"config", mint.as_ref(), &bump_seed];
+            burn(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    Burn {
+                        mint: ctx.accounts.mint.to_account_info(),
+                        from: ctx.accounts.fee_vault.to_account_info(),
+                        authority: ctx.accounts.config.to_account_info(),
+                    },
+                    &[burn_seeds],
+                ),
+                shares.burn,
+            )?;
+        }
+        if shares.creator > 0 {
+            signed_transfer_checked(
+                &ctx.accounts.token_program,
+                &ctx.accounts.fee_vault.to_account_info(),
+                &ctx.accounts.creator_ata.to_account_info(),
+                &ctx.accounts.config.to_account_info(),
+                &ctx.accounts.mint.to_account_info(),
+                shares.creator,
+                ctx.accounts.mint.decimals,
+                &mint,
+                bump,
+            )?;
+        }
+        if shares.treasury > 0 {
+            swap_eol_for_usdc(&ctx, seeds, shares.treasury, &ctx.accounts.treasury_usdc.to_account_info())?;
+        }
+        let sol_tokens = shares.ctoken.saturating_add(shares.protocol);
+        if sol_tokens > 0 {
+            let usdc_before = ctx.accounts.scratch_usdc.amount;
+            swap_eol_for_usdc(&ctx, seeds, sol_tokens, &ctx.accounts.scratch_usdc.to_account_info())?;
+            ctx.accounts.scratch_usdc.reload()?;
+            let usdc_out = ctx.accounts.scratch_usdc.amount.saturating_sub(usdc_before);
+            let ctoken_usdc = ((usdc_out as u128) * (shares.ctoken as u128)
+                / (sol_tokens as u128)) as u64;
+            let protocol_usdc = usdc_out.saturating_sub(ctoken_usdc);
+            if raydium && usdc_out > 0 {
+                // One USDC → WSOL unwrap, then split the SOL. A second swap would
+                // need the wrapped-SOL account that the first unwrap closes.
+                let before = ctx.accounts.config.to_account_info().lamports();
+                raydium_usdc_to_sol(&ctx, seeds, usdc_out, &ctx.accounts.config.to_account_info())?;
+                let got = ctx
+                    .accounts
+                    .config
+                    .to_account_info()
+                    .lamports()
+                    .saturating_sub(before);
+                let basket_sol = ((got as u128) * (ctoken_usdc as u128) / (usdc_out as u128)) as u64;
+                let protocol_sol = got.saturating_sub(basket_sol);
+                if basket_sol > 0 {
+                    credit_basket(&ctx, basket_sol)?;
+                }
+                if protocol_sol > 0 {
+                    credit_lamports(
+                        &ctx.accounts.config.to_account_info(),
+                        &ctx.accounts.protocol_revenue_wallet.to_account_info(),
+                        protocol_sol,
+                    )?;
+                }
+            } else {
+                if shares.ctoken > 0 && ctoken_usdc > 0 {
+                    pay_basket(&ctx, seeds, ctoken_usdc)?;
+                }
+                if protocol_usdc > 0 {
+                    swap_usdc_for_sol(
+                        &ctx,
+                        seeds,
+                        protocol_usdc,
+                        &ctx.accounts.protocol_revenue_wallet.to_account_info(),
+                    )?;
+                }
+            }
+        }
+
+        set_transfer_fee(&ctx, ctx.accounts.config.transfer_fee_bps)?;
         Ok(())
     }
 
@@ -1557,6 +1773,244 @@ fn token_amount(account: &AccountInfo) -> Result<u64> {
     Ok(u64::from_le_bytes(data[64..72].try_into().unwrap()))
 }
 
+fn flush_protocol_premium(ctx: &Context<ConvertTreasury>) -> Result<()> {
+    transmuter_ctoken::cpi::flush_protocol_revenue(CpiContext::new(
+        ctx.accounts.ctoken_program.to_account_info(),
+        transmuter_ctoken::cpi::accounts::FlushProtocolRevenue {
+            config: ctx.accounts.ctoken_config.to_account_info(),
+            revenue_pot: ctx.accounts.ctoken_revenue.to_account_info(),
+            protocol_revenue_wallet: ctx.accounts.protocol_revenue_wallet.to_account_info(),
+        },
+    ))
+}
+
+fn fee_legs_ok(legs: &[u16; 6], transfer_fee_bps: u16) -> bool {
+    let sum = legs.iter().fold(0u32, |acc, leg| acc + *leg as u32);
+    sum == transfer_fee_bps as u32
+        && legs[2] == FEE_CTOKEN_RESERVE_BPS
+        && legs[3] >= FEE_PROTOCOL_MIN_BPS
+        && legs[3] <= FEE_PROTOCOL_MAX_BPS
+        && legs[0] >= FEE_LP_MIN_BPS
+        && legs[1] >= FEE_TREASURY_MIN_BPS
+        && (legs[4] == 0 || legs[4] <= FEE_CREATOR_MAX_BPS)
+        && (legs[5] == 0 || (legs[5] >= FEE_BURN_MIN_BPS && legs[5] <= FEE_BURN_MAX_BPS))
+}
+
+fn basket_ok(weights: &[u16; 4]) -> bool {
+    backing_basket_ok(weights)
+}
+
+fn set_transfer_fee(ctx: &Context<SettleTransferFees>, bps: u16) -> Result<()> {
+    let mint = ctx.accounts.config.mint;
+    let ma_bump = ctx.bumps.mint_authority;
+    let seeds: &[&[u8]] = &[b"mint_authority", mint.as_ref(), &[ma_bump]];
+    transfer_fee_set(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            TransferFeeSetTransferFee {
+                token_program_id: ctx.accounts.token_program.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+                authority: ctx.accounts.mint_authority.to_account_info(),
+            },
+            &[seeds],
+        ),
+        bps,
+        u64::MAX / 2,
+    )
+}
+
+fn swap_eol_for_usdc<'info>(
+    ctx: &Context<'_, '_, '_, 'info, SettleTransferFees<'info>>,
+    seeds: &[&[u8]],
+    amount: u64,
+    dest: &AccountInfo<'info>,
+) -> Result<()> {
+    require!(
+        ctx.accounts.pool_mint_a.key() == ctx.accounts.config.mint,
+        EolError::BadDex
+    );
+    if is_raydium_cpmm(&ctx.accounts.dex_program.key()) {
+        let rem = ctx.remaining_accounts;
+        require!(rem.len() >= 9, EolError::BadDex);
+        return transmuter_dex::swap_usdc_to_wsol(
+            ctx.accounts.dex_program.to_account_info(),
+            ctx.accounts.config.to_account_info(),
+            rem[0].clone(),
+            rem[1].clone(),
+            ctx.accounts.pool.to_account_info(),
+            ctx.accounts.fee_vault.to_account_info(),
+            dest.clone(),
+            ctx.accounts.pool_vault_a.to_account_info(),
+            ctx.accounts.pool_vault_b.to_account_info(),
+            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.usdc_program.to_account_info(),
+            ctx.accounts.pool_mint_a.to_account_info(),
+            ctx.accounts.pool_mint_b.to_account_info(),
+            rem[8].clone(),
+            seeds,
+            amount,
+            1,
+        )
+        .map_err(|_| error!(EolError::BadDex));
+    }
+    mock_dex::cpi::swap(
+        CpiContext::new_with_signer(
+            ctx.accounts.dex_program.to_account_info(),
+            Swap {
+                user: ctx.accounts.config.to_account_info(),
+                pool: ctx.accounts.pool.to_account_info(),
+                vault_a: ctx.accounts.pool_vault_a.to_account_info(),
+                vault_b: ctx.accounts.pool_vault_b.to_account_info(),
+                user_source: ctx.accounts.fee_vault.to_account_info(),
+                user_dest: dest.clone(),
+                mint_a: ctx.accounts.pool_mint_a.to_account_info(),
+                mint_b: ctx.accounts.pool_mint_b.to_account_info(),
+                token_program_a: ctx.accounts.token_program.to_account_info(),
+                token_program_b: ctx.accounts.usdc_program.to_account_info(),
+            },
+            &[seeds],
+        ),
+        amount,
+        1,
+        true,
+    )?;
+    Ok(())
+}
+
+fn swap_usdc_for_sol<'info>(
+    ctx: &Context<'_, '_, '_, 'info, SettleTransferFees<'info>>,
+    seeds: &[&[u8]],
+    amount: u64,
+    sol_dest: &AccountInfo<'info>,
+) -> Result<()> {
+    mock_dex::cpi::swap_to_sol(
+        CpiContext::new_with_signer(
+            ctx.accounts.dex_program.to_account_info(),
+            SwapToSol {
+                user: ctx.accounts.config.to_account_info(),
+                pool: ctx.accounts.native_pool.to_account_info(),
+                vault_usdc: ctx.accounts.native_vault.to_account_info(),
+                user_usdc: ctx.accounts.scratch_usdc.to_account_info(),
+                sol_dest: sol_dest.clone(),
+                token_program: ctx.accounts.usdc_program.to_account_info(),
+            },
+            &[seeds],
+        ),
+        amount,
+        1,
+    )?;
+    Ok(())
+}
+
+fn raydium_usdc_to_sol<'info>(
+    ctx: &Context<'_, '_, '_, 'info, SettleTransferFees<'info>>,
+    seeds: &[&[u8]],
+    amount: u64,
+    sol_dest: &AccountInfo<'info>,
+) -> Result<()> {
+    let rem = ctx.remaining_accounts;
+    require!(rem.len() >= 9, EolError::BadDex);
+    transmuter_dex::swap_usdc_to_wsol(
+        ctx.accounts.dex_program.to_account_info(),
+        ctx.accounts.config.to_account_info(),
+        rem[0].clone(),
+        rem[1].clone(),
+        ctx.accounts.native_pool.to_account_info(),
+        ctx.accounts.scratch_usdc.to_account_info(),
+        rem[5].clone(),
+        ctx.accounts.native_vault.to_account_info(),
+        rem[6].clone(),
+        ctx.accounts.usdc_program.to_account_info(),
+        rem[7].clone(),
+        rem[3].clone(),
+        rem[4].clone(),
+        rem[2].clone(),
+        seeds,
+        amount,
+        1,
+    )
+    .map_err(|_| error!(EolError::BadDex))?;
+    transmuter_dex::close_wsol(
+        rem[7].clone(),
+        rem[5].clone(),
+        sol_dest.clone(),
+        ctx.accounts.config.to_account_info(),
+        seeds,
+    )
+    .map_err(|_| error!(EolError::BadDex))?;
+    Ok(())
+}
+
+fn credit_basket<'info>(
+    ctx: &Context<'_, '_, '_, 'info, SettleTransferFees<'info>>,
+    sol: u64,
+) -> Result<()> {
+    let legs = split_basket(sol, ctx.accounts.fee_route.basket);
+    let from = ctx.accounts.config.to_account_info();
+    if legs[0] > 0 {
+        let (expected, _) = Pubkey::find_program_address(
+            &[b"reserve", ctx.accounts.ctoken_mint.key().as_ref()],
+            ctx.accounts.ctoken_program.key,
+        );
+        require_keys_eq!(ctx.accounts.csol_reserve.key(), expected, EolError::BackingBasket);
+        credit_lamports(&from, &ctx.accounts.csol_reserve.to_account_info(), legs[0])?;
+    }
+    if legs[1] > 0 {
+        let (expected, _) = Pubkey::find_program_address(
+            &[b"reserve", ctx.accounts.cbtc_mint.key().as_ref()],
+            ctx.accounts.ctoken_program.key,
+        );
+        require_keys_eq!(ctx.accounts.cbtc_reserve.key(), expected, EolError::BackingBasket);
+        credit_lamports(&from, &ctx.accounts.cbtc_reserve.to_account_info(), legs[1])?;
+    }
+    if legs[2] > 0 {
+        let (expected, _) = Pubkey::find_program_address(&[b"backing_fee", b"gold"], &FACTORY_ID);
+        require_keys_eq!(ctx.accounts.gold_sink.key(), expected, EolError::BackingBasket);
+        credit_lamports(&from, &ctx.accounts.gold_sink.to_account_info(), legs[2])?;
+    }
+    if legs[3] > 0 {
+        let (expected, _) = Pubkey::find_program_address(&[b"backing_fee", b"spx"], &FACTORY_ID);
+        require_keys_eq!(ctx.accounts.spx_sink.key(), expected, EolError::BackingBasket);
+        credit_lamports(&from, &ctx.accounts.spx_sink.to_account_info(), legs[3])?;
+    }
+    Ok(())
+}
+
+fn pay_basket<'info>(
+    ctx: &Context<'_, '_, '_, 'info, SettleTransferFees<'info>>,
+    seeds: &[&[u8]],
+    usdc: u64,
+) -> Result<()> {
+    let legs = split_basket(usdc, ctx.accounts.fee_route.basket);
+    if legs[0] > 0 {
+        let (expected, _) = Pubkey::find_program_address(
+            &[b"reserve", ctx.accounts.ctoken_mint.key().as_ref()],
+            ctx.accounts.ctoken_program.key,
+        );
+        require_keys_eq!(ctx.accounts.csol_reserve.key(), expected, EolError::BackingBasket);
+        swap_usdc_for_sol(ctx, seeds, legs[0], &ctx.accounts.csol_reserve.to_account_info())?;
+    }
+    if legs[1] > 0 {
+        let (expected, _) = Pubkey::find_program_address(
+            &[b"reserve", ctx.accounts.cbtc_mint.key().as_ref()],
+            ctx.accounts.ctoken_program.key,
+        );
+        require_keys_eq!(ctx.accounts.cbtc_reserve.key(), expected, EolError::BackingBasket);
+        swap_usdc_for_sol(ctx, seeds, legs[1], &ctx.accounts.cbtc_reserve.to_account_info())?;
+    }
+    if legs[2] > 0 {
+        let (expected, _) = Pubkey::find_program_address(&[b"backing_fee", b"gold"], &FACTORY_ID);
+        require_keys_eq!(ctx.accounts.gold_sink.key(), expected, EolError::BackingBasket);
+        swap_usdc_for_sol(ctx, seeds, legs[2], &ctx.accounts.gold_sink.to_account_info())?;
+    }
+    if legs[3] > 0 {
+        let (expected, _) = Pubkey::find_program_address(&[b"backing_fee", b"spx"], &FACTORY_ID);
+        require_keys_eq!(ctx.accounts.spx_sink.key(), expected, EolError::BackingBasket);
+        swap_usdc_for_sol(ctx, seeds, legs[3], &ctx.accounts.spx_sink.to_account_info())?;
+    }
+    Ok(())
+}
+
 fn credit_lamports(from: &AccountInfo, to: &AccountInfo, amount: u64) -> Result<()> {
     if amount == 0 {
         return Ok(());
@@ -1986,6 +2440,8 @@ pub struct ConvertTreasury<'info> {
     pub config: Box<Account<'info, Config>>,
     #[account(mut, address = config.treasury_usdc)]
     pub treasury_usdc: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(mut, address = config.protocol_revenue_wallet)]
+    pub protocol_revenue_wallet: SystemAccount<'info>,
     /// CHECK: mock_dex (localnet / new-token LP) or Raydium CPMM (public-devnet convert).
     #[account(
         constraint = is_mock_dex(&dex_program.key()) || is_raydium_cpmm(&dex_program.key()) @ EolError::BadDex
@@ -2258,6 +2714,111 @@ pub struct SettleProtocol<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 }
 
+#[derive(Accounts)]
+pub struct InitFeeRoute<'info> {
+    #[account(mut, address = config.factory)]
+    pub factory: Signer<'info>,
+    #[account(seeds = [b"config", config.mint.as_ref()], bump = config.bump)]
+    pub config: Box<Account<'info, Config>>,
+    #[account(
+        init,
+        payer = factory,
+        space = 8 + FeeRoute::INIT_SPACE,
+        seeds = [b"fee_route", config.mint.as_ref()],
+        bump
+    )]
+    pub fee_route: Box<Account<'info, FeeRoute>>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct SettleTransferFees<'info> {
+    pub cranker: Signer<'info>,
+    #[account(mut, seeds = [b"config", config.mint.as_ref()], bump = config.bump)]
+    pub config: Box<Account<'info, Config>>,
+    #[account(mut)]
+    pub mint: Box<InterfaceAccount<'info, Mint>>,
+    /// CHECK: PDA mint authority, also the transfer-fee withdraw authority.
+    #[account(seeds = [b"mint_authority", config.mint.as_ref()], bump)]
+    pub mint_authority: UncheckedAccount<'info>,
+    #[account(mut, address = config.fee_vault)]
+    pub fee_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(mut, address = config.lp_token_vault)]
+    pub lp_token_vault: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(mut, address = config.treasury_usdc)]
+    pub treasury_usdc: Box<InterfaceAccount<'info, TokenAccount>>,
+    /// Scratch USDC account. The sale vault is empty after finalize.
+    #[account(mut, address = config.sale_usdc_vault)]
+    pub scratch_usdc: Box<InterfaceAccount<'info, TokenAccount>>,
+    #[account(
+        seeds = [b"fee_route", config.mint.as_ref()],
+        bump = fee_route.bump,
+        has_one = config
+    )]
+    pub fee_route: Box<Account<'info, FeeRoute>>,
+    /// CHECK: mock DEX or Raydium CPMM.
+    #[account(
+        constraint = is_mock_dex(&dex_program.key()) || is_raydium_cpmm(&dex_program.key()) @ EolError::BadDex
+    )]
+    pub dex_program: UncheckedAccount<'info>,
+    /// CHECK: EOL/USDC pool.
+    #[account(mut)]
+    pub pool: UncheckedAccount<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub pool_vault_a: UncheckedAccount<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub pool_vault_b: UncheckedAccount<'info>,
+    pub pool_mint_a: Box<InterfaceAccount<'info, Mint>>,
+    pub pool_mint_b: Box<InterfaceAccount<'info, Mint>>,
+    /// CHECK: USDC/SOL pool.
+    #[account(mut)]
+    pub native_pool: UncheckedAccount<'info>,
+    /// CHECK:
+    #[account(mut)]
+    pub native_vault: UncheckedAccount<'info>,
+    pub ctoken_program: Program<'info, TransmuterCtoken>,
+    /// CHECK: backing cToken mint. Must be the coin's ctoken_mint.
+    #[account(constraint = ctoken_mint.key() == config.ctoken_mint @ EolError::BackingBasket)]
+    pub ctoken_mint: UncheckedAccount<'info>,
+    /// CHECK: fallback cToken mint. Unused when its basket weight is zero.
+    pub cbtc_mint: UncheckedAccount<'info>,
+    /// CHECK: cSOL reserve PDA.
+    #[account(mut)]
+    pub csol_reserve: UncheckedAccount<'info>,
+    /// CHECK: cBTC reserve PDA.
+    #[account(mut)]
+    pub cbtc_reserve: UncheckedAccount<'info>,
+    /// CHECK: Gold fee sink.
+    #[account(mut)]
+    pub gold_sink: UncheckedAccount<'info>,
+    /// CHECK: S&P fee sink.
+    #[account(mut)]
+    pub spx_sink: UncheckedAccount<'info>,
+    #[account(mut, address = config.protocol_revenue_wallet)]
+    pub protocol_revenue_wallet: SystemAccount<'info>,
+    /// CHECK: creator token account. Ignored when the creator leg is zero.
+    #[account(mut)]
+    pub creator_ata: UncheckedAccount<'info>,
+    pub token_program: Interface<'info, TokenInterface>,
+    pub usdc_program: Interface<'info, TokenInterface>,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct FeeRoute {
+    pub config: Pubkey,
+    pub fee_lp_bps: u16,
+    pub fee_treasury_bps: u16,
+    pub fee_ctoken_bps: u16,
+    pub fee_protocol_bps: u16,
+    pub fee_creator_bps: u16,
+    pub fee_burn_bps: u16,
+    pub basket: [u16; 4],
+    pub bump: u8,
+}
+
 #[account]
 #[derive(InitSpace)]
 pub struct Config {
@@ -2489,4 +3050,8 @@ pub enum EolError {
     AlreadyVoted,
     #[msg("stake account is not a staking record")]
     StakeRecord,
+    #[msg("transfer fee split does not match the mint")]
+    Fee,
+    #[msg("backing basket weights must sum to 100%")]
+    BackingBasket,
 }

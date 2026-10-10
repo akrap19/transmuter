@@ -141,6 +141,47 @@ describe('createDevnetFailoverFetch', () => {
 		await pending
 	})
 
+	it('does not freeze the host when one method is refused', async () => {
+		let now = 1_000
+		const slept: number[] = []
+		const calls: string[] = []
+		const rpcFetch = createDevnetFailoverFetch({
+			now: () => now,
+			sleep: async (ms) => {
+				slept.push(ms)
+				now += ms
+			},
+			cooldownMs: 15_000,
+			endpoints: [PRIMARY, FALLBACK],
+			fetchImpl: async (input, init) => {
+				calls.push(String(input))
+				const method = JSON.parse(String(init?.body ?? '{}')).method
+				if (method === 'getTokenLargestAccounts') {
+					return jsonResponse(429, {
+						jsonrpc: '2.0',
+						error: { code: 429, message: 'Too many requests for a specific RPC call' },
+						id: 1
+					})
+				}
+				return jsonResponse(200, { jsonrpc: '2.0', result: 'ok', id: 'test-id' })
+			}
+		})
+
+		const banned = await rpcFetch(PRIMARY, {
+			method: 'POST',
+			body: JSON.stringify({ method: 'getTokenLargestAccounts' })
+		})
+		const next = await rpcFetch(PRIMARY, {
+			method: 'POST',
+			body: JSON.stringify({ method: 'getAccountInfo' })
+		})
+
+		expect(slept).toEqual([])
+		expect((await banned.json()).error.message).toMatch(/specific RPC call/)
+		expect((await next.json()).result).toBe('ok')
+		expect(calls).toEqual([PRIMARY, FALLBACK, PRIMARY])
+	})
+
 	it('waits out a cooldown and reads the account from the host once it is open again', async () => {
 		let now = 1_000
 		const calls: string[] = []

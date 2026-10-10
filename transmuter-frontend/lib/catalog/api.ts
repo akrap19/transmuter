@@ -1,4 +1,4 @@
-import { LAUNCH_STATUSES, type ChartPoint, type CoinListItem, type CoinQuery, type CoinQueryResult, type CoinSocials, type LaunchStatus } from "./types";
+import { LAUNCH_STATUSES, type BackingLeg, type ChartPoint, type CoinListItem, type CoinQuery, type CoinQueryResult, type CoinSocials, type LaunchStatus } from "./types";
 import { serializeCoinQuery } from "./search-params";
 
 export type ApiCoin = CoinListItem & {
@@ -100,10 +100,23 @@ function parseApiCoin(body: unknown): ApiCoin | null {
   const record = body as CoinListItem & { description?: unknown; socials?: unknown; chart?: unknown };
   return {
     ...record,
+    backingBasket: parseBasket(record.backingBasket),
     description: typeof record.description === "string" ? record.description : "",
     socials: parseSocials(record.socials),
     chart: Array.isArray(record.chart) ? record.chart.filter(isChartPoint) : [],
   };
+}
+
+function parseBasket(value: unknown): BackingLeg[] | null {
+  if (!Array.isArray(value)) return null;
+  const legs: BackingLeg[] = [];
+  for (const entry of value) {
+    const leg = entry as { assetKind?: unknown; weightBps?: unknown } | null;
+    if (leg && typeof leg.assetKind === "number" && typeof leg.weightBps === "number") {
+      legs.push({ assetKind: leg.assetKind, weightBps: leg.weightBps });
+    }
+  }
+  return legs.length > 0 ? legs : null;
 }
 
 function parseSocials(value: unknown): CoinSocials {

@@ -9,18 +9,26 @@ export async function startIndexerWorker(options: {
   resolveTx?: Parameters<typeof subscribeProgramLogs>[0]["resolveTx"];
   websocket?: WsFactory;
   syncLaunches?: () => Promise<number>;
+  syncStats?: () => Promise<number>;
   syncIntervalMs?: number;
 }): Promise<{ stop: () => void }> {
   const stops: Array<() => void> = [];
 
   if (options.syncLaunches) {
     const syncLaunches = options.syncLaunches;
+    const syncStats = options.syncStats;
     let seen = -1;
     const run = async () => {
       const count = await syncLaunches();
       if (count !== seen) {
         console.info(`indexer synced ${count} factory launches`);
         seen = count;
+      }
+      if (!syncStats) return;
+      try {
+        await syncStats();
+      } catch (error) {
+        console.error("indexer stats sync failed", error instanceof Error ? error.message : "unknown error");
       }
     };
     try {

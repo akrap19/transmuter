@@ -21,12 +21,17 @@ export const COIN_SORT_FIELDS = [
 export type CoinSortField = (typeof COIN_SORT_FIELDS)[number];
 export type SortDir = "asc" | "desc";
 
+/** One treasury-backing leg: reserve asset kind + its share of backing in bps. */
+export type BackingLeg = { assetKind: number; weightBps: number };
+
 export type CoinListItem = {
   mint: string;
   name: string;
   symbol: string;
   creator: string;
   backing: string;
+  /** How treasury backing splits across reserve assets. Null for pre-basket launches. */
+  backingBasket: BackingLeg[] | null;
   status: LaunchStatus;
   priceUsd: number | null;
   marketCapUsd: number | null;

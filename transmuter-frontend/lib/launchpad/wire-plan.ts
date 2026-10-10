@@ -38,8 +38,8 @@ const STEPS: Array<{ id: WireStepId; label: string; bit?: number }> = [
   { id: "treasuryAta", label: "Create cToken treasury" },
   { id: "register", label: "Register with cToken", bit: WIRE_REGISTER },
   { id: "dao", label: "Wire DAO", bit: WIRE_DAO },
-  { id: "poolUsdc", label: "Wire USDC pool", bit: WIRE_POOL_USDC },
-  { id: "poolSol", label: "Wire SOL pool", bit: WIRE_POOL_SOL },
+  { id: "poolUsdc", label: "Wire Raydium USDC/SOL pool", bit: WIRE_POOL_USDC },
+  { id: "poolSol", label: "Wire Raydium SOL pool", bit: WIRE_POOL_SOL },
   { id: "vaults", label: "Wire vaults", bit: WIRE_VAULTS },
 ];
 

@@ -2,7 +2,9 @@ import { syncAllocation } from "./allocation-sync";
 import type { PendingWire } from "./mint-secret";
 import { calculateFees, type FeeChangeSource } from "./fee-calculator";
 import { solveFromState } from "./launch-solver";
+import { assetMeta, primaryBackingAsset, setBasketWeight, type BackingAsset } from "./backing-basket";
 import {
+  CTOKENS,
   initialLaunchpadState,
   type FeeState,
   type LaunchpadState,
@@ -18,6 +20,7 @@ export type LaunchpadAction =
   | { type: "TOGGLE"; key: ToggleKey }
   | { type: "SET_VESTING"; vesting: VestingPreset }
   | { type: "SELECT_CTOKEN"; cToken: CToken }
+  | { type: "SET_BACKING_WEIGHT"; asset: BackingAsset; weight: number }
   | { type: "SYNC_ALLOC"; changed: Parameters<typeof syncAllocation>[1] }
   | { type: "UPDATE_FEES"; changed?: FeeChangeSource; totalFee?: number; feeOverrides?: Partial<Pick<FeeState, "lpFee" | "treasuryFee" | "burnFee" | "creatorFee">> }
   | { type: "SET_LOGO"; url: string | null; fileName: string | null }
@@ -81,6 +84,10 @@ export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction)
       return { ...state, vesting: action.vesting };
     case "SELECT_CTOKEN":
       return { ...state, selectedCToken: action.cToken };
+    case "SET_BACKING_WEIGHT": {
+      const backingBasket = setBasketWeight(state.backingBasket, action.asset, action.weight);
+      return { ...state, backingBasket, selectedCToken: primaryCtoken(backingBasket, state.selectedCToken) };
+    }
     case "SYNC_ALLOC": {
       const synced = syncAllocation(
         {
@@ -171,6 +178,12 @@ export function launchpadReducer(state: LaunchpadState, action: LaunchpadAction)
     default:
       return state;
   }
+}
+
+/** Keep `selectedCToken` aligned with the basket's heavier live-cToken leg (SOL/BTC). */
+function primaryCtoken(basket: LaunchpadState["backingBasket"], current: CToken): CToken {
+  const name = assetMeta(primaryBackingAsset(basket)).cToken;
+  return CTOKENS.find((token) => token.name === name) ?? current;
 }
 
 function withSolvedRaise(state: LaunchpadState, preserveHeadroom: boolean): LaunchpadState {

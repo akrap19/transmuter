@@ -41,9 +41,11 @@ export function useChainPostSale(mint: string) {
       const batched = getBatchedConnection(connection);
       const provider = createReadonlyProvider(batched, publicKey ?? PublicKey.default);
       const client = createTransmuterClient(provider);
+      const readers = postSaleReaders(client, batched);
+      readers.holders = undefined;
       let next: Awaited<ReturnType<typeof readPostSale>>;
       try {
-        next = await readPostSale(postSaleReaders(client, batched), mintKey, publicKey, Math.floor(Date.now() / 1000));
+        next = await readPostSale(readers, mintKey, publicKey, Math.floor(Date.now() / 1000));
       } catch (error) {
         if (active && request === latest.current) {
           setView((current) => settleChainRead(current, null, request, latest.current));

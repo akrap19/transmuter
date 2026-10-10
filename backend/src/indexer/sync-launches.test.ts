@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { encodeBase58 } from "./base58.ts";
-import { LAUNCH_DISC } from "./hydrate.ts";
+import { CREATE_LAUNCH_DISC, LAUNCH_DISC } from "./hydrate.ts";
 import { createMemoryWrites } from "./memory.ts";
 import type { RpcFetch } from "./rpc.ts";
 import { syncFactoryLaunches } from "./sync-launches.ts";
@@ -100,5 +100,94 @@ describe("syncFactoryLaunches", () => {
     const [coin] = await writes.list();
     expect(coin.metadataUri).toBe("https://cdn.example/log.json");
     expect(coin.logoUrl).toBe("https://cdn.example/log.png");
+  });
+
+  it("recovers a basket from the create transaction when the account only has zero padding", async () => {
+    const account = encodeLaunch(2, 2, "New backing test", "BCKNG");
+    const ix = Buffer.concat([
+      CREATE_LAUNCH_DISC,
+      Buffer.alloc(8),
+      encodeString("New backing test"),
+      encodeString("BCKNG"),
+      encodeString(""),
+      Buffer.alloc(1 + 1 + 8 + 8 + 8 + 2 * 7 + 8 + 8 + 2 + 8 * 6 + 2 * 7 + 1 + 1),
+      Buffer.from("004c0401280a02a00f03fc08", "hex"),
+    ]);
+    const fetchImpl: RpcFetch = async (_url, init) => {
+      const body = JSON.parse(init.body) as { method: string };
+      if (body.method === "getProgramAccounts") {
+        return new Response(
+          JSON.stringify({
+            result: [{ pubkey: "Launch111", account: { data: [account.toString("base64"), "base64"] } }],
+          }),
+        );
+      }
+      if (body.method === "getSignaturesForAddress") {
+        return new Response(JSON.stringify({ result: [{ signature: "newersig" }, { signature: "createsig" }] }));
+      }
+      return new Response(
+        JSON.stringify({
+          result: { transaction: { message: { instructions: [{ data: encodeBase58(ix) }] } } },
+        }),
+      );
+    };
+
+    const writes = createMemoryWrites();
+    const basketCache = new Map();
+    await syncFactoryLaunches({
+      fetch: fetchImpl,
+      rpcUrl: "http://rpc.test",
+      programId: "factory",
+      writes,
+      basketCache,
+    });
+    await syncFactoryLaunches({
+      fetch: async (_url, init) => {
+        const body = JSON.parse(init.body) as { method: string };
+        expect(body.method).toBe("getProgramAccounts");
+        return new Response(
+          JSON.stringify({
+            result: [{ pubkey: "Launch111", account: { data: [account.toString("base64"), "base64"] } }],
+          }),
+        );
+      },
+      rpcUrl: "http://rpc.test",
+      programId: "factory",
+      writes,
+      basketCache,
+    });
+
+    const [coin] = await writes.list();
+    expect(coin.backingBasket).toEqual([
+      { assetKind: 0, weightBps: 1100 },
+      { assetKind: 1, weightBps: 2600 },
+      { assetKind: 2, weightBps: 4000 },
+      { assetKind: 3, weightBps: 2300 },
+    ]);
+  });
+
+  it("keeps syncing when the create-transaction lookup is rate limited", async () => {
+    const account = encodeLaunch(2, 2, "New backing test", "BCKNG");
+    const fetchImpl: RpcFetch = async (_url, init) => {
+      const body = JSON.parse(init.body) as { method: string };
+      if (body.method === "getProgramAccounts") {
+        return new Response(
+          JSON.stringify({
+            result: [{ pubkey: "Launch111", account: { data: [account.toString("base64"), "base64"] } }],
+          }),
+        );
+      }
+      return new Response("rate limited", { status: 429 });
+    };
+
+    const writes = createMemoryWrites();
+    const applied = await syncFactoryLaunches({
+      fetch: fetchImpl,
+      rpcUrl: "http://rpc.test",
+      programId: "factory",
+      writes,
+    });
+    expect(applied).toBe(1);
+    expect((await writes.list())[0].backingBasket).toBeNull();
   });
 });
