@@ -678,6 +678,7 @@ pub mod transmuter_factory {
                 basket[2].weight_bps,
                 basket[3].weight_bps,
             ],
+            ctx.accounts.launch.creator,
         )?;
         Ok(())
     }

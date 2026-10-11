@@ -857,6 +857,7 @@ describe("eol token", () => {
           0,
           0,
           [5000, 0, 2500, 2500],
+          payer.publicKey,
         )
         .accounts({
           factory: payer.publicKey,
@@ -932,43 +933,57 @@ describe("eol token", () => {
       const spxBefore = await connection.getBalance(spxSink);
       const protocolBefore = await connection.getBalance(l.protocolKp.publicKey);
 
-      await eol.methods
-        .settleTransferFees()
-        .accounts({
-          cranker: payer.publicKey,
-          config: l.config,
-          mint: l.mint,
-          mintAuthority: l.mintAuthority,
-          feeVault: l.feeVault,
-          lpTokenVault: l.lpToken,
-          treasuryUsdc: l.treasuryUsdc,
-          scratchUsdc: l.saleUsdc,
-          feeRoute,
-          dexProgram: dex.programId,
-          pool: l.poolUsdc,
-          poolVaultA: l.poolVaultA,
-          poolVaultB: l.poolVaultB,
-          poolMintA: l.mint,
-          poolMintB: l.usdc,
-          nativePool: l.nativePool,
-          nativeVault: l.nativeVault,
-          ctokenProgram: ctoken.programId,
-          ctokenMint: l.cs.mint,
-          cbtcMint: l.cs.mint,
-          csolReserve: l.cs.reserve,
-          cbtcReserve: payer.publicKey,
-          goldSink,
-          spxSink,
-          protocolRevenueWallet: l.protocolKp.publicKey,
-          creatorAta: dest,
-          tokenProgram: TOKEN_2022_PROGRAM_ID,
-          usdcProgram: TOKEN_PROGRAM_ID,
-        })
-        .remainingAccounts([
-          { pubkey: userEol, isWritable: true, isSigner: false },
-        ])
-        .preInstructions([cu])
-        .rpc();
+      // The creator leg may only be paid into the creator's associated token account.
+      // Any other token account must be rejected before a transfer happens.
+      const creatorAta = getAssociatedTokenAddressSync(l.mint, payer.publicKey, false, TOKEN_2022_PROGRAM_ID);
+      const settleWith = (creatorTokenAccount: PublicKey) =>
+        eol.methods
+          .settleTransferFees()
+          .accounts({
+            cranker: payer.publicKey,
+            config: l.config,
+            mint: l.mint,
+            mintAuthority: l.mintAuthority,
+            feeVault: l.feeVault,
+            lpTokenVault: l.lpToken,
+            treasuryUsdc: l.treasuryUsdc,
+            scratchUsdc: l.saleUsdc,
+            feeRoute,
+            dexProgram: dex.programId,
+            pool: l.poolUsdc,
+            poolVaultA: l.poolVaultA,
+            poolVaultB: l.poolVaultB,
+            poolMintA: l.mint,
+            poolMintB: l.usdc,
+            nativePool: l.nativePool,
+            nativeVault: l.nativeVault,
+            ctokenProgram: ctoken.programId,
+            ctokenMint: l.cs.mint,
+            cbtcMint: l.cs.mint,
+            csolReserve: l.cs.reserve,
+            cbtcReserve: payer.publicKey,
+            goldSink,
+            spxSink,
+            protocolRevenueWallet: l.protocolKp.publicKey,
+            creatorAta: creatorTokenAccount,
+            tokenProgram: TOKEN_2022_PROGRAM_ID,
+            usdcProgram: TOKEN_PROGRAM_ID,
+          })
+          .remainingAccounts([
+            { pubkey: userEol, isWritable: true, isSigner: false },
+          ])
+          .preInstructions([cu])
+          .rpc();
+
+      await settleWith(dest).then(
+        () => {
+          throw new Error("settle accepted a token account that is not the creator's");
+        },
+        (err: unknown) => {
+          if (!String(err).includes("creator token account")) throw err;
+        },
+      );
+      await settleWith(creatorAta);
 
       const lpAfter = (
         await getAccount(connection, l.lpToken, undefined, TOKEN_2022_PROGRAM_ID)

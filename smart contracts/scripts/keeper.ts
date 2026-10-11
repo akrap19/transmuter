@@ -4,7 +4,8 @@
  * Devnet:
  *   ANCHOR_PROVIDER_URL=https://api.devnet.solana.com ANCHOR_WALLET=~/.config/solana/id.json yarn keeper
  *
- * The script cranks mock_pyth set_price when that owner's price feed exists.
+ * Runs the settle job when SETTLE_MINTS is set (dry run unless SETTLE_EXECUTE=1).
+ * The mock_pyth price crank only runs when PYTH_CRANK=1, and only if that owner's feed exists.
  * EOL snapshot_oracle is the permissionless follow-up once the print is fresh.
  * Defaults to localnet. `anchor test` tears the validator down unless you
  * pass `--detach`. No feed account is a skip, not a crash.
@@ -20,6 +21,7 @@ import * as path from "path";
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import { runSettleJob } from "./settle-fees";
 
 const DEFAULT_RPC = "http://127.0.0.1:8899";
 const DEFAULT_WALLET = path.join(os.homedir(), ".config", "solana", "id.json");
@@ -80,6 +82,19 @@ async function main() {
   console.log("jobs:", JOBS.join(", "));
   console.log("full lifecycle: yarn lifecycle");
 
+  const workspace = anchor.workspace as Record<string, Program | undefined>;
+  const eol = workspace.TransmuterEolToken;
+  const factory = workspace.TransmuterFactory;
+  if (eol && factory) {
+    await runSettleJob(provider, eol, factory);
+  } else {
+    console.log("settle: skip (TransmuterEolToken or TransmuterFactory IDL not in workspace)");
+  }
+
+  if (process.env.PYTH_CRANK !== "1") {
+    console.log("pyth: skip (set PYTH_CRANK=1 to crank mock_pyth set_price)");
+    return;
+  }
   if (!pyth) {
     console.log("mock_pyth IDL not in workspace; skip set_price crank");
     return;

@@ -37,6 +37,21 @@ const FACTORY_ID: Pubkey = pubkey!("5D3y69mm4wrz7VcGsagfvnrMorvLar7ZnZaLfd3uVcfV
 
 declare_id!("DUYcHygp6rTdf3XY49ewhEyzpUg2QEfWECPTu5ucpaXJ");
 
+/// Associated Token program, pinned. Used to derive the creator's fee token account.
+const ASSOCIATED_TOKEN_PROGRAM_ID_STR: &str = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
+
+/// The only token account the creator fee leg may be paid into: the creator's
+/// associated token account for this mint under the given token program.
+pub fn creator_ata_address(creator: &Pubkey, mint: &Pubkey, token_program: &Pubkey) -> Pubkey {
+    let ata_program = std::str::FromStr::from_str(ASSOCIATED_TOKEN_PROGRAM_ID_STR)
+        .expect("pinned associated token program id");
+    Pubkey::find_program_address(
+        &[creator.as_ref(), token_program.as_ref(), mint.as_ref()],
+        &ata_program,
+    )
+    .0
+}
+
 pub const STATUS_SALE: u8 = 0;
 pub const STATUS_ACTIVE: u8 = 1;
 pub const STATUS_VOIDED: u8 = 2;
@@ -850,6 +865,7 @@ pub mod transmuter_eol_token {
         fee_creator_bps: u16,
         fee_burn_bps: u16,
         basket: [u16; 4],
+        creator: Pubkey,
     ) -> Result<()> {
         let legs = [
             fee_lp_bps,
@@ -861,8 +877,10 @@ pub mod transmuter_eol_token {
         ];
         require!(fee_legs_ok(&legs, ctx.accounts.config.transfer_fee_bps), EolError::Fee);
         require!(basket_ok(&basket), EolError::BackingBasket);
+        require!(creator != Pubkey::default(), EolError::BadParams);
         let route = &mut ctx.accounts.fee_route;
         route.config = ctx.accounts.config.key();
+        route.creator = creator;
         route.fee_lp_bps = fee_lp_bps;
         route.fee_treasury_bps = fee_treasury_bps;
         route.fee_ctoken_bps = fee_ctoken_bps;
@@ -884,6 +902,16 @@ pub mod transmuter_eol_token {
         ctx: Context<'_, '_, 'a, 'a, SettleTransferFees<'a>>,
     ) -> Result<()> {
         require!(ctx.accounts.config.status == STATUS_ACTIVE, EolError::WrongStatus);
+        // Checked on every settle, even when the creator leg is zero, so the account cannot be swapped out.
+        require_keys_eq!(
+            ctx.accounts.creator_ata.key(),
+            creator_ata_address(
+                &ctx.accounts.fee_route.creator,
+                &ctx.accounts.mint.key(),
+                &ctx.accounts.token_program.key(),
+            ),
+            EolError::BadCreatorAta
+        );
         let raydium = is_raydium_cpmm(&ctx.accounts.dex_program.key());
         require!(
             is_mock_dex(&ctx.accounts.dex_program.key()) || raydium,
@@ -2798,7 +2826,8 @@ pub struct SettleTransferFees<'info> {
     pub spx_sink: UncheckedAccount<'info>,
     #[account(mut, address = config.protocol_revenue_wallet)]
     pub protocol_revenue_wallet: SystemAccount<'info>,
-    /// CHECK: creator token account. Ignored when the creator leg is zero.
+    /// CHECK: must be the creator's associated token account for this mint, enforced at the top of
+    /// `settle_transfer_fees`. It need not exist when the creator leg is zero.
     #[account(mut)]
     pub creator_ata: UncheckedAccount<'info>,
     pub token_program: Interface<'info, TokenInterface>,
@@ -2809,6 +2838,8 @@ pub struct SettleTransferFees<'info> {
 #[derive(InitSpace)]
 pub struct FeeRoute {
     pub config: Pubkey,
+    /// Creator wallet, set by the Factory at route creation. The creator leg may only go to its ATA.
+    pub creator: Pubkey,
     pub fee_lp_bps: u16,
     pub fee_treasury_bps: u16,
     pub fee_ctoken_bps: u16,
@@ -3054,4 +3085,6 @@ pub enum EolError {
     Fee,
     #[msg("backing basket weights must sum to 100%")]
     BackingBasket,
+    #[msg("creator token account is not the creator's associated token account")]
+    BadCreatorAta,
 }
