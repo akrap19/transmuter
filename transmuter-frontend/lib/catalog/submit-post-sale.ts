@@ -20,8 +20,11 @@ import {
 import { claimPlan, convertPlan, feeRoutePda, finalizePlan, seedRaydiumPlan, settlePlan, type PostSaleAccountsInput } from "./post-sale-accounts";
 import { raydiumSeedAmounts, type PostSaleKind } from "./post-sale";
 
-const FINALIZE_CU = 1_400_000;
-const LP_SIGNER_LAMPORTS = BigInt(2_500_000_000);
+export const FINALIZE_CU = 1_400_000;
+export const LP_SIGNER_LAMPORTS = BigInt(2_500_000_000);
+
+/** `settleFees` is a recurring crank for a keeper, not a step of the sale. */
+export type SubmitKind = PostSaleKind | "settleFees";
 
 type Built = { transaction: () => Promise<Transaction> };
 
@@ -60,9 +63,13 @@ export type PostSaleChain = PostSaleAccountsInput & {
   saleUsdcAtoms: bigint;
   wsolAtoms: bigint;
   depositAtoms: bigint;
+  /** The connected wallet already took its tokens. Present on a chain read, absent in hand-built fixtures. */
+  claimed?: boolean;
   wsolAtaExists: boolean;
   lpSignerLamports: bigint;
   poolsReady: boolean;
+  /** Raydium only: the EOL/USDC pool exists, so transfer fees have somewhere to swap. */
+  eolPoolReady: boolean;
   feeRouteExists: boolean;
   launchId: bigint | null;
 };
@@ -70,7 +77,7 @@ export type PostSaleChain = PostSaleAccountsInput & {
 type TxConnection = Parameters<typeof signSendAndConfirm>[0]["connection"];
 
 export async function submitPostSale(input: {
-  kind: PostSaleKind;
+  kind: SubmitKind;
   chain: PostSaleChain;
   eol: EolPostSaleClient;
   factory?: FactoryOutcomeClient;
@@ -87,7 +94,7 @@ export async function submitPostSale(input: {
     if (input.kind !== "claimTokens") {
       transaction.add(ComputeBudgetProgram.setComputeUnitLimit({ units: FINALIZE_CU }));
     }
-    transaction.add(...(await instructions(input.kind, input.chain, input.eol, input.factory)));
+    transaction.add(...(await postSaleInstructions(input.kind, input.chain, input.eol, input.factory)));
     return await send({ connection: input.connection, signer: input.signer, transaction });
   } catch (error) {
     if (error instanceof ChainTransactionError) throw error;
@@ -96,8 +103,8 @@ export async function submitPostSale(input: {
   }
 }
 
-async function instructions(
-  kind: PostSaleKind,
+export async function postSaleInstructions(
+  kind: SubmitKind,
   chain: PostSaleChain,
   eol: EolPostSaleClient,
   factory?: FactoryOutcomeClient,
@@ -165,6 +172,9 @@ async function settleInstructions(
   factory?: FactoryOutcomeClient,
 ): Promise<Transaction["instructions"]> {
   if (!factory) throw new ChainTransactionError("Factory client is required to settle transfer fees.");
+  if (chain.venue === "raydium" && !chain.eolPoolReady) {
+    throw new ChainTransactionError("The EOL/USDC pool is not seeded yet, so there is nothing to settle fees through.");
+  }
   const plan = settlePlan(chain);
   const steps: Transaction["instructions"] = [
     ...(chain.venue === "raydium" ? wsolPrelude(chain) : []),

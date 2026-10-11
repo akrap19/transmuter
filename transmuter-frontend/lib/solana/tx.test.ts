@@ -1,6 +1,12 @@
 import { Keypair, SystemProgram, Transaction, type VersionedTransaction } from '@solana/web3.js'
 import { describe, expect, it, vi } from 'vitest'
-import { ChainTransactionError, describeChainError, signSendAndConfirm } from '@/lib/solana/tx'
+import {
+	type BatchSigner,
+	ChainTransactionError,
+	describeChainError,
+	signAllSendAndConfirm,
+	signSendAndConfirm
+} from '@/lib/solana/tx'
 
 const SIGNATURE = '5'.repeat(88)
 const BLOCKHASH = Keypair.generate().publicKey.toBase58()
@@ -211,5 +217,101 @@ describe('signSendAndConfirm', () => {
 			signature: SIGNATURE,
 			explorerUrl: `https://explorer.solana.com/tx/${SIGNATURE}?cluster=devnet`
 		})
+	})
+})
+
+describe('signAllSendAndConfirm', () => {
+	function batchSigner(keypair: Keypair, signAll = true) {
+		const calls = { signAll: 0, single: 0 }
+		const signer: BatchSigner = {
+			publicKey: keypair.publicKey,
+			signTransaction: async (tx) => {
+				calls.single += 1
+				return signerFor(keypair).signTransaction(tx)
+			},
+			...(signAll
+				? {
+						signAllTransactions: async (txs) => {
+							calls.signAll += 1
+							for (const tx of txs) if (tx instanceof Transaction) tx.partialSign(keypair)
+							return txs
+						}
+					}
+				: {})
+		}
+		return { signer, calls }
+	}
+
+	it('asks the wallet once for every transaction, then sends them in order', async () => {
+		const rpc = connection({
+			sendRawTransaction: vi.fn().mockResolvedValueOnce('a'.repeat(88)).mockResolvedValueOnce('b'.repeat(88))
+		})
+		const payer = Keypair.generate()
+		const { signer, calls } = batchSigner(payer)
+		const progress = vi.fn()
+
+		const result = await signAllSendAndConfirm({
+			connection: rpc as never,
+			signer,
+			transactions: [transfer(payer).tx, transfer(payer).tx],
+			networkName: 'devnet',
+			onProgress: progress
+		})
+
+		expect(calls.signAll).toBe(1)
+		expect(rpc.getLatestBlockhash).toHaveBeenCalledTimes(1)
+		expect(result.map((entry) => entry.signature)).toEqual(['a'.repeat(88), 'b'.repeat(88)])
+		expect(progress.mock.calls).toEqual([[0, 2], [1, 2], [2, 2]])
+	})
+
+	it('stops at the failed step and names it', async () => {
+		const rpc = connection({
+			sendRawTransaction: vi
+				.fn()
+				.mockResolvedValueOnce(SIGNATURE)
+				.mockRejectedValueOnce(new Error('Transaction simulation failed: custom program error: 0x1771'))
+		})
+		const payer = Keypair.generate()
+
+		const error = await signAllSendAndConfirm({
+			connection: rpc as never,
+			signer: batchSigner(payer).signer,
+			transactions: [transfer(payer).tx, transfer(payer).tx, transfer(payer).tx]
+		}).catch((caught: unknown) => caught)
+
+		expect(error).toBeInstanceOf(ChainTransactionError)
+		expect((error as Error).message).toMatch(/^Step 2 of 3 failed: /)
+		expect(rpc.sendRawTransaction).toHaveBeenCalledTimes(2)
+	})
+
+	it('does not send anything when the wallet rejects the batch', async () => {
+		const rpc = connection()
+		const payer = Keypair.generate()
+		const signer = {
+			...signerFor(payer),
+			signAllTransactions: async () => {
+				throw Object.assign(new Error('User rejected the request.'), { name: 'WalletSignTransactionError' })
+			}
+		}
+
+		await expect(
+			signAllSendAndConfirm({ connection: rpc as never, signer, transactions: [transfer(payer).tx] })
+		).rejects.toMatchObject({ message: 'Transaction cancelled in the wallet.' })
+		expect(rpc.sendRawTransaction).not.toHaveBeenCalled()
+	})
+
+	it('falls back to one prompt per transaction when the wallet cannot sign a batch', async () => {
+		const rpc = connection()
+		const payer = Keypair.generate()
+		const { signer, calls } = batchSigner(payer, false)
+
+		await signAllSendAndConfirm({
+			connection: rpc as never,
+			signer,
+			transactions: [transfer(payer).tx, transfer(payer).tx]
+		})
+
+		expect(calls.single).toBe(2)
+		expect(rpc.sendRawTransaction).toHaveBeenCalledTimes(2)
 	})
 })

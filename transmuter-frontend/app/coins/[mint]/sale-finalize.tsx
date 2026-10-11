@@ -1,8 +1,10 @@
 "use client";
 
+import { batchProgressLabel } from "@/lib/catalog/post-sale";
 import type { PostSaleChain } from "@/lib/catalog/submit-post-sale";
 import { useSubmitPostSale } from "./use-submit-post-sale";
 
+/** Finalize and the whole close-out behind it, under one wallet approval. */
 export function SaleFinalize({ chain, onConfirmed }: { chain: PostSaleChain; onConfirmed: () => void }) {
   const tx = useSubmitPostSale(onConfirmed);
   return (
@@ -11,9 +13,9 @@ export function SaleFinalize({ chain, onConfirmed }: { chain: PostSaleChain; onC
         type="button"
         className="button button-primary button-sm"
         disabled={tx.busy}
-        onClick={() => void tx.run("finalize", chain)}
+        onClick={() => void tx.runBatch("finalize", chain)}
       >
-        {tx.busy ? "Signing…" : "Finalize sale"}
+        {tx.busy ? batchProgressLabel(tx.progress) : "Finalize sale"}
       </button>
       {tx.explorerUrl ? (
         <a className="coin-tx-link" href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">

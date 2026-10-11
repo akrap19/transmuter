@@ -77,6 +77,23 @@ describe("submitPostSale", () => {
     expect(transfer?.keys.some((key) => key.pubkey.equals(chain.cranker))).toBe(true);
   });
 
+  it("refuses to settle transfer fees on Raydium before the EOL/USDC pool is seeded", async () => {
+    const { eol, factory } = client();
+    const send = vi.fn();
+    await expect(
+      submitPostSale({
+        kind: "settleFees",
+        chain: fixture({ venue: "raydium", eolPoolReady: false }),
+        eol,
+        factory,
+        connection: {} as never,
+        signer: { publicKey: cranker, signTransaction: async (tx) => tx },
+        send,
+      }),
+    ).rejects.toThrow(/not seeded yet/i);
+    expect(send).not.toHaveBeenCalled();
+  });
+
   it("refuses to finalize when the wired pool vaults are missing", async () => {
     const { eol } = client();
     await expect(
@@ -149,6 +166,7 @@ function fixture(overrides: Partial<PostSaleChain> = {}): PostSaleChain {
     wsolAtaExists: true,
     lpSignerLamports: BigInt(3_000_000_000),
     poolsReady: true,
+    eolPoolReady: true,
     feeRouteExists: true,
     launchId: BigInt(1),
     ...overrides,

@@ -94,6 +94,7 @@ export async function readPostSale(
     readers.lamports(eolLpSignerPda(mint)),
     readers.accountData(poolPda),
     readers.accountData(nativePda),
+    readers.accountData(raydiumPoolKeys(mint, config.usdcMint).poolState),
   ]);
   const [launch, core] = await Promise.all([launchPromise, corePromise]);
   const holderCount = await holderPromise;
@@ -110,6 +111,7 @@ export async function readPostSale(
     lpLamports,
     poolData,
     nativeData,
+    eolPoolData,
   ] = core;
 
   const cpmm = raydiumPoolKeys(config.usdcMint, NATIVE_MINT).poolState;
@@ -173,6 +175,7 @@ export async function readPostSale(
     wsolAtaExists: wsolData != null,
     lpSignerLamports: lpLamports,
     poolsReady: venue === "raydium" || (vaults != null && nativeVault != null),
+    eolPoolReady: eolPoolData != null,
     feeRouteExists: feeRoute != null,
     launchId: launch?.launchId ?? null,
   };

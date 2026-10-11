@@ -1,18 +1,9 @@
 "use client";
 
 import { WalletGate } from "@/components/catalog/wallet-gate";
-import { postSaleButtonOrder, type PostSaleKind } from "@/lib/catalog/post-sale";
+import { batchProgressLabel, setupSteps, type PostSaleKind } from "@/lib/catalog/post-sale";
 import type { PostSaleChain } from "@/lib/catalog/submit-post-sale";
 import { useSubmitPostSale } from "./use-submit-post-sale";
-
-const LABELS: Record<PostSaleKind, string> = {
-  finalize: "Finalize sale",
-  convertTreasury: "Convert treasury",
-  seedRaydiumUsdc: "Seed EOL/USDC pool",
-  seedRaydiumWsol: "Seed EOL/SOL pool",
-  claimTokens: "Claim tokens",
-  settleFees: "Settle transfer fees",
-};
 
 export function PostSaleActions({
   offers,
@@ -24,26 +15,37 @@ export function PostSaleActions({
   onConfirmed: () => void;
 }) {
   const tx = useSubmitPostSale(onConfirmed);
+  const setup = setupSteps(offers);
+  const claim = offers.includes("claimTokens");
 
   return (
     <WalletGate
-      title="Connect to finalize or claim"
-      body="Finalize, treasury conversion, LP seeding, and token claims are signed here. Any wallet can crank them. The creator is not required."
+      title="Connect to finish or claim"
+      body="Finishing the close-out is signed once here and any wallet can do it. Each buyer claims their own tokens."
     >
       {() => (
         <div className="coin-actions coin-actions-row">
           <div className="coin-buttons">
-            {postSaleButtonOrder(offers).map((kind, index) => (
+            {setup.length > 0 ? (
               <button
-                key={kind}
                 type="button"
-                className={index === 0 ? "button button-primary" : "button button-ghost"}
+                className="button button-primary"
                 disabled={tx.busy}
-                onClick={() => void tx.run(kind, chain)}
+                onClick={() => void tx.runBatch("setup", chain, setup)}
               >
-                {tx.pending === kind ? "Signing…" : LABELS[kind]}
+                {tx.pending === "batch" ? batchProgressLabel(tx.progress) : "Finish setup"}
               </button>
-            ))}
+            ) : null}
+            {claim ? (
+              <button
+                type="button"
+                className={setup.length > 0 ? "button button-ghost" : "button button-primary"}
+                disabled={tx.busy}
+                onClick={() => void tx.run("claimTokens", chain)}
+              >
+                {tx.pending === "claimTokens" ? "Signing…" : "Claim tokens"}
+              </button>
+            ) : null}
           </div>
           {tx.explorerUrl ? (
             <a className="coin-tx-link" href={tx.explorerUrl} target="_blank" rel="noopener noreferrer">

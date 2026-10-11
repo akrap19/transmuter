@@ -21,7 +21,7 @@ export function PostSalePanel({
       title="Finalize & claim"
       lede={
         note ??
-        "Convert remaining USDC into the backing cToken, seed a Raydium pool when the LP vault still holds inventory, and claim purchased tokens."
+        "Seeds the Raydium pools and converts the remaining USDC into the backing cToken. Each buyer claims their own tokens."
       }
     >
       {offers.length > 0 && chain ? <PostSaleActions offers={offers} chain={chain} onConfirmed={onConfirmed} /> : null}

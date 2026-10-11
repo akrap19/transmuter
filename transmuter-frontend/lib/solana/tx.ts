@@ -93,9 +93,80 @@ export async function signSendAndConfirm(input: {
 		throw toChainError(error)
 	}
 
+	return sendAndConfirm(input.connection, signed, latest, networkName)
+}
+
+export type BatchSigner = TransactionSigner & {
+	signAllTransactions?: <T extends Transaction | VersionedTransaction>(transactions: T[]) => Promise<T[]>
+}
+
+/**
+ * Sign every transaction with one wallet approval, then send and confirm them in
+ * order. Later transactions are simulated by the RPC only after the earlier ones
+ * landed, so they may depend on the earlier ones' state. A wallet without
+ * `signAllTransactions` gets one prompt per transaction instead.
+ */
+export async function signAllSendAndConfirm(input: {
+	connection: TxConnection
+	signer: BatchSigner
+	transactions: Transaction[]
+	networkName?: SolanaCluster
+	onProgress?: (done: number, total: number) => void
+}): Promise<ConfirmedTransaction[]> {
+	const networkName = input.networkName ?? solanaNetworkName
+	const total = input.transactions.length
+	const confirmed: ConfirmedTransaction[] = []
+	input.onProgress?.(0, total)
+
+	if (!input.signer.signAllTransactions) {
+		for (const transaction of input.transactions) {
+			confirmed.push(
+				await signSendAndConfirm({ connection: input.connection, signer: input.signer, transaction, networkName })
+			)
+			input.onProgress?.(confirmed.length, total)
+		}
+		return confirmed
+	}
+
+	const latest = await input.connection.getLatestBlockhash('confirmed')
+	for (const transaction of input.transactions) {
+		transaction.feePayer = input.signer.publicKey
+		transaction.recentBlockhash = latest.blockhash
+	}
+
+	let signed: Transaction[]
+	try {
+		signed = await input.signer.signAllTransactions(input.transactions)
+	} catch (error) {
+		throw toChainError(error)
+	}
+
+	for (const [index, transaction] of signed.entries()) {
+		try {
+			confirmed.push(await sendAndConfirm(input.connection, transaction, latest, networkName))
+		} catch (error) {
+			const chainError = toChainError(error)
+			throw new ChainTransactionError(`Step ${index + 1} of ${total} failed: ${chainError.message}`, {
+				signature: chainError.signature,
+				explorerUrl: chainError.explorerUrl,
+				code: chainError.code,
+				cause: error
+			})
+		}
+		input.onProgress?.(confirmed.length, total)
+	}
+	return confirmed
+}
+
+async function sendAndConfirm(
+	connection: TxConnection,
+	signed: Transaction | VersionedTransaction,
+	latest: { blockhash: string; lastValidBlockHeight: number },
+	networkName: SolanaCluster
+): Promise<ConfirmedTransaction> {
 	let signature: string
 	try {
-		signature = await input.connection.sendRawTransaction(signed.serialize(), {
+		signature = await connection.sendRawTransaction(signed.serialize(), {
 			skipPreflight: false,
 			preflightCommitment: 'confirmed'
 		})
@@ -112,7 +183,7 @@ export async function signSendAndConfirm(input: {
 
 	let confirmation: Awaited<ReturnType<Connection['confirmTransaction']>>
 	try {
-		confirmation = await input.connection.confirmTransaction(
+		confirmation = await connection.confirmTransaction(
 			{ signature, blockhash, lastValidBlockHeight: latest.lastValidBlockHeight },
 			'confirmed'
 		)
@@ -121,7 +192,7 @@ export async function signSendAndConfirm(input: {
 	}
 
 	if (confirmation.value.err) {
-		const logs = await logsFor(input.connection, signature)
+		const logs = await logsFor(connection, signature)
 		throw toChainError({ message: JSON.stringify(confirmation.value.err), logs }, { signature, explorerUrl })
 	}
 

@@ -45,14 +45,14 @@ describe("readPostSale", () => {
       NOW,
     );
 
-    expect(view?.offers).toEqual(["convertTreasury", "claimTokens", "settleFees"]);
+    expect(view?.offers).toEqual(["convertTreasury", "claimTokens"]);
     expect(view?.treasury.cTokenAmount).toBe(2);
     expect(view?.treasury.cTokenPriceUsd).toBe(1.5);
     expect(view?.treasury.backingValueUsd).toBe(10);
     expect(view?.chain.depositAtoms).toBe(BigInt(4_000_000));
   });
 
-  it("offers transfer-fee settlement on an active Raydium coin", async () => {
+  it("reads an active Raydium coin without offering transfer-fee settlement", async () => {
     const cpmm = raydiumPoolKeys(usdc, NATIVE_MINT).poolState;
     const view = await readPostSale(
       readers({ status: 1, convertDone: true, launchPool: cpmm }),
@@ -62,7 +62,7 @@ describe("readPostSale", () => {
     );
 
     expect(view?.chain.venue).toBe("raydium");
-    expect(view?.offers).toContain("settleFees");
+    expect(view?.offers).toEqual([]);
   });
 
   it("counts sale-vault USDC as backing and surfaces the holder count", async () => {
@@ -160,7 +160,7 @@ function readers(overrides: {
       fetchNullable: vi.fn().mockResolvedValue(overrides.launchPool ? { poolUsdc: overrides.launchPool } : null),
     },
     mintIndex: {
-      fetchNullable: vi.fn().mockResolvedValue(overrides.launchPool ? { launchId: 1n } : null),
+      fetchNullable: vi.fn().mockResolvedValue(overrides.launchPool ? { launchId: BigInt(1) } : null),
     },
     deposit: { fetchNullable: vi.fn().mockResolvedValue(overrides.depositAmount == null ? null : { amount: overrides.depositAmount, claimed: overrides.claimed ?? false }) },
     escrow: { fetchNullable: vi.fn().mockResolvedValue(null) },

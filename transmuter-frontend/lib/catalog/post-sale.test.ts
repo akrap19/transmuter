@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { postSaleButtonOrder, postSaleOffers, raydiumSeedAmounts } from "./post-sale";
+import { postSaleOffers, raydiumSeedAmounts, setupSteps } from "./post-sale";
 
 const NOW = 1_700_000_000;
 
@@ -23,13 +23,11 @@ describe("postSaleOffers", () => {
     expect(postSaleOffers(sale({ status: "active", now: NOW, saleEnd: NOW }))).not.toContain("finalize");
   });
 
-  it("shows claim before treasury conversion", () => {
-    expect(postSaleButtonOrder(["convertTreasury", "claimTokens"])).toEqual(["claimTokens", "convertTreasury"]);
-    expect(postSaleButtonOrder(["claimTokens"])).toEqual(["claimTokens"]);
-    expect(postSaleButtonOrder(["convertTreasury"])).toEqual(["convertTreasury"]);
+  it("never offers settle-fees from the sale panel", () => {
+    expect(postSaleOffers(sale({ status: "active", convertDone: true }))).toEqual([]);
   });
 
-  it("offers treasury conversion, Raydium LP seed, and a participant claim after the sale is active", () => {
+  it("orders the pool seeds before treasury conversion so convert cannot swallow the WSOL", () => {
     expect(
       postSaleOffers(
         sale({
@@ -43,7 +41,7 @@ describe("postSaleOffers", () => {
           lpUsdcShareBps: 5_000,
         }),
       ),
-    ).toEqual(["convertTreasury", "seedRaydiumUsdc", "seedRaydiumWsol", "claimTokens", "settleFees"]);
+    ).toEqual(["seedRaydiumUsdc", "seedRaydiumWsol", "convertTreasury", "claimTokens"]);
   });
 
   it("hides conversion after it is done, seed legs with an empty side, and a claim that was already taken", () => {
@@ -60,11 +58,30 @@ describe("postSaleOffers", () => {
           lpUsdcShareBps: 5_000,
         }),
       ),
-    ).toEqual(["settleFees"]);
+    ).toEqual([]);
     expect(raydiumSeedAmounts({ lpTokenAtoms: BigInt(1_000), saleUsdcAtoms: BigInt(9), wsolAtoms: BigInt(4), lpUsdcShareBps: 2_500 })).toEqual({
       usdc: { token: BigInt(250), quote: BigInt(9) },
       wsol: { token: BigInt(750), quote: BigInt(4) },
     });
+  });
+
+  it("gives the SOL leg the whole LP vault once the USDC leg is seeded", () => {
+    expect(raydiumSeedAmounts({ lpTokenAtoms: BigInt(750), saleUsdcAtoms: BigInt(0), wsolAtoms: BigInt(4), lpUsdcShareBps: 2_500 })).toEqual({
+      usdc: { token: BigInt(0), quote: BigInt(0) },
+      wsol: { token: BigInt(750), quote: BigInt(4) },
+    });
+  });
+});
+
+describe("setupSteps", () => {
+  it("keeps finalize and the per-buyer claim out of the finish-setup run", () => {
+    expect(setupSteps(["seedRaydiumUsdc", "seedRaydiumWsol", "convertTreasury", "claimTokens"])).toEqual([
+      "seedRaydiumUsdc",
+      "seedRaydiumWsol",
+      "convertTreasury",
+    ]);
+    expect(setupSteps(["finalize"])).toEqual([]);
+    expect(setupSteps(["claimTokens"])).toEqual([]);
   });
 });
 

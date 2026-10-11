@@ -5,8 +5,7 @@ export type PostSaleKind =
   | "convertTreasury"
   | "seedRaydiumUsdc"
   | "seedRaydiumWsol"
-  | "claimTokens"
-  | "settleFees";
+  | "claimTokens";
 
 export type RaydiumSeed = {
   usdc: { token: bigint; quote: bigint };
@@ -30,35 +29,47 @@ export type PostSaleInput = {
   decimals: number;
 };
 
-/** Permissionless. The program does not require the creator. */
+/**
+ * Permissionless. The program does not require the creator.
+ *
+ * The order is the order the jobs must run in: `convert_treasury` unwraps and
+ * closes the config WSOL account, so it has to come after both pool seeds or it
+ * swallows the WSOL that belongs in the EOL/SOL pool.
+ */
 export function postSaleOffers(input: PostSaleInput): PostSaleKind[] {
   const offers: PostSaleKind[] = [];
   if (canFinalize(input)) offers.push("finalize");
-  if (input.status === "active" && !input.convertDone) offers.push("convertTreasury");
   if (input.status === "active") {
     const seed = raydiumSeedAmounts(input);
     if (seed.usdc.token > BigInt(0) && seed.usdc.quote > BigInt(0)) offers.push("seedRaydiumUsdc");
     if (seed.wsol.token > BigInt(0) && seed.wsol.quote > BigInt(0)) offers.push("seedRaydiumWsol");
+    if (!input.convertDone) offers.push("convertTreasury");
   }
   if (input.status === "active" && !input.claimed && input.depositAtoms > BigInt(0)) offers.push("claimTokens");
-  if (input.status === "active") offers.push("settleFees");
   return offers;
 }
 
-export function postSaleButtonOrder(offers: PostSaleKind[]): PostSaleKind[] {
-  const claim = offers.indexOf("claimTokens");
-  const convert = offers.indexOf("convertTreasury");
-  if (claim < 0 || convert < 0 || claim < convert) return offers;
-  const next = offers.slice();
-  const [claimKind] = next.splice(claim, 1);
-  next.splice(convert, 0, claimKind);
-  return next;
+/** Jobs left after finalize that any wallet can finish in one approval. A claim is per buyer and stays separate. */
+export function setupSteps(offers: PostSaleKind[]): PostSaleKind[] {
+  return offers.filter((kind) => kind !== "finalize" && kind !== "claimTokens");
 }
 
+/** Button text while a batch signs and lands: "Signing…" until the first transaction confirms, then a step count. */
+export function batchProgressLabel(progress: { done: number; total: number } | null): string {
+  if (!progress || progress.done === 0) return "Signing…";
+  if (progress.done >= progress.total) return "Finishing…";
+  return `Confirming ${progress.done + 1} of ${progress.total}…`;
+}
+
+/**
+ * The USDC leg is seeded first, so while it is still pending it takes its share
+ * of the LP vault. Once it is gone the SOL leg owns whatever the vault still holds.
+ */
 export function raydiumSeedAmounts(
   input: Pick<PostSaleInput, "lpTokenAtoms" | "saleUsdcAtoms" | "wsolAtoms" | "lpUsdcShareBps">,
 ): RaydiumSeed {
-  const usdcToken = (input.lpTokenAtoms * BigInt(input.lpUsdcShareBps)) / BigInt(10_000);
+  const usdcPending = input.saleUsdcAtoms > BigInt(0);
+  const usdcToken = usdcPending ? (input.lpTokenAtoms * BigInt(input.lpUsdcShareBps)) / BigInt(10_000) : BigInt(0);
   return {
     usdc: { token: usdcToken, quote: input.saleUsdcAtoms },
     wsol: { token: input.lpTokenAtoms - usdcToken, quote: input.wsolAtoms },
