@@ -1,4 +1,4 @@
-import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { describe, expect, it } from "vitest";
 import { PROGRAM_IDS } from "@/lib/solana/program-ids";
@@ -17,6 +17,7 @@ import {
 const mint = Keypair.generate().publicKey;
 const usdc = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
 const cranker = Keypair.generate().publicKey;
+const creator = Keypair.generate().publicKey;
 const ctoken = Keypair.generate().publicKey;
 const saleUsdc = Keypair.generate().publicKey;
 const saleToken = Keypair.generate().publicKey;
@@ -96,6 +97,12 @@ describe("post-sale accounts", () => {
     expect(plan.remaining).toHaveLength(9);
   });
 
+  it("pays the creator fee leg to the creator's token account, not the cranker's", () => {
+    const plan = settlePlan(base({ venue: "mock", escrow: SystemProgram.programId, vesting: SystemProgram.programId }));
+    expect(plan.accounts.creatorAta.equals(getAssociatedTokenAddressSync(mint, creator, false, TOKEN_2022_PROGRAM_ID))).toBe(true);
+    expect(plan.accounts.creatorAta.equals(getAssociatedTokenAddressSync(mint, cranker, false, TOKEN_2022_PROGRAM_ID))).toBe(false);
+  });
+
   it("seeds a Raydium CPMM pool with the published devnet authority", () => {
     const plan = seedRaydiumPlan({
       cranker,
@@ -116,6 +123,7 @@ describe("post-sale accounts", () => {
 
 function base(extra: { venue: "mock" | "raydium"; escrow: PublicKey; vesting: PublicKey }) {
   return {
+    creator,
     cranker,
     mint,
     usdcMint: usdc,

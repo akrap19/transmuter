@@ -2,12 +2,14 @@
 
 import { batchProgressLabel } from "@/lib/catalog/post-sale";
 import type { PostSaleChain } from "@/lib/catalog/submit-post-sale";
+import { PostSaleStepsModal } from "./post-sale-steps-modal";
 import { useSubmitPostSale } from "./use-submit-post-sale";
 
 /** Finalize and the whole close-out behind it, under one wallet approval. */
 export function SaleFinalize({ chain, onConfirmed }: { chain: PostSaleChain; onConfirmed: () => void }) {
   const tx = useSubmitPostSale(onConfirmed);
   return (
+    <>
     <div className="sale-finalize">
       <button
         type="button"
@@ -23,5 +25,7 @@ export function SaleFinalize({ chain, onConfirmed }: { chain: PostSaleChain; onC
         </a>
       ) : null}
     </div>
+    {tx.steps ? <PostSaleStepsModal title="Finalizing sale" tx={tx} /> : null}
+    </>
   );
 }

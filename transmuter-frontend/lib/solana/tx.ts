@@ -34,6 +34,20 @@ export class ChainTransactionError extends Error {
 	}
 }
 
+/**
+ * The wallet cannot sign several transactions at once, or refused the batch for a reason other
+ * than the user cancelling. Nothing has been sent when this is thrown, so callers may sign one
+ * transaction at a time instead.
+ */
+export class BatchSigningUnsupported extends ChainTransactionError {
+	constructor(message: string, details: { cause?: unknown } = {}) {
+		super(message, details)
+		this.name = 'BatchSigningUnsupported'
+	}
+}
+
+export const WALLET_CANCELLED_MESSAGE = 'Transaction cancelled in the wallet.'
+
 type TxConnection = Pick<Connection, 'getLatestBlockhash' | 'sendRawTransaction' | 'confirmTransaction' | 'getTransaction'>
 
 const ANCHOR_MESSAGE = /Error Message:\s*([^\n.]+)/
@@ -47,7 +61,7 @@ export function describeChainError(error: unknown): { message: string; code?: st
 	if (anchor?.message) return anchor
 
 	const text = errorText(error)
-	if (isUserRejection(error, text)) return { message: 'Transaction cancelled in the wallet.' }
+	if (isUserRejection(error, text)) return { message: WALLET_CANCELLED_MESSAGE }
 
 	const anchorMessage = text.match(ANCHOR_MESSAGE)?.[1]?.trim()
 	if (anchorMessage) return { message: anchorMessage, code: text.match(ANCHOR_CODE)?.[1] }
@@ -119,13 +133,7 @@ export async function signAllSendAndConfirm(input: {
 	input.onProgress?.(0, total)
 
 	if (!input.signer.signAllTransactions) {
-		for (const transaction of input.transactions) {
-			confirmed.push(
-				await signSendAndConfirm({ connection: input.connection, signer: input.signer, transaction, networkName })
-			)
-			input.onProgress?.(confirmed.length, total)
-		}
-		return confirmed
+		throw new BatchSigningUnsupported('This wallet cannot sign several transactions at once.')
 	}
 
 	const latest = await input.connection.getLatestBlockhash('confirmed')
@@ -138,7 +146,9 @@ export async function signAllSendAndConfirm(input: {
 	try {
 		signed = await input.signer.signAllTransactions(input.transactions)
 	} catch (error) {
-		throw toChainError(error)
+		const mapped = toChainError(error)
+		if (mapped.message === WALLET_CANCELLED_MESSAGE) throw mapped
+		throw new BatchSigningUnsupported(mapped.message, { cause: error })
 	}
 
 	for (const [index, transaction] of signed.entries()) {

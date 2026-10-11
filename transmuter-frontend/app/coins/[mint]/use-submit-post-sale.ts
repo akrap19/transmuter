@@ -4,13 +4,14 @@ import { AnchorProvider } from "@coral-xyz/anchor";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useCallback, useState } from "react";
 import type { PostSaleKind } from "@/lib/catalog/post-sale";
-import { submitPostSaleBatch, type BatchClient } from "@/lib/catalog/submit-post-sale-batch";
+import { runPostSale, type BatchClient, type StepEvent } from "@/lib/catalog/submit-post-sale-batch";
 import { submitPostSale, type EolPostSaleClient, type FactoryOutcomeClient, type PostSaleChain } from "@/lib/catalog/submit-post-sale";
 import { createTransmuterClient } from "@/lib/solana/anchor-client";
 import { ChainTransactionError } from "@/lib/solana/tx";
 import { toastError, toastSuccess } from "@/lib/toast";
 
 export type PostSaleProgress = { done: number; total: number };
+export type FallbackStep = { kind: PostSaleKind; state: "waiting" | "active" | "done" | "failed"; error?: string };
 type Pending = PostSaleKind | "batch";
 
 export function useSubmitPostSale(onConfirmed: () => void) {
@@ -18,6 +19,7 @@ export function useSubmitPostSale(onConfirmed: () => void) {
   const { connection } = useConnection();
   const [pending, setPending] = useState<Pending | null>(null);
   const [progress, setProgress] = useState<PostSaleProgress | null>(null);
+  const [steps, setSteps] = useState<FallbackStep[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null);
 
@@ -74,25 +76,45 @@ export function useSubmitPostSale(onConfirmed: () => void) {
     [clientFor, connection, guarded],
   );
 
-  /** Finalize plus everything that follows it, or just the jobs still open, under one wallet approval. */
+  /**
+   * Finalize plus everything that follows it, or just the jobs still open. One approval when the
+   * wallet allows it. Otherwise each step is signed in turn, with the step modal open.
+   */
   const runBatch = useCallback(
-    (mode: "finalize" | "setup", chain: PostSaleChain, steps?: PostSaleKind[]) =>
+    (mode: "finalize" | "setup", chain: PostSaleChain, stepKinds?: PostSaleKind[]) =>
       guarded("batch", async (signer) => {
         const client = clientFor(signer);
-        const confirmed = await submitPostSaleBatch({
+        const confirmed = await runPostSale({
           mode,
-          steps,
+          steps: stepKinds,
           chain: { ...chain, cranker: signer.publicKey },
           eol: client.eolToken as unknown as BatchClient,
           factory: client.factory as unknown as FactoryOutcomeClient,
           connection,
           signer,
           onProgress: (done, total) => setProgress({ done, total }),
+          onFallback: (kinds) => setSteps(kinds.map((kind) => ({ kind, state: "waiting" }))),
+          onStep: (event: StepEvent) =>
+            setSteps((current) =>
+              current?.map((step, index) =>
+                index === event.index ? { ...step, state: event.state, error: event.error } : step,
+              ) ?? null,
+            ),
         });
         return confirmed[confirmed.length - 1].explorerUrl;
       }),
     [clientFor, connection, guarded],
   );
 
-  return { busy: pending != null, pending, progress, error, explorerUrl, run, runBatch };
+  return {
+    busy: pending != null,
+    pending,
+    progress,
+    steps,
+    closeSteps: () => setSteps(null),
+    error,
+    explorerUrl,
+    run,
+    runBatch,
+  };
 }

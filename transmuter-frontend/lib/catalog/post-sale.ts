@@ -54,6 +54,15 @@ export function setupSteps(offers: PostSaleKind[]): PostSaleKind[] {
   return offers.filter((kind) => kind !== "finalize" && kind !== "claimTokens");
 }
 
+/** Human labels for each job, shared by the buttons and the step-by-step modal. */
+export const POST_SALE_LABELS: Record<PostSaleKind, string> = {
+  finalize: "Finalize sale",
+  convertTreasury: "Convert treasury",
+  seedRaydiumUsdc: "Seed EOL/USDC pool",
+  seedRaydiumWsol: "Seed EOL/SOL pool",
+  claimTokens: "Claim tokens",
+};
+
 /** Button text while a batch signs and lands: "Signing…" until the first transaction confirms, then a step count. */
 export function batchProgressLabel(progress: { done: number; total: number } | null): string {
   if (!progress || progress.done === 0) return "Signing…";

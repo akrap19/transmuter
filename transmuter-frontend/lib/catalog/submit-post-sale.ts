@@ -176,25 +176,17 @@ async function settleInstructions(
     throw new ChainTransactionError("The EOL/USDC pool is not seeded yet, so there is nothing to settle fees through.");
   }
   const plan = settlePlan(chain);
+  // The backing fee sinks are created once per protocol by the keeper. Calling init here
+  // would fail on every run after the first, so the sale panel does not send it.
   const steps: Transaction["instructions"] = [
     ...(chain.venue === "raydium" ? wsolPrelude(chain) : []),
     createAssociatedTokenAccountIdempotentInstruction(
       chain.cranker,
-      plan.holderAta,
-      chain.cranker,
+      plan.creatorAta,
+      plan.creatorWallet,
       chain.mint,
       TOKEN_2022_PROGRAM_ID,
     ),
-    ...(await compile(
-      factory.methods.initBackingFeeSinks(),
-      {
-        payer: chain.cranker,
-        goldSink: plan.accounts.goldSink,
-        spxSink: plan.accounts.spxSink,
-        systemProgram: SystemProgram.programId,
-      },
-      [],
-    )),
   ];
   if (!chain.feeRouteExists) {
     if (chain.launchId == null) throw new ChainTransactionError("This mint is not in the Factory index.");
@@ -217,7 +209,7 @@ async function settleInstructions(
   steps.push(
     ...(await compile(eol.methods.settleTransferFees(), plan.accounts, [
       ...plan.remaining,
-      { pubkey: plan.holderAta, isSigner: false, isWritable: true },
+      { pubkey: plan.creatorAta, isSigner: false, isWritable: true },
     ])),
   );
   return steps;

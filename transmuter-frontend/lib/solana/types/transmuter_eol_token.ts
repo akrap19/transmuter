@@ -1014,6 +1014,10 @@ export type TransmuterEolToken = {
               4
             ]
           }
+        },
+        {
+          "name": "creator",
+          "type": "pubkey"
         }
       ]
     },
@@ -2124,6 +2128,9 @@ export type TransmuterEolToken = {
         },
         {
           "name": "creatorAta",
+          "docs": [
+            "`settle_transfer_fees`. It need not exist when the creator leg is zero."
+          ],
           "writable": true
         },
         {
@@ -2648,6 +2655,11 @@ export type TransmuterEolToken = {
       "code": 6042,
       "name": "backingBasket",
       "msg": "backing basket weights must sum to 100%"
+    },
+    {
+      "code": 6043,
+      "name": "badCreatorAta",
+      "msg": "creator token account is not the creator's associated token account"
     }
   ],
   "types": [
@@ -2986,6 +2998,13 @@ export type TransmuterEolToken = {
         "fields": [
           {
             "name": "config",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "docs": [
+              "Creator wallet, set by the Factory at route creation. The creator leg may only go to its ATA."
+            ],
             "type": "pubkey"
           },
           {

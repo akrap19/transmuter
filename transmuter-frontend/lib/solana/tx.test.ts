@@ -300,18 +300,47 @@ describe('signAllSendAndConfirm', () => {
 		expect(rpc.sendRawTransaction).not.toHaveBeenCalled()
 	})
 
-	it('falls back to one prompt per transaction when the wallet cannot sign a batch', async () => {
+	it('reports an unsupported batch without sending, so the caller can sign step by step', async () => {
 		const rpc = connection()
 		const payer = Keypair.generate()
-		const { signer, calls } = batchSigner(payer, false)
+		const { signer } = batchSigner(payer, false)
 
-		await signAllSendAndConfirm({
-			connection: rpc as never,
-			signer,
-			transactions: [transfer(payer).tx, transfer(payer).tx]
-		})
+		await expect(
+			signAllSendAndConfirm({ connection: rpc as never, signer, transactions: [transfer(payer).tx, transfer(payer).tx] })
+		).rejects.toMatchObject({ name: 'BatchSigningUnsupported' })
+		expect(rpc.sendRawTransaction).not.toHaveBeenCalled()
+	})
 
-		expect(calls.single).toBe(2)
-		expect(rpc.sendRawTransaction).toHaveBeenCalledTimes(2)
+	it('treats a wallet refusal of the batch as a cancel, not as unsupported', async () => {
+		const rpc = connection()
+		const payer = Keypair.generate()
+		const signer = {
+			...signerFor(payer),
+			signAllTransactions: async () => {
+				throw Object.assign(new Error('User rejected the request.'), { name: 'WalletSignTransactionError' })
+			}
+		}
+
+		const error = await signAllSendAndConfirm({ connection: rpc as never, signer, transactions: [transfer(payer).tx] }).catch(
+			(caught: unknown) => caught
+		)
+		expect(error).not.toMatchObject({ name: 'BatchSigningUnsupported' })
+		expect(error).toMatchObject({ message: 'Transaction cancelled in the wallet.' })
+	})
+
+	it('treats any other batch refusal as unsupported and sends nothing', async () => {
+		const rpc = connection()
+		const payer = Keypair.generate()
+		const signer = {
+			...signerFor(payer),
+			signAllTransactions: async () => {
+				throw new Error('Wallet does not support signAllTransactions for this account')
+			}
+		}
+
+		await expect(
+			signAllSendAndConfirm({ connection: rpc as never, signer, transactions: [transfer(payer).tx] })
+		).rejects.toMatchObject({ name: 'BatchSigningUnsupported' })
+		expect(rpc.sendRawTransaction).not.toHaveBeenCalled()
 	})
 })

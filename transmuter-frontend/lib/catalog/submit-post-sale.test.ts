@@ -1,4 +1,4 @@
-import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { TOKEN_2022_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { ComputeBudgetProgram, Keypair, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { describe, expect, it, vi } from "vitest";
 import { PROGRAM_IDS } from "@/lib/solana/program-ids";
@@ -75,6 +75,42 @@ describe("submitPostSale", () => {
     const tx = send.mock.calls[0][0].transaction as Transaction;
     const transfer = tx.instructions.find((ix) => ix.programId.equals(SystemProgram.programId));
     expect(transfer?.keys.some((key) => key.pubkey.equals(chain.cranker))).toBe(true);
+  });
+
+  it("routes the creator fee leg to the creator's token account, never the cranker's", async () => {
+    const { eol, factory, accounts } = client();
+    const creator = Keypair.generate().publicKey;
+    const send = vi.fn().mockResolvedValue({ signature: "settle", explorerUrl: "https://explorer.solana.com/tx/settle?cluster=devnet" });
+
+    await submitPostSale({
+      kind: "settleFees",
+      chain: fixture({ venue: "mock", creator }),
+      eol,
+      factory,
+      connection: {} as never,
+      signer: { publicKey: cranker, signTransaction: async (tx) => tx },
+      send,
+    });
+
+    const creatorAta = getAssociatedTokenAddressSync(mint, creator, false, TOKEN_2022_PROGRAM_ID);
+    const crankerAta = getAssociatedTokenAddressSync(mint, cranker, false, TOKEN_2022_PROGRAM_ID);
+    expect(accounts).toHaveBeenCalledWith(expect.objectContaining({ creatorAta }));
+    expect(creatorAta.equals(crankerAta)).toBe(false);
+  });
+
+  it("refuses to settle fees when the creator is unknown instead of defaulting to the cranker", async () => {
+    const { eol, factory } = client();
+    await expect(
+      submitPostSale({
+        kind: "settleFees",
+        chain: fixture({ venue: "mock", creator: null }),
+        eol,
+        factory,
+        connection: {} as never,
+        signer: { publicKey: cranker, signTransaction: async (tx) => tx },
+        send: vi.fn(),
+      }),
+    ).rejects.toThrow(/creator is not known/i);
   });
 
   it("refuses to settle transfer fees on Raydium before the EOL/USDC pool is seeded", async () => {

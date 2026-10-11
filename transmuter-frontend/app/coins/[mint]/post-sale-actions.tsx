@@ -2,6 +2,7 @@
 
 import { WalletGate } from "@/components/catalog/wallet-gate";
 import { batchProgressLabel, setupSteps, type PostSaleKind } from "@/lib/catalog/post-sale";
+import { PostSaleStepsModal } from "./post-sale-steps-modal";
 import type { PostSaleChain } from "@/lib/catalog/submit-post-sale";
 import { useSubmitPostSale } from "./use-submit-post-sale";
 
@@ -24,6 +25,7 @@ export function PostSaleActions({
       body="Finishing the close-out is signed once here and any wallet can do it. Each buyer claims their own tokens."
     >
       {() => (
+        <>
         <div className="coin-actions coin-actions-row">
           <div className="coin-buttons">
             {setup.length > 0 ? (
@@ -54,6 +56,8 @@ export function PostSaleActions({
             </a>
           ) : null}
         </div>
+        {tx.steps ? <PostSaleStepsModal title="Finishing setup" tx={tx} /> : null}
+        </>
       )}
     </WalletGate>
   );

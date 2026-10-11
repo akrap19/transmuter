@@ -25,6 +25,8 @@ export type PostSaleAccountsInput = {
   treasuryUsdc: PublicKey;
   protocolRevenueWallet: PublicKey;
   feeVault: PublicKey;
+  /** The launch creator. The creator fee leg is paid to this wallet's token account, never the cranker's. */
+  creator?: PublicKey | null;
   fallbackCtoken: PublicKey;
   poolVaultA: PublicKey;
   poolVaultB: PublicKey;
@@ -118,16 +120,23 @@ export function feeRoutePda(mint: PublicKey): PublicKey {
   return findPda(new PublicKey(PROGRAM_IDS.eolToken), Buffer.from("fee_route"), mint.toBuffer());
 }
 
-/** Harvest withheld Token-2022 fees and pay LP, treasury, the basket, and the protocol wallet. */
+/**
+ * Harvest withheld Token-2022 fees and pay LP, treasury, the basket, and the protocol wallet.
+ * Throws without a known creator: the on-chain program does not check `creator_ata`, so the
+ * frontend must never default that leg to the cranker.
+ */
 export function settlePlan(input: PostSaleAccountsInput) {
+  if (!input.creator) throw new Error("The launch creator is not known, so the creator fee leg cannot be routed.");
   const cbtcMint = input.fallbackCtoken.equals(SystemProgram.programId) ? input.ctokenMint : input.fallbackCtoken;
-  const holderAta = getAssociatedTokenAddressSync(input.mint, input.cranker, false, TOKEN_2022_PROGRAM_ID);
+  const creatorWallet = input.creator;
+  const creatorAta = getAssociatedTokenAddressSync(input.mint, creatorWallet, false, TOKEN_2022_PROGRAM_ID);
   const raydium = input.venue === "raydium" ? usdcWsol(input) : null;
   const eolPool = raydium ? raydiumPoolKeys(input.mint, input.usdcMint) : null;
   const eolVault = eolPool ? (eolPool.token0.equals(input.mint) ? eolPool.vault0 : eolPool.vault1) : input.poolVaultA;
   const quoteVault = eolPool ? (eolPool.token0.equals(input.usdcMint) ? eolPool.vault0 : eolPool.vault1) : input.poolVaultB;
   return {
-    holderAta,
+    creatorWallet,
+    creatorAta,
     remaining: eolPool
       ? [...raydium!.remaining, { pubkey: eolPool.observation, isSigner: false, isWritable: true }]
       : [],
@@ -157,7 +166,7 @@ export function settlePlan(input: PostSaleAccountsInput) {
       goldSink: new PublicKey(GOLD_FEE_ADDRESS),
       spxSink: new PublicKey(SPX_FEE_ADDRESS),
       protocolRevenueWallet: input.protocolRevenueWallet,
-      creatorAta: holderAta,
+      creatorAta,
       tokenProgram: TOKEN_2022_PROGRAM_ID,
       usdcProgram: TOKEN_PROGRAM_ID,
     },

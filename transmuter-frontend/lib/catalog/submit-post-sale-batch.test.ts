@@ -2,7 +2,8 @@ import { ComputeBudgetProgram, Keypair, PublicKey, SystemProgram, Transaction } 
 import { describe, expect, it, vi } from "vitest";
 import { PROGRAM_IDS } from "@/lib/solana/program-ids";
 import type { FactoryOutcomeClient, PostSaleChain } from "./submit-post-sale";
-import { buildBatch, submitPostSaleBatch, type BatchClient } from "./submit-post-sale-batch";
+import { buildBatch, runPostSale, submitPostSaleBatch, type BatchClient, type StepEvent } from "./submit-post-sale-batch";
+import { BatchSigningUnsupported, ChainTransactionError } from "@/lib/solana/tx";
 
 const mint = Keypair.generate().publicKey;
 const cranker = Keypair.generate().publicKey;
@@ -20,14 +21,14 @@ describe("buildBatch", () => {
     expect(h.claim).toHaveBeenCalledTimes(1);
   });
 
-  it("sizes the seeds from the simulated post-finalize vaults and keeps a margin on the swapped WSOL", async () => {
+  it("sizes the seeds from the simulated post-finalize vaults at the exact amounts", async () => {
     const h = harness({ lp: 1_000, saleUsdc: 500, wsol: 2_000 });
     await buildBatch(batch(h, { chain: fixture({ venue: "raydium", lpUsdcShareBps: 2_500 }) }));
 
     const amounts = h.seed.mock.calls.map((call) => call.map((value: { toString(): string }) => value.toString()));
     expect(amounts).toEqual([
       ["250", "500"],
-      ["750", "1990"],
+      ["750", "2000"],
     ]);
   });
 
@@ -202,3 +203,78 @@ function fixture(overrides: Partial<PostSaleChain> = {}): PostSaleChain {
     ...overrides,
   };
 }
+
+describe("runPostSale", () => {
+  it("uses one approval and never falls back when the wallet signs the batch", async () => {
+    const h = harness({ lp: 1_000, saleUsdc: 500, wsol: 2_000 });
+    const sendAll = vi.fn().mockResolvedValue([{ signature: "a", explorerUrl: "x" }]);
+    const sendOne = vi.fn();
+    const onFallback = vi.fn();
+
+    await runPostSale({ ...batch(h, { chain: fixture({ venue: "raydium", lpUsdcShareBps: 2_500 }) }), sendAll, sendOne, onFallback });
+
+    expect(sendAll).toHaveBeenCalledTimes(1);
+    expect(sendOne).not.toHaveBeenCalled();
+    expect(onFallback).not.toHaveBeenCalled();
+  });
+
+  it("signs each planned step in order when the wallet cannot sign the batch, and reports each one", async () => {
+    const h = harness({ lp: 1_000, saleUsdc: 500, wsol: 2_000 });
+    const sendAll = vi.fn().mockRejectedValue(new BatchSigningUnsupported("no batch"));
+    const sendOne = vi
+      .fn()
+      .mockResolvedValueOnce({ signature: "s1", explorerUrl: "x" })
+      .mockResolvedValueOnce({ signature: "s2", explorerUrl: "x" })
+      .mockResolvedValueOnce({ signature: "s3", explorerUrl: "x" })
+      .mockResolvedValueOnce({ signature: "s4", explorerUrl: "x" });
+    const events: StepEvent[] = [];
+    const kinds: string[][] = [];
+
+    const confirmed = await runPostSale({
+      ...batch(h, { chain: fixture({ venue: "raydium", lpUsdcShareBps: 2_500 }) }),
+      sendAll,
+      sendOne,
+      onFallback: (planned) => kinds.push(planned),
+      onStep: (event) => events.push(event),
+    });
+
+    expect(confirmed.map((c) => c.signature)).toEqual(["s1", "s2", "s3", "s4"]);
+    expect(kinds).toEqual([["finalize", "seedRaydiumUsdc", "seedRaydiumWsol", "convertTreasury"]]);
+    expect(events.filter((e) => e.state === "done").map((e) => e.index)).toEqual([0, 1, 2, 3]);
+    // Each planned step is signed on its own: no claim was merged into the convert step.
+    expect(sendOne.mock.calls.every((call) => (call[0].transaction as Transaction).instructions.length > 0)).toBe(true);
+  });
+
+  it("stops at the failed step and names it, keeping the earlier signatures on the error", async () => {
+    const h = harness({ lp: 1_000, saleUsdc: 500, wsol: 2_000 });
+    const sendAll = vi.fn().mockRejectedValue(new BatchSigningUnsupported("no batch"));
+    const sendOne = vi
+      .fn()
+      .mockResolvedValueOnce({ signature: "s1", explorerUrl: "x" })
+      .mockRejectedValueOnce(new Error("Transaction cancelled in the wallet."));
+    const events: StepEvent[] = [];
+
+    const error = await runPostSale({
+      ...batch(h, { chain: fixture({ venue: "raydium", lpUsdcShareBps: 2_500 }) }),
+      sendAll,
+      sendOne,
+      onStep: (event) => events.push(event),
+    }).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ChainTransactionError);
+    expect((error as Error).message).toMatch(/^Step 2 of 4 failed: Transaction cancelled in the wallet\./);
+    expect(sendOne).toHaveBeenCalledTimes(2);
+    expect(events.at(-1)).toMatchObject({ index: 1, state: "failed" });
+  });
+
+  it("stops at once when the user cancels the batch, without a step-by-step fallback", async () => {
+    const h = harness({ lp: 1_000, saleUsdc: 500, wsol: 2_000 });
+    const sendAll = vi.fn().mockRejectedValue(new ChainTransactionError("Transaction cancelled in the wallet."));
+    const sendOne = vi.fn();
+
+    await expect(
+      runPostSale({ ...batch(h, { chain: fixture({ venue: "raydium", lpUsdcShareBps: 2_500 }) }), sendAll, sendOne }),
+    ).rejects.toThrow(/cancelled in the wallet/);
+    expect(sendOne).not.toHaveBeenCalled();
+  });
+});

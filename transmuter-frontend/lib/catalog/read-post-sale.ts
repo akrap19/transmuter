@@ -42,7 +42,7 @@ export type EolPostSaleConfig = {
 
 export type PostSaleReaders = {
   config: AccountFetcher<EolPostSaleConfig>;
-  launch: AccountFetcher<{ poolUsdc: PublicKey; fallbackCtoken?: PublicKey }>;
+  launch: AccountFetcher<{ poolUsdc: PublicKey; fallbackCtoken?: PublicKey; creator?: PublicKey }>;
   mintIndex: AccountFetcher<{ launchId: { toString(): string } }>;
   deposit: AccountFetcher<{ amount: ChainAmount; claimed: boolean }>;
   escrow: AccountFetcher<{ vault: PublicKey }>;
@@ -60,6 +60,13 @@ export async function readPostSale(
   wallet: PublicKey | null,
   now: number,
 ) {
+  // Reads that need only the mint start before the config read, so they overlap it
+  // instead of queuing behind it. A rejection is still surfaced when the value is awaited.
+  const launchPromise = readFactoryLaunchByMint({ launch: readers.launch, mintIndex: readers.mintIndex }, mint);
+  const feeRoutePromise = readers.accountData(feeRoutePda(mint));
+  launchPromise.catch(() => undefined);
+  feeRoutePromise.catch(() => undefined);
+
   const config = await readers.config.fetchNullable(eolConfigPda(mint));
   if (!config) return null;
 
@@ -71,12 +78,10 @@ export async function readPostSale(
   const tokenVaults = [config.saleTokenVault, config.lpTokenVault, config.teamTokenVault].filter(
     (key): key is PublicKey => key instanceof PublicKey,
   );
-  // The launch lookup and every config-derived read only need the config and the
-  // mint, so issue them together. With the batching connection they collapse into
-  // one getMultipleAccounts instead of waiting on each other round trip by round trip.
+  // Every config-derived read is issued together. With the batching connection they
+  // collapse into one getMultipleAccounts instead of waiting round trip by round trip.
   const poolPda = mockPoolPda(mint, config.usdcMint);
   const nativePda = mockNativePoolPda(config.usdcMint);
-  const launchPromise = readFactoryLaunchByMint({ launch: readers.launch, mintIndex: readers.mintIndex }, mint);
   // Holder listing is a program scan. It must not sit in front of the treasury figures.
   const holderPromise = readers.holders
     ? readers.holders(configAddress, mint, tokenVaults).catch(() => null)
@@ -151,7 +156,7 @@ export async function readPostSale(
     decimals: Number(config.decimals),
   };
   const offers = postSaleOffers(input);
-  const feeRoute = await readers.accountData(feeRoutePda(mint));
+  const feeRoute = await feeRoutePromise;
   const chain: PostSaleChain = {
     cranker: wallet ?? PublicKey.default,
     mint,
@@ -164,6 +169,7 @@ export async function readPostSale(
     protocolRevenueWallet: config.protocolRevenueWallet,
     feeVault: config.feeVault,
     fallbackCtoken: launch?.account.fallbackCtoken ?? config.ctokenMint,
+    creator: launch?.account.creator ?? null,
     poolVaultA: vaults?.vaultA ?? SystemProgram.programId,
     poolVaultB: vaults?.vaultB ?? SystemProgram.programId,
     nativeVault: nativeVault ?? SystemProgram.programId,

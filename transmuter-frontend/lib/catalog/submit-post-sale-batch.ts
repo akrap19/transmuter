@@ -2,9 +2,11 @@ import { NATIVE_MINT, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@s
 import { ComputeBudgetProgram, PublicKey, Transaction, type Connection } from "@solana/web3.js";
 import { eolConfigPda } from "@/lib/solana/programs/eol-token";
 import {
+  BatchSigningUnsupported,
   ChainTransactionError,
   describeChainError,
   signAllSendAndConfirm,
+  signSendAndConfirm,
   type BatchSigner,
   type ConfirmedTransaction,
 } from "@/lib/solana/tx";
@@ -21,9 +23,6 @@ import {
 /** Legacy transactions are capped at 1232 bytes on the wire. */
 const PACKET_BYTES = 1232;
 const EOL_STATUS_ACTIVE = 1;
-/** The WSOL leg comes from a swap whose output can drift a little between simulation and landing. */
-const WSOL_MARGIN_BPS = BigInt(50);
-const BPS = BigInt(10_000);
 
 /** The order the jobs must run in. Convert closes the config WSOL account, so it follows both seeds. */
 const ORDER: PostSaleKind[] = ["finalize", "seedRaydiumUsdc", "seedRaydiumWsol", "convertTreasury", "claimTokens"];
@@ -66,14 +65,17 @@ export async function submitPostSaleBatch(input: PostSaleBatch): Promise<Confirm
   }
 }
 
-export async function buildBatch(input: PostSaleBatch): Promise<Transaction[]> {
+/** One transaction per job, in order, before any packing. Each is what a single approval would sign. */
+export type PlannedStep = { kind: PostSaleKind; transaction: Transaction };
+
+export async function planPostSale(input: PostSaleBatch): Promise<PlannedStep[]> {
   const { chain } = input;
   if (!chain.poolsReady && input.mode === "finalize") {
     throw new ChainTransactionError("Pool vaults are not on this launch yet.");
   }
 
   const plan = input.mode === "finalize" ? await finalizePlanSteps(input) : setupPlanSteps(input);
-  const groups: Transaction[] = [];
+  const planned: PlannedStep[] = [];
   let seedsBuilt = 0;
   for (const step of plan.steps) {
     // Finalize creates the config WSOL account, so the later steps of the same run can count on it.
@@ -82,18 +84,92 @@ export async function buildBatch(input: PostSaleBatch): Promise<Transaction[]> {
     // The first seed tops up the LP signer for the pool-creation fee. The second reuses what is left.
     const seeding = step.kind === "seedRaydiumUsdc" || step.kind === "seedRaydiumWsol";
     if (seeding && seedsBuilt++ > 0) stepChain.lpSignerLamports = LP_SIGNER_LAMPORTS;
-    const built = new Transaction();
-    if (step.kind !== "claimTokens") built.add(ComputeBudgetProgram.setComputeUnitLimit({ units: FINALIZE_CU }));
-    built.add(...(await postSaleInstructions(step.kind, stepChain, input.eol, input.factory)));
+    const transaction = new Transaction();
+    if (step.kind !== "claimTokens") transaction.add(ComputeBudgetProgram.setComputeUnitLimit({ units: FINALIZE_CU }));
+    transaction.add(...(await postSaleInstructions(step.kind, stepChain, input.eol, input.factory)));
+    planned.push({ kind: step.kind, transaction });
+  }
+  return planned;
+}
 
+/**
+ * Merge the buyer's claim into the transaction before it when both fit under the packet limit.
+ * Builds new transactions rather than mutating the planned ones, so a fallback can still send
+ * each planned step on its own without a duplicate claim.
+ */
+export function packBatch(planned: PlannedStep[], payer: PublicKey): Transaction[] {
+  const groups: Transaction[] = [];
+  for (const step of planned) {
     const previous = groups[groups.length - 1];
-    if (step.kind === "claimTokens" && previous && fits(previous, built, chain.cranker)) {
-      previous.add(...built.instructions);
+    if (step.kind === "claimTokens" && previous && fits(previous, step.transaction, payer)) {
+      groups[groups.length - 1] = new Transaction().add(...previous.instructions, ...step.transaction.instructions);
     } else {
-      groups.push(built);
+      groups.push(step.transaction);
     }
   }
   return groups;
+}
+
+export async function buildBatch(input: PostSaleBatch): Promise<Transaction[]> {
+  return packBatch(await planPostSale(input), input.chain.cranker);
+}
+
+export type StepEvent = { index: number; state: "active" | "done" | "failed"; error?: string };
+
+/**
+ * Sign once if the wallet can. If it cannot sign several transactions, or refuses the batch for a
+ * reason other than a cancel, nothing has been sent, so sign each planned step in order instead.
+ * A cancel stops the run at once.
+ */
+export async function runPostSale(
+  input: PostSaleBatch & {
+    onFallback?: (kinds: PostSaleKind[]) => void;
+    onStep?: (event: StepEvent) => void;
+    sendAll?: typeof signAllSendAndConfirm;
+    sendOne?: typeof signSendAndConfirm;
+  },
+): Promise<ConfirmedTransaction[]> {
+  const planned = await planPostSale(input).catch((error: unknown) => {
+    throw asChainError(error);
+  });
+  const sendAll = input.sendAll ?? signAllSendAndConfirm;
+  try {
+    return await sendAll({
+      connection: input.connection,
+      signer: input.signer,
+      transactions: packBatch(planned, input.chain.cranker),
+      onProgress: input.onProgress,
+    });
+  } catch (error) {
+    if (!(error instanceof BatchSigningUnsupported)) throw asChainError(error);
+  }
+
+  input.onFallback?.(planned.map((step) => step.kind));
+  const sendOne = input.sendOne ?? signSendAndConfirm;
+  const confirmed: ConfirmedTransaction[] = [];
+  for (const [index, step] of planned.entries()) {
+    input.onStep?.({ index, state: "active" });
+    try {
+      confirmed.push(await sendOne({ connection: input.connection, signer: input.signer, transaction: step.transaction }));
+      input.onStep?.({ index, state: "done" });
+    } catch (error) {
+      const chainError = asChainError(error);
+      input.onStep?.({ index, state: "failed", error: chainError.message });
+      throw new ChainTransactionError(`Step ${index + 1} of ${planned.length} failed: ${chainError.message}`, {
+        signature: chainError.signature,
+        explorerUrl: chainError.explorerUrl,
+        code: chainError.code,
+        cause: error,
+      });
+    }
+  }
+  return confirmed;
+}
+
+function asChainError(error: unknown): ChainTransactionError {
+  if (error instanceof ChainTransactionError) return error;
+  const described = describeChainError(error);
+  return new ChainTransactionError(described.message, { code: described.code, cause: error });
 }
 
 type Plan = { chain: PostSaleChain; steps: { kind: PostSaleKind }[] };
@@ -121,7 +197,9 @@ async function finalizePlanSteps(input: PostSaleBatch): Promise<Plan> {
         ...chain,
         lpTokenAtoms: after.lpTokenAtoms,
         saleUsdcAtoms: after.saleUsdcAtoms,
-        wsolAtoms: (after.wsolAtoms * (BPS - WSOL_MARGIN_BPS)) / BPS,
+        // Exact simulated amount, so both pools land at the same implied price. If the balance
+        // drifts before the seed lands, that step fails and "Finish setup" re-simulates.
+        wsolAtoms: after.wsolAtoms,
       };
       const seed = raydiumSeedAmounts(planChain);
       if (seed.usdc.token > BigInt(0) && seed.usdc.quote > BigInt(0)) steps.push({ kind: "seedRaydiumUsdc" });
