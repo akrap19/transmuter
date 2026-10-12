@@ -1,7 +1,7 @@
 import { resolveCtokens, type CtokenEnv } from "@/lib/launchpad/ctokens";
 import { detailFromApi } from "./load-catalog";
 import { liveStatus } from "./live-sale";
-import type { CoinDetail, CoinSocials } from "./types";
+import type { BackingLeg, CoinDetail, CoinSocials } from "./types";
 
 export type ChainLaunchIdentity = {
   mint: string;
@@ -12,6 +12,8 @@ export type ChainLaunchIdentity = {
   status: number;
   launchedAt: number;
   metadataUri: string;
+  /** Launch account basket, so a fresh coin shows the same split as the indexed page. */
+  backingBasket?: BackingLeg[] | null;
 };
 
 export type ChainMetadata = {
@@ -57,6 +59,18 @@ export function parseChainMetadata(body: unknown): ChainMetadata {
   };
 }
 
+/** Anchor decodes each `BackingLeg` as `{ assetKind, weightBps }`. Any malformed leg voids the basket. */
+export function basketFromChainLegs(value: unknown): BackingLeg[] | null {
+  if (!Array.isArray(value)) return null;
+  const legs: BackingLeg[] = [];
+  for (const entry of value) {
+    const leg = entry as { assetKind?: unknown; weightBps?: unknown } | null;
+    if (!leg || typeof leg.assetKind !== "number" || typeof leg.weightBps !== "number") return null;
+    legs.push({ assetKind: leg.assetKind, weightBps: leg.weightBps });
+  }
+  return legs.length > 0 ? legs : null;
+}
+
 /** Build a coin page from the Factory launch account when the index has not caught up. */
 export function detailFromChainLaunch(
   launch: ChainLaunchIdentity,
@@ -75,6 +89,7 @@ export function detailFromChainLaunch(
       symbol,
       creator: launch.creator,
       backing: labels[launch.backingMint] ?? launch.backingMint,
+      backingBasket: launch.backingBasket ?? null,
       status,
       priceUsd: null,
       marketCapUsd: null,

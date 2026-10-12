@@ -4,6 +4,7 @@ import { solanaEndpoint } from "@/lib/solana/config";
 import { readFactoryLaunchByMint } from "@/lib/solana/accounts";
 import { solanaConnectionConfig } from "@/lib/solana/rpc-fetch";
 import {
+  basketFromChainLegs,
   ctokenLabels,
   detailFromChainLaunch,
   EMPTY_CHAIN_METADATA,
@@ -21,6 +22,7 @@ type LaunchAccount = {
   name: string;
   symbol: string;
   metadataUri: string;
+  backingBasket?: unknown;
 };
 
 export async function readServerChainCoin(mint: string): Promise<CoinDetail | null> {
@@ -49,6 +51,7 @@ export async function readServerChainCoin(mint: string): Promise<CoinDetail | nu
     status: Number(account.status),
     launchedAt: Number(account.timestamp.toString()),
     metadataUri: account.metadataUri ?? "",
+    backingBasket: basketFromChainLegs(account.backingBasket),
   };
   const meta = await fetchChainMetadata(identity.metadataUri);
   return detailFromChainLaunch(identity, meta, ctokenLabels());

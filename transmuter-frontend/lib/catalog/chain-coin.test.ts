@@ -1,10 +1,54 @@
 import { describe, expect, it } from "vitest";
-import { detailFromChainLaunch, parseChainMetadata } from "./chain-coin";
+import { basketFromChainLegs, detailFromChainLaunch, parseChainMetadata } from "./chain-coin";
 
 const MINT = "MintHelix111111111111111111111111111111111";
 const CSOL = "CsolMint11111111111111111111111111111111111";
 
+describe("basketFromChainLegs", () => {
+  it("keeps all four decoded legs in canonical order", () => {
+    const legs = [
+      { assetKind: 0, weightBps: 6000 },
+      { assetKind: 1, weightBps: 0 },
+      { assetKind: 2, weightBps: 4000 },
+      { assetKind: 3, weightBps: 0 },
+    ];
+    expect(basketFromChainLegs(legs)).toEqual(legs);
+  });
+
+  it("returns null when the basket is missing or malformed", () => {
+    expect(basketFromChainLegs(undefined)).toBeNull();
+    expect(basketFromChainLegs([])).toBeNull();
+    expect(basketFromChainLegs([{ assetKind: 0 }])).toBeNull();
+  });
+});
+
 describe("detailFromChainLaunch", () => {
+  it("carries the launch account basket into the coin page", () => {
+    const legs = [
+      { assetKind: 0, weightBps: 6000 },
+      { assetKind: 1, weightBps: 0 },
+      { assetKind: 2, weightBps: 4000 },
+      { assetKind: 3, weightBps: 0 },
+    ];
+    const detail = detailFromChainLaunch(
+      {
+        mint: MINT,
+        name: "Basket test",
+        symbol: "BSKT",
+        creator: "Creator11111111111111111111111111111111111",
+        backingMint: CSOL,
+        status: 1,
+        launchedAt: 1_791_456_542,
+        metadataUri: "",
+        backingBasket: legs,
+      },
+      parseChainMetadata(null),
+      { [CSOL]: "cSOL" },
+    );
+
+    expect(detail?.backingBasket).toEqual(legs);
+  });
+
   it("builds a coin page from the factory account and metadata json", () => {
     const detail = detailFromChainLaunch(
       {
