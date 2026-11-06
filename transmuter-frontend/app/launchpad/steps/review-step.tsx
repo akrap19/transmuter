@@ -23,10 +23,10 @@ export function ReviewStep() {
       <div className="launch-warning">
         <strong>Before you launch.</strong> Deploying opens your sale. Buyers claim tokens only
         after it concludes. Deposits stay withdrawable until the sale concludes; if the raise can&apos;t fund
-        the backing minimums (treasury {state.treasuryBackingPct}% ask in this wizard; on-chain accept 8% of MCP
+        the backing minimums (treasury {state.treasuryBackingPct}% ask in this wizard; on-chain accept 8% of market cap
         after conversion, combined 18%), the launch voids and
         every deposit is reclaimable. Once finalized, the treasury is fully non-custodial: no
-        human, including you, can access it. End of life requires a community vote.
+        human, including you, can access it. End of life requires a holder vote.
       </div>
 
       <div className="review-grid">

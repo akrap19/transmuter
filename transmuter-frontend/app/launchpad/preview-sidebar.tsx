@@ -2,6 +2,7 @@
 
 import { computeOverflowFromState } from '@/lib/launchpad/overflow-calc'
 import { formatMcap, formatNum, formatPrice } from '@/lib/launchpad/launch-solver'
+import { formatTransferFee } from '@/lib/launchpad/fee-calculator'
 import { activeLegs, assetMeta } from '@/lib/launchpad/backing-basket'
 import { useLaunchpad } from './launchpad-context'
 
@@ -53,13 +54,13 @@ export function PreviewSidebar() {
 				<PreviewStat label='Sale Type' value={SALE_LABELS[state.saleType]} gold />
 				<PreviewStat label='Total Supply' value={supply && !isNaN(supply) ? formatNum(supply) : '-'} />
 				<PreviewStat
-					label='Implied MCP'
+					label='Implied market cap'
 					value={state.saleType === 'overflow' && overflow?.mcp ? overflow.mcp : mcap ? `$${formatMcap(mcap)}` : '-'}
 					gold
 				/>
-				<PreviewStat label='TX Fee' value={`${state.fees.totalFee.toFixed(2)}%`} />
+				<PreviewStat label='Transfer fee' value={formatTransferFee(state.fees.totalFee)} />
 				<div className='preview-stat'>
-					<span className='preview-stat-label'>Backing</span>
+					<span className='preview-stat-label'>Reserve asset</span>
 					<span className='preview-stat-value green preview-backing-value'>
 						{backingLegs.length ? (
 							backingLegs.map((leg) => (
@@ -81,14 +82,14 @@ export function PreviewSidebar() {
 					<br />
 					✓ Treasury closed to the creator. Runway paid through escrow.
 					<br />
-					✓ Treasury grows with every TX
+					✓ Every transfer adds to the treasury
 					<br />
 					✓ Backing per token, counted in the base asset, only grows
 					<br />
 					✓ Built-in end of life plan
 					<br />
-					✓ Community governance
-					<br />✓ Anti-rug architecture
+					✓ Holders vote on end of life
+					<br />✓ Liquidity owned by the contract, not the team
 				</div>
 			</div>
 		</div>

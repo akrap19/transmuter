@@ -47,7 +47,7 @@ export function DerivedPriceNote({ variant }: { variant: "hint" | "outcome" }) {
       ? <>
           After pairing the LP (${formatMcap(L.lpCash ?? 0)}) and funding escrow ($
           {formatMcap(L.escrowNeed ?? 0)}), the treasury would be only{" "}
-          {((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of MCP, under the {ask}% ask. Raise at
+          {((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of market cap, under the {ask}% ask. Raise at
           least <strong>${formatMcap(L.minRaise ?? 0)}</strong>, or cut the LP allocation.
         </>
       : <>
@@ -89,7 +89,7 @@ export function DerivedPriceNote({ variant }: { variant: "hint" | "outcome" }) {
       <OutcomeRow label="Escrow" value={`$${formatMcap(L.escrowNeed ?? 0)}`} />
       <OutcomeRow
         label="Treasury"
-        value={`$${formatMcap(L.treasury ?? 0)} (${((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of MCP)`}
+        value={`$${formatMcap(L.treasury ?? 0)} (${((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of market cap)`}
       />
       <p className="small-note outcome-foot">
         {strong}.

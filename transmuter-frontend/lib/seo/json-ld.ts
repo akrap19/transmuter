@@ -2,6 +2,7 @@ import type { FaqGroup } from "@/lib/marketing/faq-data";
 import type { GlossaryTerm } from "@/lib/marketing/glossary-data";
 import {
   absoluteUrl,
+  contentUpdatedIso,
   organizationId,
   organizationNode,
   siteName,
@@ -39,32 +40,61 @@ export function webPageNode(input: {
   };
 }
 
-export function homePageGraph(input: { name: string; description: string }) {
+/** Organization and WebSite, rendered once from the root layout. */
+export function siteGraph() {
   return {
     "@context": "https://schema.org",
     "@graph": [
       organizationNode(),
       {
-        "@type": "WebSite",
+        "@type": "WebSite" as const,
         "@id": websiteId,
         url: absoluteUrl("/"),
         name: siteName,
         publisher: { "@id": organizationId },
-        potentialAction: {
-          "@type": "SearchAction",
-          target: {
-            "@type": "EntryPoint",
-            urlTemplate: `${absoluteUrl("/coins")}?q={search_term_string}`,
-          },
-          "query-input": "required name=search_term_string",
-        },
       },
+    ],
+  };
+}
+
+export function homePageGraph(input: { name: string; description: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
       webPageNode({
         path: "/",
         name: input.name,
         description: input.description,
         webpageId: `${absoluteUrl("/")}#webpage`,
       }),
+    ],
+  };
+}
+
+export function docsPageGraph(input: { name: string; description: string; headline: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      organizationNode(),
+      {
+        "@type": "TechArticle" as const,
+        headline: input.headline,
+        name: input.name,
+        description: input.description,
+        dateModified: contentUpdatedIso,
+        url: absoluteUrl("/docs"),
+        inLanguage: "en",
+        publisher: { "@id": organizationId },
+      },
+      webPageNode({
+        path: "/docs",
+        name: input.name,
+        description: input.description,
+      }),
+      breadcrumbList([
+        { name: siteName, path: "/" },
+        { name: "Docs", path: "/docs" },
+      ]),
     ],
   };
 }

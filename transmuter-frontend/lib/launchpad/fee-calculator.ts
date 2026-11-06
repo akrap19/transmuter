@@ -100,4 +100,15 @@ export function feeSegmentPct(value: number, totalFee: number): number {
   return totalFee > 0 ? (value / totalFee) * 100 : 0;
 }
 
+const RECOMMENDED_TOTAL_FEE = 0.6;
+
+/** Preview and review label. The recommended default keeps the minimum visible. */
+export function formatTransferFee(totalFee: number): string {
+  const shown = `${totalFee.toFixed(2)}%`;
+  if (Math.abs(totalFee - RECOMMENDED_TOTAL_FEE) < 0.001) {
+    return `${shown} (recommended default, minimum 0.5%)`;
+  }
+  return `${shown} (minimum 0.5%)`;
+}
+
 export { PROTOCOL_FEE, CTOKEN_RESERVE_FEE, MIN_TOTAL_FEE, PUBLISHED_MIN_TOTAL_FEE };

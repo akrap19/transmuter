@@ -18,6 +18,7 @@ export function BackingBasket() {
           <span className="alloc-label">
             <span className="backing-asset-icon">{meta.asset === "SOL" ? <SolanaMark /> : meta.icon}</span>
             {meta.label}
+            {meta.settlement === "allocation" ? " (optional)" : ""}
           </span>
           <div className="alloc-slider-wrap">
             <input

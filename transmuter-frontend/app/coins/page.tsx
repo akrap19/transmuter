@@ -7,7 +7,7 @@ import { InfiniteCoinGrid } from "@/components/catalog/infinite-coin-grid";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { explorePageQuery } from "@/lib/catalog/explore-page";
 import { loadCoinList } from "@/lib/catalog/load-catalog";
-import { coinQueryHasFilters, parseCoinSearchParams, searchParamsFromRecord, serializeCoinQuery } from "@/lib/catalog/search-params";
+import { parseCoinSearchParams, searchParamsFromRecord, serializeCoinQuery } from "@/lib/catalog/search-params";
 import { routes } from "@/lib/routes";
 import { marketingPageGraph } from "@/lib/seo/json-ld";
 import { marketingPageMetadata } from "@/lib/seo/page-metadata";
@@ -16,15 +16,12 @@ const exploreTitle = "All coins";
 const exploreDescription =
   "Browse every Factory-registered launch on Transmuter, including live sales and VOIDED tokens. Search and check the contract before you trade.";
 
-export async function generateMetadata({ searchParams }: ExplorePageProps): Promise<Metadata> {
-  const query = parseCoinSearchParams(searchParamsFromRecord(await searchParams));
-  return marketingPageMetadata({
-    path: routes.coins,
-    title: exploreTitle,
-    description: exploreDescription,
-    index: !coinQueryHasFilters(query),
-  });
-}
+export const metadata: Metadata = marketingPageMetadata({
+  path: routes.coins,
+  title: exploreTitle,
+  description: exploreDescription,
+  index: false,
+});
 
 type ExplorePageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

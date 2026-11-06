@@ -13,7 +13,7 @@ export function HomeHero() {
         <div className="depth-pillar pillar-one" />
         <div className="depth-pillar pillar-two" />
       </div>
-      <div className="hero-copy reveal">
+      <div className="hero-copy">
         <p className="eyebrow hero-kicker">
           <span /> VALUE RECOVERY INFRASTRUCTURE FOR TOKENS <span />
         </p>

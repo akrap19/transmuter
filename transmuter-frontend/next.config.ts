@@ -10,10 +10,11 @@ const legacyRoutes = {
   contact: "/transmuter_contact.html",
 } as const;
 
-const siteAllowsIndexing = process.env.SITE_ALLOW_INDEXING !== "false";
-
 const nextConfig: NextConfig = {
   trailingSlash: true,
+  experimental: {
+    inlineCss: true,
+  },
   transpilePackages: [
     "@coral-xyz/anchor",
     "@solana/spl-token",
@@ -21,15 +22,6 @@ const nextConfig: NextConfig = {
     "@solana/wallet-adapter-react",
     "@solana/wallet-adapter-react-ui",
   ],
-  async headers() {
-    if (siteAllowsIndexing) return [];
-    return [
-      {
-        source: "/:path*",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
-      },
-    ];
-  },
   async rewrites() {
     return [
       { source: "/og-image.png", destination: "/opengraph-image" },

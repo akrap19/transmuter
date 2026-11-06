@@ -15,9 +15,9 @@ export function BackingStep() {
         Treasury backing basket
         <FieldHint label="About the backing basket">
           Choose which reserve assets back your treasury and how the backing splits across them.
-          Each share is set on its own, and the total must be 100%. SOL and BTC settle into live
-          cToken reserves. Gold and S&amp;P each have one fee address; their share of the reserve
-          fee is sent there.
+          Each share is set on its own, and the total must be 100%. Gold and S&amp;P are optional
+          and can stay at 0%. SOL and BTC settle into live cToken reserves. Gold and S&amp;P each
+          have one fee address; their share of the reserve fee is sent there.
         </FieldHint>
       </div>
 

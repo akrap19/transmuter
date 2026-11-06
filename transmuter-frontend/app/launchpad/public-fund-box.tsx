@@ -15,10 +15,10 @@ export function PublicFundBox() {
     <>
       This is the outcome, not a set of dials. Escrow takes the amount the team asked for,
       the liquidity pool takes exactly what it needs to pair its allocation, and the treasury
-      takes everything left. The wizard sizes the raise so treasury starts at a {ask}% of MCP
+      takes everything left. The wizard sizes the raise so treasury starts at a {ask}% of market cap
       ask. On-chain, conversion slippage can land it as low as {(TREASURY_ACCEPT * 100).toFixed(0)}%;
       below that the sale voids. Treasury plus liquidity-pool cash must still clear{" "}
-      {(COMBINED_BACKING_MIN * 100).toFixed(0)}% of MCP. A realised treasury between{" "}
+      {(COMBINED_BACKING_MIN * 100).toFixed(0)}% of market cap. A realised treasury between{" "}
       {(TREASURY_ACCEPT * 100).toFixed(0)}% and {ask}% is a shortfall, not an automatic void.
     </>
   );
@@ -53,11 +53,11 @@ export function PublicFundBox() {
           ready ? (
             <>
               Everything left after the liquidity pool pairs and escrow is funded:{" "}
-              <strong>{((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of MCP</strong>. Wizard ask is{" "}
+              <strong>{((L.treasPctMCP ?? 0) * 100).toFixed(1)}% of market cap</strong>. Wizard ask is{" "}
               {ask}%; chain accepts down to {(TREASURY_ACCEPT * 100).toFixed(0)}%.
             </>
           ) : (
-            `Everything left after the LP pairs and escrow is funded. Wizard ask ${ask}% of MCP; on-chain accept floor ${(TREASURY_ACCEPT * 100).toFixed(0)}%.`
+            `Everything left after the LP pairs and escrow is funded. Wizard ask ${ask}% of market cap; on-chain accept floor ${(TREASURY_ACCEPT * 100).toFixed(0)}%.`
           )
         }
       />
@@ -78,7 +78,7 @@ export function PublicFundBox() {
         <div className="public-fund-summary" id="pubFundSummary">
           Minimum raise <strong>${formatMcap(L.R ?? 0)}</strong>
           {" "}· Treasury receives <strong>${formatMcap(L.treasury ?? 0)}</strong>
-          {" "}· Treasury ask ({ask}% MCP) <strong>${formatMcap((L.mcp ?? 0) * (ask / 100))}</strong>
+          {" "}· Treasury ask ({ask}% of market cap) <strong>${formatMcap((L.mcp ?? 0) * (ask / 100))}</strong>
         </div>
       ) : null}
     </div>

@@ -1,5 +1,5 @@
 import { activeLegs, assetMeta, basketIsComplete, basketTotal } from "./backing-basket";
-import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE } from "./fee-calculator";
+import { CTOKEN_RESERVE_FEE, PROTOCOL_FEE, formatTransferFee } from "./fee-calculator";
 import { formatMcap, formatNum, formatPrice } from "./launch-solver";
 import { formatSaleWindow } from "./map-create-launch";
 import { getForegoPct } from "./overflow-calc";
@@ -71,7 +71,7 @@ function tokenomicsRows(state: LaunchpadState, solve: LaunchSolveResult | null):
     { label: "Vesting", value: state.vesting },
     { label: "Total Supply", value: Number.isFinite(supply) && supply > 0 ? formatNum(supply) : "—" },
     { label: "Target Escrow Raise", value: usd(state.escrowNeed) },
-    { label: "Treasury backing", value: `${pct(state.treasuryBackingPct)} of MCP` },
+    { label: "Treasury backing", value: `${pct(state.treasuryBackingPct)} of market cap` },
     { label: "Total Target Raise", value: usd(state.targetRaise) },
     { label: "Sale Window", value: formatSaleWindow(state.saleWindow) },
     { label: "Sale Type", value: SALE_LABELS[state.saleType] },
@@ -106,7 +106,7 @@ function tokenomicsRows(state: LaunchpadState, solve: LaunchSolveResult | null):
 
   rows.push(
     { label: "Initial Price", value: price ? `$${formatPrice(price)}` : "—" },
-    { label: "Implied MCP", value: price && supply ? `$${formatMcap(price * supply)}` : "—" },
+    { label: "Implied market cap", value: price && supply ? `$${formatMcap(price * supply)}` : "—" },
     { label: "Public Sale → LP", value: proceeds(solve?.lpFrac) },
     { label: "Public Sale → Treasury", value: proceeds(solve?.treasFrac) },
     { label: "Public Sale → Runway", value: proceeds(solve?.escrowFrac) },
@@ -140,7 +140,7 @@ function backingRows(state: LaunchpadState): ReviewRowModel[] {
 
 function feeRows(state: LaunchpadState): ReviewRowModel[] {
   return [
-    { label: "Total TX Fee", value: `${state.fees.totalFee.toFixed(2)}%` },
+    { label: "Transfer fee", value: formatTransferFee(state.fees.totalFee) },
     { label: "→ LP", value: `${state.fees.lpFee.toFixed(2)}%` },
     { label: "→ Treasury", value: `${state.fees.treasuryFee.toFixed(2)}%` },
     { label: "→ Reserve", value: `${CTOKEN_RESERVE_FEE.toFixed(2)}%` },

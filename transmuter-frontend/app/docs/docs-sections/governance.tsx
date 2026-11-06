@@ -4,7 +4,7 @@ export function GovernanceSection() {
       <section id="for-launch-platforms">
         <h2>For Launch Platforms</h2>
         <p>
-          Transmuter is infrastructure first; the launchpad is one way to use it. Other platforms
+          Transmuter is infrastructure first. The launchpad is one way to use it. Other platforms
           can run their launches on it and give their tokens the same reserves, escrow and end of
           life.
         </p>

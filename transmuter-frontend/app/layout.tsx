@@ -4,11 +4,12 @@ import Script from "next/script";
 import { BrandMotion } from "@/components/brand/brand-motion";
 import { SiteFooter } from "@/components/brand/site-footer";
 import { SiteHeader } from "@/components/brand/site-header";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { AppToaster } from "@/components/system/app-toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SolanaProvider } from "@/components/solana/solana-provider";
 import { assetUrl, defaultOgImagePath, siteName, siteUrl, themeColor, twitterSite } from "@/lib/seo/constants";
 import { siteAllowsIndexing } from "@/lib/seo/indexing";
+import { siteGraph } from "@/lib/seo/json-ld";
 import "./globals.css";
 
 const googleTagId = "G-BMKMCMG0SL";
@@ -61,24 +62,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <Script src={`https://www.googletagmanager.com/gtag/js?id=${googleTagId}`} strategy="beforeInteractive" />
-        <Script id="google-tag" strategy="beforeInteractive">
+      <body className={`${inter.variable} ${manrope.variable}`}>
+        <JsonLdScript data={siteGraph()} />
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${googleTagId}`} strategy="afterInteractive" />
+        <Script id="google-tag" strategy="afterInteractive">
           {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', '${googleTagId}');`}
         </Script>
-      </head>
-      <body className={`${inter.variable} ${manrope.variable}`}>
         <TooltipProvider>
           <BrandMotion />
-          <SolanaProvider>
-            <AppToaster />
-            <SiteHeader />
-            {children}
-            <SiteFooter />
-          </SolanaProvider>
+          <AppToaster />
+          <SiteHeader />
+          {children}
+          <SiteFooter />
         </TooltipProvider>
       </body>
     </html>

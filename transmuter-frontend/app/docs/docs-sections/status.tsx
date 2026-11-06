@@ -7,8 +7,8 @@ export function StatusSection() {
       </p>
       <ul>
         <li>
-          <strong>Audit:</strong> independent, one to two months before launch, currently targeted
-          for Q1 to Q2 2027.
+          <strong>Audit:</strong> The contracts have not been audited. An audit is planned for Q1 or Q2
+          2027.
         </li>
         <li>
           <strong>Contract addresses:</strong> published once deployed.
