@@ -13,6 +13,7 @@ export const metadata: Metadata = marketingPageMetadata({
   title: glossaryTitle,
   description: glossaryDescription,
   absoluteTitle: true,
+  image: null,
 });
 
 export default function GlossaryPage() {

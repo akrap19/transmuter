@@ -11,8 +11,11 @@ type MarketingPageMetadataInput = {
   absoluteTitle?: boolean;
   /** Wallet pages and filtered Explore URLs stay out of the index. */
   index?: boolean;
-  /** Absolute image URL. Falls back to the site card. */
-  image?: string;
+  /**
+   * Absolute image URL. Falls back to the site card.
+   * `null` leaves the image unset so a route `opengraph-image` file can supply it.
+   */
+  image?: string | null;
 };
 
 export function marketingPageMetadata(input: MarketingPageMetadataInput): Metadata {
@@ -22,7 +25,7 @@ export function marketingPageMetadata(input: MarketingPageMetadataInput): Metada
   const title = input.absoluteTitle
     ? { absolute: input.title }
     : input.title;
-  const image = input.image ?? assetUrl(defaultOgImagePath);
+  const image = input.image === undefined ? assetUrl(defaultOgImagePath) : input.image;
   const robots = pageRobots(input.index !== false);
 
   return {
@@ -42,14 +45,16 @@ export function marketingPageMetadata(input: MarketingPageMetadataInput): Metada
       title: input.title,
       description: input.description,
       url: canonical,
-      images: input.image ? [{ url: image }] : [{ url: image, width: 1200, height: 630 }],
+      ...(image
+        ? { images: input.image ? [{ url: image }] : [{ url: image, width: 1200, height: 630 }] }
+        : {}),
     },
     twitter: {
       card: "summary_large_image",
       site: twitterSite,
       title: input.title,
       description: input.description,
-      images: [image],
+      ...(image ? { images: [image] } : {}),
     },
   };
 }

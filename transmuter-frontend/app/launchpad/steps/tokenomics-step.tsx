@@ -117,7 +117,7 @@ function SupplyFields({ dispatch }: { dispatch: ReturnType<typeof useLaunchpad>[
                 This is the overflow floor: it funds escrow, pairs the liquidity in full, and
                 puts the treasury on its {state.treasuryBackingPct}% ask. If the pool raises less, the wizard will not
                 size a launch; on-chain the sale voids only if projected treasury is below 8%
-                of MCP after pairing, or combined backing is below 18%. Anything above the ask
+                of market cap after pairing, or combined backing is below 18%. Anything above the ask
                 is surplus.
               </span>
             )}
@@ -224,7 +224,7 @@ function TreasuryBackingField() {
           }}
           onBlur={(e) => commit(e.target.value)}
         />
-        <span className="input-suffix">% of MCP</span>
+        <span className="input-suffix">% of market cap</span>
       </div>
     </div>
   );

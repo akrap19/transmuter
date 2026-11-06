@@ -17,7 +17,7 @@
 .chart-section .chart-explainer { margin-top: 12px; }
 .chart-section .chart-scroll { margin-top: 14px; }
 .proof-strip { padding-top: 30px; padding-bottom: 52px; }
-.proof-strip > p { margin-bottom: 18px; }
+.proof-strip > h2 { margin-bottom: 18px; }
 
 /* Problem and constraints now form one act. The complete permission matrix is still
    in the initial HTML and can be opened using a native, keyboard-friendly detail. */

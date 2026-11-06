@@ -55,8 +55,8 @@ function WizardContent() {
         <p className="eyebrow">LAUNCHPAD</p>
         <h1>Create your EOL token</h1>
         <p>
-          Launch a treasury-backed token. No creator access to the treasury, ever. Your runway sits in
-          escrow and releases on the schedule you set at launch. Built-in end of life protection.
+          Launch a treasury-backed token. No creator access to the treasury, ever. If you set a runway, it
+          sits in escrow and releases on the schedule you fix at launch. Built-in end of life protection.
         </p>
       </section>
       <section className="launch-body section-shell page-wrapper">

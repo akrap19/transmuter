@@ -49,5 +49,30 @@ export const glossaryTerms: GlossaryTerm[] = [
     "id": "contingency-layer",
     "title": "Contingency layer",
     "body": "Optional: gold held as a secondary contingency measure beneath a cToken's base asset, for projects that choose the gold variant."
+  },
+  {
+    "id": "dao-token",
+    "title": "DAO token",
+    "body": "The protocol governance token. Backed by its own reserves in cSOL."
+  },
+  {
+    "id": "treasury",
+    "title": "Treasury",
+    "body": "The project's own reserve account, held in a cToken. Non-custodial, grows from fees, redeemable by holders."
+  },
+  {
+    "id": "redemption-ratio",
+    "title": "Redemption ratio",
+    "body": "What each token can claim from the treasury. Quantity based, so no price feed can move it."
+  },
+  {
+    "id": "backing-ratio",
+    "title": "Backing ratio",
+    "body": "Treasury value against market cap. Price based, and used only to open Mint to Scale, never to price a redemption."
+  },
+  {
+    "id": "cgold",
+    "title": "cGold",
+    "body": "A pure cToken whose base asset is tokenised gold. Gold is its first and only reserve, and it is always redeemable, the same as SOL is for cSOL."
   }
 ]

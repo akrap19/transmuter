@@ -25,6 +25,7 @@ export function coinShareMetadata(coin: CoinShareSource): Metadata {
     title: `${coin.name} (${coin.symbol})`,
     description: coinShareDescription(coin),
     image: shareImageUrl(coin.logoUrl),
+    index: false,
   });
 }
 

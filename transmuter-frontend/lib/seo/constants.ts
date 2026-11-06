@@ -31,6 +31,11 @@ export function assetUrl(path: string): string {
 export const organizationId = `${siteUrl}/#organization`;
 export const websiteId = `${siteUrl}/#website`;
 
+/** Public copy revision. Sitemap `lastmod` and the docs date use this. */
+export const contentUpdatedIso = "2026-11-06";
+export const contentUpdatedLabel = "6 November 2026";
+export const contentLastModified = new Date(`${contentUpdatedIso}T00:00:00.000Z`);
+
 export function organizationNode() {
   return {
     "@type": "Organization" as const,
@@ -45,16 +50,15 @@ export function organizationNode() {
   };
 }
 
-/** Public URLs search engines should crawl. Wallet dashboards stay out of this list. */
+/** Public URLs in the sitemap. App routes (/coins, /my-coins, /portfolio) stay out. */
 export const indexableStaticPaths = [
   "/",
   "/faq",
   "/glossary",
-  "/integrate",
-  "/holders",
-  "/access",
-  "/coins",
-  "/launchpad",
   "/docs",
+  "/holders",
+  "/integrate",
+  "/launchpad",
+  "/access",
   "/contact",
 ] as const;

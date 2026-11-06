@@ -7,7 +7,7 @@ const points = [
 export function ProofStrip() {
   return (
     <section className="proof-strip section-shell reveal">
-      <p>Built for Solana. Defined before trading.</p>
+      <h2>Built for Solana. Defined before trading.</h2>
       <div aria-label="Transmuter launch structure" className="proof-marquee">
         <div className="proof-track">
           <div className="proof-points">

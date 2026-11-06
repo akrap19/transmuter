@@ -413,6 +413,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
 .reveal.is-visible { opacity: 1; transform: translateY(0); }
+.nav-wallet-slot:empty { display: none; }
+.nav-wallet-slot:not(:empty) { display: contents; }
 
 @keyframes drawLine { to { stroke-dashoffset: 0; } }
 @keyframes pulse { 0%,100%{opacity:.35;box-shadow:0 0 0 0 rgba(216,173,89,.16)} 50%{opacity:1;box-shadow:0 0 0 5px rgba(216,173,89,0)} }
@@ -975,7 +977,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .chart-scroll { position: static; margin: 28px auto 0; width: fit-content; }
 
 .proof-strip { padding: 48px 0 95px; border-top: 1px solid var(--line-soft); }
-.proof-strip > p { margin: 0 0 28px; color: #d2ccbf; font: 500 clamp(19px, 2vw, 27px)/1.45 var(--font-manrope), sans-serif; letter-spacing: -.025em; }
+.proof-strip > h2 { margin: 0 0 28px; color: #d2ccbf; font: 500 clamp(19px, 2vw, 27px)/1.45 var(--font-manrope), sans-serif; letter-spacing: -.025em; }
 .proof-points { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
 .proof-points span { display: flex; gap: 10px; align-items: flex-start; color: var(--muted); font-size:14px; line-height: 1.55; }
 .proof-points i { flex: 0 0 auto; width: 6px; height: 6px; margin-top: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 14px rgba(216,173,89,.45); }

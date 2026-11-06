@@ -14,6 +14,7 @@ export const metadata: Metadata = marketingPageMetadata({
   title: faqTitle,
   description: faqDescription,
   absoluteTitle: true,
+  image: null,
 });
 
 export default function FaqPage() {

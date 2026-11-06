@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { moveHero, revealObserver, updateHeroShift, updateWaterfall } from "@/components/brand/brand-motion-effects";
+import { moveHero, readHeroProgress, revealObserver, watchWaterfall, writeHeroProgress } from "@/components/brand/brand-motion-effects";
 
 export function BrandMotion() {
   const pathname = usePathname();
@@ -13,12 +13,19 @@ export function BrandMotion() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const reveals = document.querySelectorAll(".reveal");
     const observer = revealObserver(reveals, reduce);
+    const waterfall = watchWaterfall(reduce);
+    let frame = 0;
     const onScroll = () => {
-      const max = root.scrollHeight - window.innerHeight;
-      root.style.setProperty("--progress", max > 0 ? String(Math.min(1, window.scrollY / max)) : "0");
-      header?.classList.toggle("scrolled", window.scrollY > 24);
-      updateHeroShift(root, reduce);
-      updateWaterfall();
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const heroProgress = readHeroProgress(reduce);
+        const max = root.scrollHeight - window.innerHeight;
+        const progress = max > 0 ? String(Math.min(1, window.scrollY / max)) : "0";
+        root.style.setProperty("--progress", progress);
+        header?.classList.toggle("scrolled", window.scrollY > 24);
+        writeHeroProgress(root, heroProgress);
+      });
     };
     const onPointer = (event: PointerEvent) => {
       root.style.setProperty("--mouse-x", `${event.clientX}px`);
@@ -43,6 +50,8 @@ export function BrandMotion() {
 
     return () => {
       observer?.disconnect();
+      waterfall?.disconnect();
+      if (frame) cancelAnimationFrame(frame);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       window.removeEventListener("pointermove", onPointer);
@@ -61,4 +70,3 @@ export function BrandMotion() {
     </>
   );
 }
-

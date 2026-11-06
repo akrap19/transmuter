@@ -48,7 +48,7 @@ describe("launchReviewSections", () => {
     expect(tokenomics["DAO Airdrop"]).toBe("Yes - 2% of supply");
     expect(tokenomics.Vesting).toBe("12 Month Linear");
     expect(tokenomics["Target Escrow Raise"]).toBe("$15,000");
-    expect(tokenomics["Treasury backing"]).toBe("12% of MCP");
+    expect(tokenomics["Treasury backing"]).toBe("12% of market cap");
     expect(tokenomics["Total Target Raise"]).toBe("$70,000");
     expect(tokenomics["Sale Window"]).toBe("2.5 days");
     expect(tokenomics["Sale Type"]).toBe("Fixed price");
@@ -105,7 +105,7 @@ describe("launchReviewSections", () => {
       toggles: { daoAirdrop: false, burnFee: true, creatorFee: false },
       fees: { ...initialLaunchpadState.fees, burnFee: 0.05 },
     });
-    expect(fees["Total TX Fee"]).toBe("0.60%");
+    expect(fees["Transfer fee"]).toBe("0.60% (recommended default, minimum 0.5%)");
     expect(fees["→ Reserve"]).toBe("0.10%");
     expect(fees["→ Gold"]).toBeUndefined();
     expect(fees["→ S&P"]).toBeUndefined();

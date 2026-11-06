@@ -15,8 +15,8 @@ export function FeesStep() {
     <div className={`step-panel panel${state.currentStep === 4 ? " active" : ""}`}>
       <div className="panel-title">
         <div className="dot" />
-        Transaction Fee Configuration
-        <FieldHint label="About transaction fees">
+        Transfer fee
+        <FieldHint label="About the transfer fee">
           Set the total transfer fee and how it splits. Protocol revenue ({PROTOCOL_FEE.toFixed(2)}%) and
           the reserve contribution ({CTOKEN_RESERVE_FEE.toFixed(2)}%) are fixed — a combined
           minimum of {(PROTOCOL_FEE + CTOKEN_RESERVE_FEE).toFixed(2)}%. You choose how the rest splits
@@ -26,7 +26,7 @@ export function FeesStep() {
       </div>
 
       <RangeField
-        label="Total TX Fee"
+        label="Transfer fee"
         value={fees.totalFee}
         max={2}
         min={PUBLISHED_MIN_TOTAL_FEE}

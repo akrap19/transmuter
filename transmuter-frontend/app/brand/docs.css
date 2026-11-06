@@ -19,6 +19,20 @@
 	margin-top: 24px;
 }
 
+.docs-hero .docs-note,
+.docs-hero .docs-updated {
+	max-width: 720px;
+	margin: 12px 0 0;
+	color: #aaa8b1;
+	font-size: 16px;
+	line-height: 1.6;
+}
+
+.docs-hero .docs-updated {
+	color: #8d8b94;
+	font-size: 14px;
+}
+
 .docs-section {
 	padding: 0 0 120px;
 }
