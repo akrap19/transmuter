@@ -59,6 +59,7 @@ export const indexableStaticPaths = [
   "/holders",
   "/integrate",
   "/launchpad",
+  "/simulator",
   "/access",
   "/contact",
 ] as const;

@@ -103,6 +103,7 @@ describe("search metadata", () => {
       "/holders",
       "/integrate",
       "/launchpad",
+      "/simulator",
       "/access",
       "/contact",
     ]);

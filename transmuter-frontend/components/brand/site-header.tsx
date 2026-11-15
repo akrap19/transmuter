@@ -59,10 +59,10 @@ export function SiteHeader() {
           );
         })}
         <LearnMenu onNavigate={() => setOpen(false)} />
+        <div className="nav-wallet-slot" id="wallet-slot" />
         <Link className="nav-cta" href={routes.access} onClick={() => setOpen(false)}>
           Beta testing
         </Link>
-        <div className="nav-wallet-slot" id="wallet-slot" />
       </nav>
     </header>
   );
