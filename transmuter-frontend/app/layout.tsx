@@ -4,6 +4,7 @@ import Script from "next/script";
 import { BrandMotion } from "@/components/brand/brand-motion";
 import { SiteFooter } from "@/components/brand/site-footer";
 import { SiteHeader } from "@/components/brand/site-header";
+import { WalletShell } from "@/components/solana/wallet-shell";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { AppToaster } from "@/components/system/app-toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -71,13 +72,15 @@ function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', '${googleTagId}');`}
         </Script>
-        <TooltipProvider>
-          <BrandMotion />
-          <AppToaster />
-          <SiteHeader />
-          {children}
-          <SiteFooter />
-        </TooltipProvider>
+        <WalletShell>
+          <TooltipProvider>
+            <BrandMotion />
+            <AppToaster />
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+          </TooltipProvider>
+        </WalletShell>
       </body>
     </html>
   );

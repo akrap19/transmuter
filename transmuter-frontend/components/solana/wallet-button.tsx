@@ -59,22 +59,32 @@ export function WalletButton({ className, variant = 'default' }: WalletButtonPro
 		<div className={cn('wallet-dropdown', menuOpen && 'is-open', className)} ref={rootRef}>
 			<button
 				type='button'
-				className={nav ? 'nav-cta wallet-connect nav-wallet-trigger' : isConnected ? 'wallet-user-chip' : 'btn btn-gold wallet-connect'}
+				className={
+					nav
+						? isConnected
+							? 'wallet-user-chip nav-wallet-trigger'
+							: 'nav-cta wallet-connect nav-wallet-trigger'
+						: isConnected
+							? 'wallet-user-chip'
+							: 'btn btn-gold wallet-connect'
+				}
 				aria-expanded={menuOpen}
 				aria-haspopup='menu'
 				aria-label={isConnected && address ? `Connected wallet ${shortenAddress(address)}` : 'Connect wallet'}
 				disabled={connecting}
 				onClick={() => setMenuOpen(open => !open)}
 			>
-				{nav ? <WalletIcon size={16} aria-hidden /> : null}
-				{!nav && isConnected && address ? (
+				{isConnected && address ? (
 					<WalletChip
 						address={address}
 						walletName={wallet?.adapter.name}
 						walletIcon={wallet?.adapter.icon}
 					/>
 				) : (
-					<span>{label}</span>
+					<>
+						{nav ? <WalletIcon size={16} aria-hidden /> : null}
+						<span>{label}</span>
+					</>
 				)}
 				<ChevronDown size={14} aria-hidden className={cn('wallet-chevron', menuOpen && 'is-open')} />
 			</button>

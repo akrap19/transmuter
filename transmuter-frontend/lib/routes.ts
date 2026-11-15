@@ -1,6 +1,7 @@
 export const routes = {
   home: "/",
   launchpad: "/launchpad",
+  simulator: "/simulator",
   docs: "/docs",
   access: "/access",
   contact: "/contact",

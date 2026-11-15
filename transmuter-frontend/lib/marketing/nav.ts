@@ -5,12 +5,13 @@ export type SiteLink = {
   href: string;
 };
 
-// Header shows the two app actions as top-level tabs, then collapses the
+// Header shows the app actions as top-level tabs, then collapses the
 // informational pages into a single "Learn" dropdown. The Beta testing CTA
 // and wallet are rendered separately in SiteHeader.
 export const headerPrimaryLinks: SiteLink[] = [
   { label: "Explore", href: routes.coins },
   { label: "Launchpad", href: routes.launchpad },
+  { label: "Simulator", href: routes.simulator },
 ];
 
 export const learnMenu: { label: string; links: SiteLink[] } = {
@@ -32,6 +33,7 @@ export const footerColumns: { title: string; links: SiteLink[] }[] = [
     links: [
       { label: "Explore", href: routes.coins },
       { label: "Launchpad", href: routes.launchpad },
+      { label: "Simulator", href: routes.simulator },
       { label: "My Coins", href: routes.myCoins },
       { label: "Portfolio", href: routes.portfolio },
     ],
