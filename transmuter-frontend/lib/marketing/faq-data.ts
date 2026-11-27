@@ -17,7 +17,8 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "What is Transmuter?",
         "answers": [
-          "Transmuter is value recovery infrastructure for tokens on Solana. An isolated treasury and contract-owned liquidity sit beneath each token, with end of life rules defined before trading.",
+          "Transmuter is value recovery infrastructure for tokens on Solana. Each token has its own isolated treasury and its own pools nobody can pull or drain, with end of life rules defined before trading.",
+          "Any holder can redeem their share at any time, in the reserves themselves.",
           "Escrow is optional. If used, its schedule is fixed before trading."
         ]
       },
@@ -30,43 +31,55 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "What backs a token launched on Transmuter?",
         "answers": [
-          "Each token has an isolated treasury holding the reserve asset configured at launch.",
-          "Where the project chooses the gold variant, contingent gold sits beneath the cToken's base asset. That gold is not part of an ordinary project closure payout; it is the fallback if the base asset fails."
+          "A token's reserves are the treasury basket of BTC, SOL and USDC, USDC that has been collected but not yet converted, and the cash side of the token's own pools.",
+          "Each token holds its own basket, picked by its creator at launch."
         ]
       },
       {
         "question": "Can Transmuter access project funds or critical financial functions?",
         "answers": [
-          "No. We cannot move a project's treasury, take its reserves, mint its token, alter holder balances, block redemptions or force an end of life.",
-          "At the financial governance layer, the founder safeguard is cancel-only: it can stop an end of life, but it cannot create or accelerate one. The system is deliberately designed so that intervention cannot become a route into user funds."
+          "No. No instruction lets the creator or Transmuter take the treasury. It moves only by redemption, a holder-voted draw into escrow, and end of life. Transmuter cannot mint a token, alter holder balances or block a redemption.",
+          "Every Transmuter power runs through a 3-of-5 multisig with its own signers. It can stop a passed end of life within 48 hours and can never start one.",
+          "The reserves program can be upgraded so bugs can be fixed. For now that takes Transmuter's 3-of-5 multisig, with its own signers; later it will take Transmuter plus the DAO council or the DAO's holders. The governance section of /docs#governance sets out who can upgrade it."
         ]
       },
       {
         "question": "Can someone buy the vote and take the treasury?",
         "answers": [
           "An end of life vote does not transfer reserves to the people voting. Each holder redeems their pro rata share.",
-          "Influence in the vote does not confer a larger per-token payout. The vote thresholds are in /docs."
+          "Influence in the vote does not confer a larger per-token payout. Transmuter, together with the DAO council or the DAO's holders, can freeze a staked position. Nothing is burned or taken.",
+          "The vote thresholds are in /docs."
         ]
       },
       {
         "question": "Can a team take the money and disappear?",
         "answers": [
-          "A team cannot withdraw its project’s treasury at will. If configured, escrow unlocks on the schedule fixed before launch, by time or by milestone, without a vote for each payment.",
-          "If the work defined in a milestone is not delivered, holders can pause the escrow. Holders can also resume it or advance the next tranche, without rewriting the schedule. Paused escrow stays in escrow until it is released or joins the treasury at end of life."
+          "A team cannot withdraw its project's treasury at will. If configured, escrow unlocks on the schedule fixed before launch, without a vote for each payment.",
+          "If the work defined in a milestone is not delivered, holders can pause the escrow, resume it, or advance the next tranche, without rewriting the schedule.",
+          "At most half of the escrow can be released at finalisation. Sale deposits are final once the sale closes; if a finalisation check fails, the launch voids and every depositor gets their USDC back."
         ]
       },
       {
         "question": "What kinds of projects can launch on Transmuter?",
         "answers": [
           "Token launches are permissionless. Transmuter does not approve, vet or certify the teams that use it.",
-          "Projects choose their own terms at launch, including whether to use escrow. Those terms matter more than the name of the venue."
+          "A memecoin has no escrow and no investors. A serious project can have escrow, and investors up to 30% of supply."
         ]
       },
       {
         "question": "What are the limits of the system?",
         "answers": [
           "Transmuter does not stop projects from failing, vet teams or make statements about token price. Reserves are worth what their assets are worth.",
-          "Escrow is optional and can be set to zero at launch. Governance cannot rewrite an escrow schedule once trading begins."
+          "Redemption value can fall when people sell above it, or when the reserve assets fall in price. Escrow is optional and can be set to zero at launch. Governance cannot rewrite an escrow schedule once trading begins."
+        ]
+      },
+      {
+        "question": "What does it cost?",
+        "answers": [
+          "Launching is free. The transfer fee is 0.60% to 2.00%, set at launch and changeable by holder vote at most three times in 12 months, taking effect about four days later.",
+          "The first 0.60% is 0.20% Transmuter, 0.15% treasury, 0.15% pools, and 0.10% that buys DAO tokens and burns them. Anything above 0.60% goes to burn, the creator, the treasury or the pools.",
+          "A redemption uses the highest fee in the 12 months before it. End of life uses the highest fee in the 12 months before the vote passed, and later redemptions use that same rate.",
+          "Transmuter can cut its share; a cut reaches every live token and lowers its total by the same amount. A raise reaches only later launches. Mint to Scale is 0.25% on top. Staking is free both ways, with no staking reward."
         ]
       }
     ]
@@ -79,7 +92,7 @@ export const faqGroups: FaqGroup[] = [
         "question": "Does Transmuter compete with other launchpads?",
         "answers": [
           "Other launch platforms can integrate the protocol beneath their own launch experience.",
-          "Integration terms are still being developed. Transmuter does not claim other venues offer no protection: escrow-based protection and ongoing token reserves address different periods of a project’s life."
+          "Integration terms are still being developed. Transmuter does not claim other venues offer no protection: escrow-based protection and ongoing token reserves address different periods of a project's life."
         ]
       },
       {
@@ -97,22 +110,23 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "What is an EOL token?",
         "answers": [
-          "An EOL token is a token configured to use Transmuter’s treasury and end of life rules.",
+          "An EOL token is a token configured to use Transmuter's treasury and end of life rules.",
           "A project may configure escrow or set it to zero. The venue does not screen or approve the team."
         ]
       },
       {
-        "question": "What is a cToken?",
+        "question": "What are reserve assets?",
         "answers": [
-          "cToken: the shared reserve asset beneath EOL tokens. A project's treasury holds cTokens. Each cToken represents an amount of the base asset that grows as the ecosystem uses it. Redemption pays out the base asset, not the cToken.",
-          "Gold sits beneath the base asset where the project chooses the gold variant."
+          "A reserve asset is one of the assets a token's treasury holds: 1 to 5 of BTC, SOL and USDC, picked by the creator at launch.",
+          "They are collected by fixed ratios and never rebalanced. Nothing is ever written off: an asset that cannot move is left out of a redemption until it can."
         ]
       },
       {
         "question": "What is Mint to Scale?",
         "answers": [
-          "Mint to Scale is an automatic exchange that accepts a minter’s payment and issues tokens when backing is below the activation threshold. Minting happens only inside these events.",
-          "It is not an unconditional source of income. Currently 6 hours. Testing may adjust it before launch."
+          "Mint to Scale sells new supply above market when backing is low, paid in USDC, and the proceeds go to reserves.",
+          "It opens after 6 hours under the creator's trigger. The premium opens at 50%, falls 2 points an hour, and rests at 2% after 24 hours.",
+          "Up to 25% of supply per event; the yearly budget is 40% to 100%. There is no gap between events, and a closed event does not reopen."
         ]
       },
       {
@@ -125,21 +139,21 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "Where does the money go when someone mints?",
         "answers": [
-          "SOL paid in during a Mint to Scale event goes into cSOL's reserves, the cSOL contract mints cSOL into the token's treasury, and the payer receives newly minted EOL tokens."
+          "The buyer pays USDC plus 0.25%. All of it counts as reserves at once. 0% to 50% pairs into the pools; the rest is converted into the basket."
         ]
       },
       {
         "question": "What happens to my team's own allocation?",
         "answers": [
-          "The team’s token allocation is separate from any escrow schedule, which can be set to zero at launch.",
-          "At end of life, unsold allocation and unvested team tokens burn under the predefined rules."
+          "At most 30%, always vested, nothing unlocked at listing. A cliff releases what has built up by then.",
+          "Unvested team tokens burn at end of life; investor tokens never burn. Unsold sale tokens burn at finalisation."
         ]
       },
       {
         "question": "Is my project's treasury exposed to other projects on the protocol?",
         "answers": [
-          "No. Each token has its own isolated treasury. Other project treasuries are not pooled with it.",
-          "The cToken beneath it can respond to activity across multiple projects using it."
+          "No. Each token has its own isolated treasury and its own basket.",
+          "The only links are the 0.10% DAO buy-and-burn and an optional DAO pool."
         ]
       },
       {
@@ -153,7 +167,14 @@ export const faqGroups: FaqGroup[] = [
         "question": "Are teams vetted or contracts audited?",
         "answers": [
           "Transmuter launches are permissionless: teams are not approved or vetted.",
-          "The contracts have not been audited. An audit is planned for Q1 or Q2 2027; a contract address or dashboard is not currently published."
+          "The contracts have not been audited. Audits and legal work follow in the first half of 2027, and nothing launches before the audit. A contract address or dashboard is not currently published."
+        ]
+      },
+      {
+        "question": "What if a reserve asset is frozen?",
+        "answers": [
+          "A frozen reserve asset is left out of redemptions until it can move again. Nothing is ever written off.",
+          "Your share of that asset stays with the holders who wait."
         ]
       }
     ]
@@ -165,15 +186,15 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "Can Transmuter block a legitimate end of life vote?",
         "answers": [
-          "The current design is described in the docs and is being revised. A liquidation halt can stop an end of life, and cannot force one. It cannot move a treasury, mint a token, alter a balance, or block a redemption.",
-          "What the halt can and cannot do, and the vote thresholds, are in /docs."
+          "Transmuter's multisig can stop a passed end of life in the 48 hours before it executes, and can overrule a DAO cancel. It can never start or force one.",
+          "The DAO can cancel a passed end of life. Neither can start one. The vote thresholds are in /docs."
         ]
       },
       {
-        "question": "How decentralized is Transmuter?",
+        "question": "How decentralised is Transmuter?",
         "answers": [
-          "The current design is described in the docs and is being revised.",
-          "Holders govern their own token. The protocol DAO and its council are guardians with a narrow override, and the founder halt is cancel-only. The boundary is in /docs."
+          "Three groups: the DAO's holders, the DAO council and Transmuter's multisig. Transmuter appoints the council for now and hands that over later.",
+          "Holders govern their own token. The boundary is in /docs."
         ]
       }
     ]
@@ -186,28 +207,28 @@ export const faqGroups: FaqGroup[] = [
         "question": "What happens if a team abandons the project?",
         "answers": [
           "Abandonment does not give the team the right to withdraw the isolated treasury.",
-          "If escrow was configured, holders can pause or unpause it. Unreleased escrow joins the treasury only if end of life is approved, after which each holder redeems their pro rata share."
+          "Unspent escrow is paid to holders as USDC at end of life. A holder-passed escrow halt also opens the end-of-life gate."
         ]
       },
       {
         "question": "When can an end of life be proposed?",
         "answers": [
-          "An end of life proposal is subject to the protocol’s end of life gate and then a governance vote.",
-          "Only after end of life is approved do the mechanical reserve-consolidation and token-burn steps run. The gate is described in /docs."
+          "After the trouble condition, where the market has sat near the redemption value for about a month, after 10 days of dead price reads, after an escrow halt, or when Transmuter opens the gate.",
+          "Then two parties, one of them the creator or a holder with 0.1% of supply."
         ]
       },
       {
         "question": "How long does end of life take?",
         "answers": [
-          "About two months from vote to payout, after a 14-day vote needing a 67% supermajority and a 10% quorum.",
-          "The timeline and thresholds are in /docs."
+          "About one month from the proposal, being a 30-day vote plus a 48-hour wait, and up to two months from the first sign of trouble.",
+          "Two-thirds, with a 10% quorum. After a vote that fails for lack of quorum, 7%, then 5%."
         ]
       },
       {
         "question": "What happens to unspent escrow if a project ends?",
         "answers": [
-          "If escrow was configured, its unreleased balance converts into the reserve asset, joins the treasury at end of life, and is redeemed with it.",
-          "A holder pause alone does not send funds to the treasury or to the voters. The funds remain in escrow until released or they join the treasury at end of life."
+          "Paid out in USDC, never taxed. It is not converted into reserve assets.",
+          "A holder pause alone does not send funds to the treasury or to the voters. The funds remain in escrow until released or they are paid at end of life."
         ]
       }
     ]
@@ -219,15 +240,15 @@ export const faqGroups: FaqGroup[] = [
       {
         "question": "What do holders get?",
         "answers": [
-          "Holders can see the terms a team set at launch and participate in governance over a configured escrow schedule.",
+          "Any holder can redeem at any time, not only after an end of life.",
           "Reserves remain isolated in the project treasury. If end of life is approved, each holder redeems their share under the predefined rules; the protocol does not prevent investment losses."
         ]
       },
       {
         "question": "What does a holder actually receive?",
         "answers": [
-          "End of life pays each EOL token’s defined share of the available base asset after the vote. It is a quantity of that asset, counted in the base asset, not a dollar amount. Each holder redeems when they choose.",
-          "Where the project chooses the gold variant, contingency gold stays at the cToken on an ordinary project closure. It is a fallback if the cToken’s base asset fails."
+          "Their share of each reserve asset, of USDC not yet converted, and of the pools' cash, minus the redemption fee. It is a quantity, counted in the assets, not a dollar amount.",
+          "A holder can redeem whenever they choose."
         ]
       }
     ]

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { FaqItem } from "@/lib/marketing/faq-data";
-import { routes } from "@/lib/routes";
 
 type FaqListProps = {
   items: FaqItem[];
@@ -50,13 +49,16 @@ export function FaqList({ items }: FaqListProps) {
 }
 
 function FaqAnswer({ text }: { text: string }) {
-  const parts = text.split("/docs");
+  const parts = text.split(/(\/docs(?:#[\w-]+)?)/g);
   if (parts.length === 1) return text;
 
-  return parts.map((part, index) => (
-    <span key={`${index}-${part}`}>
-      {part}
-      {index < parts.length - 1 ? <Link href={routes.docs}>/docs</Link> : null}
-    </span>
-  ));
+  return parts.map((part, index) => {
+    if (!part.startsWith("/docs")) return <span key={`${index}-${part}`}>{part}</span>;
+    const [path, hash] = part.split("#");
+    return (
+      <Link href={hash ? `${path}#${hash}` : path} key={`${index}-${part}`}>
+        {path}
+      </Link>
+    );
+  });
 }

@@ -9,7 +9,7 @@
   --violet:#9878fd; --violet-deep:#272045; --on-gold:#111014;
   --up:#f2ba75; --down:#d4847f; --bone:#9878fd;
   --line:rgba(226,192,102,.18); --line-soft:rgba(246,244,236,.09);
-  --line-violet:rgba(152,120,253,.30);
+  --line-violet:rgba(152,120,253,.30); --muted2:#77727f;
   --radius:26px; --r-card:22px; --r-pill:20px; --r-tile:18px; --r-tag:12px;
   --card-grad:linear-gradient(160deg,rgba(19,19,24,.72),rgba(10,10,14,.88));
   --panel-grad:linear-gradient(150deg,rgba(18,15,27,.80),rgba(9,9,13,.94));
@@ -22,8 +22,13 @@
 .value-calc{background:var(--bg);color:var(--body);font-family:var(--font-inter),system-ui,sans-serif;
   font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased;padding-bottom:40px}
 .value-calc .wrap{max-width:var(--max);margin:0 auto;padding:0 26px}
+
 /* ── page head ───────────────────────────────────────────────────── */
-.value-calc .phead{padding:46px 0 10px}
+.value-calc .phead{padding:46px 0 10px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px 56px;align-items:end}
+.value-calc .resnote{border:1px solid rgba(152,120,253,.35);background:rgba(152,120,253,.06);border-radius:14px;padding:18px 22px;
+  font-size:14.5px;line-height:1.6;color:var(--neutral)}
+.value-calc .resnote .t{font-family:var(--font-manrope),sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--violet);margin-bottom:6px}
+.value-calc .resnote b{color:var(--text)}
 .value-calc .eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);
   font-weight:600;margin-bottom:14px}
 .value-calc h1{font-family:var(--font-manrope),sans-serif;font-weight:700;font-size:clamp(30px,4vw,44px);
@@ -31,6 +36,7 @@
   background:var(--gold-violet);-webkit-background-clip:text;background-clip:text;
   color:transparent;-webkit-text-fill-color:transparent;display:inline-block}
 .value-calc .sub{font-size:16px;color:var(--neutral);max-width:66ch;line-height:1.62}
+
 /* ── step sections ───────────────────────────────────────────────── */
 .value-calc .step{margin-top:30px}
 .value-calc .stephead{display:flex;align-items:center;gap:13px;margin-bottom:15px;flex-wrap:wrap}
@@ -41,10 +47,12 @@
   letter-spacing:-.015em;margin:0}
 .value-calc .stephead .say{font-size:13px;color:var(--muted);margin-left:2px}
 .value-calc .stephead .sp{flex:1}
+
 .value-calc .card{background:var(--card-grad);border:1px solid var(--line-soft);
   border-radius:var(--r-card);padding:24px;box-shadow:var(--card-shadow);
   position:relative;overflow:hidden}
 .value-calc .card + .card{margin-top:14px}
+
 /* ── controls ────────────────────────────────────────────────────── */
 .value-calc .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:18px 26px}
 .value-calc .f{min-width:0}
@@ -60,8 +68,10 @@
   box-shadow:0 0 0 3px rgba(226,192,102,.12)}
 .value-calc input[type=range]{width:100%;accent-color:var(--gold);margin-top:3px;cursor:pointer}
 .value-calc input[type=range]:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
 .value-calc .hint{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.55}
 .value-calc .hint b{color:var(--gold-lt);font-weight:500}
+
 .value-calc button{font-family:var(--font-inter),sans-serif;font-size:12.5px;font-weight:500;cursor:pointer;
   background:transparent;border:1px solid var(--line);color:var(--body);
   padding:8px 15px;border-radius:var(--r-pill);transition:all .15s;white-space:nowrap}
@@ -72,6 +82,11 @@
   border-radius:var(--r-pill);background:rgba(6,6,10,.45)}
 .value-calc .seg button{border:0;padding:7px 14px}
 .value-calc .presets{display:flex;flex-wrap:wrap;gap:7px}
+/* Presets read as buttons: the same violet the page uses for things you can click into. */
+.value-calc #presets button{border:1px solid rgba(152,120,253,.6);background:rgba(152,120,253,.22);color:var(--text)}
+.value-calc #presets button:hover{border-color:var(--violet);background:rgba(152,120,253,.26);color:var(--text)}
+.value-calc #presets button.on{background:linear-gradient(135deg,var(--gold-lt),var(--gold));border-color:transparent;color:var(--on-gold)}
+
 /* ── allocation bar ──────────────────────────────────────────────── */
 .value-calc .allocwrap{margin-top:22px;padding-top:20px;border-top:1px solid var(--line-soft)}
 .value-calc .alloc{display:flex;height:26px;border-radius:9px;overflow:hidden;
@@ -81,6 +96,7 @@
 .value-calc .legend span{display:flex;align-items:center;gap:6px}
 .value-calc .legend i{width:9px;height:9px;border-radius:2.5px;display:inline-block;flex:none}
 .value-calc .bad{color:var(--down);font-size:12px;margin-top:10px;line-height:1.55}
+
 /* ── advanced disclosures ────────────────────────────────────────── */
 .value-calc details.adv{margin-top:14px;border:1px solid var(--line-soft);border-radius:var(--r-tile);
   background:rgba(6,6,10,.35);overflow:hidden}
@@ -98,6 +114,7 @@
 .value-calc details.adv > summary strong{font-weight:600;color:var(--violet);font-size:13px}
 .value-calc .advbody{padding:4px 18px 20px;border-top:1px solid var(--line-soft)}
 .value-calc .mintstate:not(:empty){margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft)}
+
 /* Long explanatory copy, kept verbatim but out of the way until asked for. */
 .value-calc details.why{margin-top:7px}
 .value-calc details.why > summary{list-style:none;cursor:pointer;font-size:11px;color:var(--gold-deep);
@@ -107,6 +124,7 @@
 .value-calc details.why > summary:before{content:"?";width:13px;height:13px;border-radius:50%;
   border:1px solid currentColor;font-size:9px;display:grid;place-items:center;flex:none}
 .value-calc details.why .hint{margin-top:7px;padding-left:18px;border-left:1px solid var(--line-soft)}
+
 /* ── result ──────────────────────────────────────────────────────── */
 .value-calc .outcome{background:var(--panel-grad);border:1px solid var(--line);
   border-radius:var(--radius);padding:24px 26px;position:relative;overflow:hidden}
@@ -114,7 +132,7 @@
   border-radius:50%;right:-86px;top:-92px;
   background:radial-gradient(circle,rgba(226,192,102,.11),transparent 68%)}
 .value-calc .outcome > *{position:relative;z-index:1}
-.value-calc .orow{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;
+.value-calc .orow{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 0;
   border-bottom:1px solid var(--line-soft);font-size:13.5px}
 .value-calc .orow:last-of-type{border-bottom:0}
 .value-calc .orow .k{color:var(--muted);letter-spacing:.11em;text-transform:uppercase;font-size:10.5px}
@@ -122,9 +140,9 @@
 .value-calc .orow.hero .v{font-size:19px;font-weight:500}
 .value-calc .verdict{margin-top:16px;padding-top:15px;border-top:1px solid var(--line-soft);
   font-size:13px;line-height:1.65}
-.value-calc .verdict.ok{color:var(--body)}
-.value-calc .verdict.no{color:var(--down)}
+.value-calc .verdict.ok{color:var(--body)} .value-calc .verdict.no{color:var(--down)}
 .value-calc .verdict b{color:var(--gold-lt);font-weight:500}
+
 .value-calc .sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:11px;margin-top:14px}
 .value-calc .s{background:var(--card-grad);border:1px solid var(--line-soft);
   border-radius:var(--r-tile);padding:15px 16px}
@@ -132,6 +150,7 @@
 .value-calc .s .v{font-family:var(--font-manrope),sans-serif;font-weight:700;font-size:21px;color:var(--gold-lt);
   margin-top:5px;letter-spacing:-.01em}
 .value-calc .s .n{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+
 /* ── sticky answer bar ───────────────────────────────────────────── */
 .value-calc #stickybar{position:fixed;left:0;right:0;bottom:0;z-index:40;
   background:rgba(6,6,10,.92);backdrop-filter:blur(16px);
@@ -149,6 +168,7 @@
 .value-calc .sb-in a{font-size:12.5px;color:var(--body);text-decoration:none;border:1px solid var(--line);
   padding:8px 15px;border-radius:var(--r-pill);white-space:nowrap}
 .value-calc .sb-in a:hover{border-color:var(--gold);color:var(--gold-lt)}
+
 /* ── explore ─────────────────────────────────────────────────────── */
 .value-calc .headrow{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
 .value-calc .headrow h2{font-family:var(--font-manrope),sans-serif;font-weight:600;font-size:16px;color:var(--text);margin:0}
@@ -167,16 +187,17 @@
 .value-calc .viewpick button.on{border-color:var(--gold);background:rgba(226,192,102,.12)}
 .value-calc .viewpick button.on b{color:var(--gold-lt)}
 .value-calc .viewpick button.on span{color:var(--neutral)}
-
-@media (max-width:760px){.value-calc .viewpick{grid-template-columns:1fr}
-}.value-calc #srcBar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;
+@media (max-width:760px){.value-calc .viewpick{grid-template-columns:1fr}}
+.value-calc #srcBar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;
   background:rgba(6,6,10,.45);border:1px solid var(--line-soft);
   border-radius:var(--r-tile);padding:11px 14px;margin-bottom:16px}
 .value-calc .srclab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .value-calc #srcBar button{padding:6px 13px;font-size:12px}
 .value-calc .vsep{width:1px;height:20px;background:var(--line-soft);margin:0 5px}
+
 .value-calc canvas{width:100%;display:block;border:1px solid var(--line-soft);
   border-radius:var(--r-card);background:rgba(6,6,10,.4)}
+
 /* ── table ───────────────────────────────────────────────────────── */
 .value-calc #tableWrap{max-height:70vh;overflow-y:scroll;overflow-x:auto;padding-right:12px;outline:none;
   scrollbar-width:auto;scrollbar-color:var(--gold) rgba(226,192,102,.08);
@@ -198,8 +219,7 @@
   color:var(--body);white-space:nowrap}
 .value-calc tr:hover td{background:rgba(226,192,102,.05)}
 .value-calc td.p{color:var(--text);font-weight:500}
-.value-calc td.g{color:var(--gold-lt)}
-.value-calc td.big{color:var(--gold);font-weight:500}
+.value-calc td.g{color:var(--gold-lt)} .value-calc td.big{color:var(--gold);font-weight:500}
 .value-calc tr.launch td{background:linear-gradient(rgba(226,192,102,.17),rgba(226,192,102,.11));
   border-top:1px solid rgba(226,192,102,.55);border-bottom:1px solid rgba(226,192,102,.55);
   color:#f6f4ec}
@@ -214,16 +234,28 @@
 .value-calc tr.endrow td{box-shadow:inset 0 -2px 0 rgba(152,120,253,.75)}
 .value-calc thead tr:first-child th{height:27px}
 .value-calc thead tr:nth-child(2) th{top:27px}
+
 .value-calc .note{font-size:12.5px;line-height:1.7;color:var(--body);margin-top:16px;
   padding-top:15px;border-top:1px solid var(--line-soft)}
+/* The table/SOL/path views blank this note while they are on screen. Left visible it was an empty
+   bordered strip under the chart, reading as a container that had failed to load. */
+.value-calc .note:empty{display:none}
 .value-calc .note b{color:var(--gold-lt);font-weight:500}
+
+/* Shown in place of the three views until the launch can actually be run forward. */
+.value-calc .explore-empty{border:1px solid rgba(152,120,253,.35);background:rgba(152,120,253,.06);
+  border-radius:var(--r-card);padding:26px 28px;font-size:13.5px;line-height:1.7;color:var(--body);max-width:76ch}
+.value-calc .explore-empty span{display:block;font-family:var(--font-manrope),sans-serif;font-weight:700;
+  font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--violet);margin-bottom:8px}
+.value-calc .explore-empty strong{display:block;font-family:var(--font-manrope),sans-serif;font-weight:600;
+  font-size:18px;color:var(--text);margin-bottom:6px}
 .value-calc .warn{margin-top:14px;padding:13px 16px;border:1px solid var(--gold-deep);
   border-radius:var(--r-tile);background:rgba(226,192,102,.06);font-size:12.5px;line-height:1.6}
 
-
 /* ── responsive ──────────────────────────────────────────────────── */
-@media(max-width:860px){.value-calc .wrap{padding:0 16px}
-.value-calc .phead{padding:30px 0 6px}
+@media(max-width:860px){
+.value-calc .wrap{padding:0 16px}
+.value-calc .phead{padding:30px 0 6px;grid-template-columns:1fr}
 .value-calc .card{padding:18px}
 .value-calc .fields{grid-template-columns:1fr;gap:16px}
 .value-calc .sum{grid-template-columns:repeat(auto-fit,minmax(136px,1fr))}
@@ -232,8 +264,9 @@
 .value-calc .sb-item .v{font-size:16px}
 .value-calc .sb-in a{display:none}
 .value-calc #tableWrap{max-height:60vh}
+}
 
-}/* Step 4 runs the view and its controls side by side. The control groups are the same
+/* Step 4 runs the view and its controls side by side. The control groups are the same
    <details class="adv"> blocks as before, moved here unchanged, so every input keeps its id. */
 .value-calc .runsplit{display:grid;grid-template-columns:minmax(0,1fr) 244px;gap:12px;align-items:start}
 .value-calc .viewcol{min-width:0}
@@ -250,10 +283,9 @@
 .value-calc .adv > summary .tag{color:var(--muted2)}
 .value-calc details.adv[open]{background:rgba(6,6,10,.35)}
 .value-calc .ctlcol details.adv .fields{grid-template-columns:1fr}
-
-@media (max-width:1500px){.value-calc .runsplit{grid-template-columns:1fr}
+@media (max-width:1500px){
+.value-calc .runsplit{grid-template-columns:1fr}
 .value-calc .ctlcol{position:static}
-
 }
 
 /* Step 4 used to break out of a narrower page column to fit its 16-column table. The page is
@@ -261,17 +293,19 @@
 
 /* Below the wide desktop sizes the 16 columns get tight, so give the cells less air rather
    than hand the table a sideways scrollbar. */
-@media (max-width:1520px){.value-calc th{padding-left:4px;padding-right:4px}
+@media (max-width:1520px){
+.value-calc th{padding-left:4px;padding-right:4px}
 .value-calc td{padding-left:4px;padding-right:4px}
-
 }
 
 /* Under ~1240px even the full page width is short for 16 columns, so drop the table a size
    rather than hand it a scrollbar. */
-@media (max-width:1240px){.value-calc table{font-size:10.5px}
+@media (max-width:1240px){
+.value-calc table{font-size:10.5px}
 .value-calc th{font-size:8.5px}
+}
 
-}/* ══ v2 LAYOUT ═══════════════════════════════════════════════════════════
+/* ══ v2 LAYOUT ═══════════════════════════════════════════════════════════
    The cockpit: what you change and what it changes, side by side, so the
    loop never requires scrolling. v1 put the answer two screens below the
    inputs, which is the one thing a calculator must not do. */
@@ -279,11 +313,12 @@
   gap:16px;align-items:start;margin-top:26px}
 .value-calc .cockleft{position:sticky;top:16px;min-width:0}
 .value-calc .cockright{min-width:0}
-
-@media (max-width:1100px){.value-calc .cockpit{grid-template-columns:1fr}
+@media (max-width:1100px){
+.value-calc .cockpit{grid-template-columns:1fr}
 .value-calc .cockleft{position:static}
+}
 
-}/* One answer, stated once, at the size of an answer. v1 had three headline
+/* One answer, stated once, at the size of an answer. v1 had three headline
    zones and two of them repeated the same figure under different names. */
 .value-calc .hero{background:var(--panel-grad);border:1px solid var(--line);
   border-radius:var(--radius);padding:28px 30px 24px;position:relative;overflow:hidden}
@@ -307,6 +342,7 @@
 .value-calc .hg.vio .v{color:var(--violet)}
 .value-calc .hg .n{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.45}
 .value-calc .hero .verdict{margin-top:20px}
+
 .value-calc .subhead{font-family:var(--font-manrope),sans-serif;font-weight:600;font-size:14px;color:var(--text);
   margin:26px 0 12px;display:flex;align-items:baseline;gap:10px}
 .value-calc .subhead span{font-size:11.5px;color:var(--muted);font-family:var(--font-inter),sans-serif;font-weight:400}
@@ -326,11 +362,13 @@
 .value-calc .cockleft .allocfields label{font-size:11px;margin-bottom:4px}
 .value-calc .cockleft .allocfields label .rv{font-size:14.5px}
 .value-calc .cockleft .card{padding:20px}
+
 /* ══ ONE STATE, SHOWN NOT CHOSEN ═════════════════════════════════════════
    v1 had two tab rows forty pixels apart that shared two of their three
    names, and a warning line apologising when they disagreed. The state now
    follows whatever you last ran, so there is nothing to reconcile and the
    warning has no condition left to fire on. */
+
 /* Column meanings belong on the column, not in a wall of prose underneath. */
 .value-calc th[data-tip]{cursor:help;text-decoration:underline dotted rgba(226,192,102,.4);
   text-underline-offset:3px}
@@ -339,14 +377,3 @@
   padding:12px 14px;font-size:12px;line-height:1.6;color:var(--body);
   box-shadow:0 18px 44px rgba(0,0,0,.6);pointer-events:none}
 .value-calc #tipbox b{color:var(--gold-lt);font-weight:500}
-
-
-.value-calc{
-  padding-top:112px;
-  padding-bottom:72px;
-}
-.value-calc h1{filter:none}
-.value-calc .cockleft,
-.value-calc .ctlcol{top:108px}
-.value-calc #tipbox,
-.value-calc #evMenu{z-index:120 !important}

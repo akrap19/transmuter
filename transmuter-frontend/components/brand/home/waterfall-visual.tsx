@@ -6,13 +6,13 @@ export function WaterfallVisual() {
       <div className="wf-progress-line" />
       <div className="wf-pulse wf-pulse-top" />
       <div className="wf-pulse wf-pulse-bottom" />
-      <Stage number="01" stage="launch" kicker="LAUNCH" label="Token starts live" />
+      <Stage number="01" stage="launch" kicker="LAUNCH" label="Pools seed, claims open" />
       <Stage number="02" stage="build" kicker="BUILD" label="Scheduled tranches release" />
       <Stage number="03" stage="trade" kicker="TRADE" label="Backing grows with activity" />
       <Stage number="04" stage="recover" kicker="END OF LIFE" label="Defined ending" />
       <div className="wf-launch-branches">
         <div className="wf-branch branch-treasury"><small>RESERVE</small><strong>Isolated treasury</strong></div>
-        <div className="wf-branch branch-liquidity"><small>MARKET DEPTH</small><strong>Contract-owned liquidity</strong></div>
+        <div className="wf-branch branch-liquidity"><small>MARKET DEPTH</small><strong>Pools nobody can pull or drain</strong></div>
         <div className="wf-branch branch-escrow"><small>RUNWAY</small><strong>Optional escrow</strong></div>
       </div>
       <div className="wf-branch-lines wf-branch-line-one" />
@@ -26,17 +26,15 @@ export function WaterfallVisual() {
       </div>
       <div className="wf-trade-streams">
         <div className="wf-trade-pill pill-a">Transactions feed reserves</div>
-        <div className="wf-trade-pill pill-b">Mint to Scale adds backing</div>
+        <div className="wf-trade-pill pill-b">Mint to Scale buys the basket</div>
       </div>
       <div className="wf-underlayer">
-        <div className="wf-underlayer-item"><small>RESERVE ASSET</small><strong>cSOL / cBTC</strong></div>
-        <div className="wf-underlayer-link">→</div>
-        <div className="wf-underlayer-item"><small>OPTIONAL</small><strong>Gold variant</strong></div>
+        <div className="wf-underlayer-item"><small>RESERVE ASSETS</small><strong>BTC · SOL · USDC</strong></div>
       </div>
       <div className="wf-recovery-payout">
         <div className="wf-recovery-sources">
-          <span>Treasury</span>
-          <span>Liquidity</span>
+          <span>Treasury basket</span>
+          <span>Pools&apos; cash</span>
           <span>Unspent escrow</span>
         </div>
         <div className="wf-recovery-arrow" />

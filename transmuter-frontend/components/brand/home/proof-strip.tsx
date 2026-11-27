@@ -1,7 +1,8 @@
 const points = [
   "An isolated treasury from the first block",
-  "Contract-owned liquidity, not a team wallet",
+  "Pools nobody can pull or drain",
   "An escrow schedule or none, fixed at launch",
+  "At most half the escrow can be released at finalisation",
 ];
 
 export function ProofStrip() {

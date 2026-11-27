@@ -3,30 +3,12 @@ export function StatusSection() {
     <section id="status">
       <h2>Status</h2>
       <p>
-        The protocol specification is complete and the first deployment is in development on Solana.
+        MVP on devnet for the Colosseum hackathon. <strong>The MVP beta is open to everyone</strong> on
+        the site. It is an MVP, nowhere near the full scope, and its backing ratio display does not read
+        the pools&apos; share properly yet, so it shows lower than the real figure. Security audits and
+        legal work follow through the first half of 2027, then launch and integration into other
+        launchpads. Nothing launches before the audit.
       </p>
-      <ul>
-        <li>
-          <strong>Audit:</strong> The contracts have not been audited. An audit is planned for Q1 or Q2
-          2027.
-        </li>
-        <li>
-          <strong>Contract addresses:</strong> published once deployed.
-        </li>
-        <li>
-          <strong>Dashboard:</strong> in development. It will show the reserves, both ratios and
-          both redemption figures for any token, including before you buy it.
-        </li>
-        <li>
-          <strong>End of life calculator:</strong> in development.
-        </li>
-        <li>
-          <strong>Other chains:</strong> an EVM specification exists, for expansion once the Solana
-          deployment is established.
-        </li>
-      </ul>
-      <p>Nothing ships unreviewed.</p>
-      <p>Questions, integrations, beta testing: info@transmuter.net</p>
     </section>
   );
 }

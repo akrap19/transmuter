@@ -7,7 +7,7 @@ import { ValueCalculator } from "./value-calculator";
 
 const title = "Simulator";
 const description =
-  "Configure a token launch and see exactly what holders recover, at any price, at any point in its life.";
+  "Configure a token launch and see what it produces, including what holders can redeem at any time and how a wind-down pays out across price paths.";
 
 export const metadata: Metadata = marketingPageMetadata({
   path: routes.simulator,
@@ -37,6 +37,13 @@ export default function CalculatorPage() {
           first block, and holders can redeem at any time for a pro-rata share of both the treasury and the pool, not
           only at end of life.
         </p>
+        <aside className="simulator-resnote">
+          <span>Reserves in this calculator</span>
+          <strong>Reserves here are modelled as stablecoins (USDC)</strong>, so they keep their dollar value in every
+          scenario. We use stablecoins for now because the history charts follow SOL&apos;s real price, and SOL held as
+          a reserve would simply rise and fall with the token, which would show nothing useful. Real reserves held in
+          BTC or SOL fluctuate in value.
+        </aside>
       </section>
       <section className="simulator-body section-shell">
         <ValueCalculator />

@@ -166,6 +166,25 @@
 	list-style: none;
 }
 
+.docs-main ol {
+	margin: 0 0 24px;
+	padding-left: 26px;
+	list-style: decimal;
+}
+
+.docs-main ol li {
+	padding-left: 4px;
+}
+
+.docs-main ol li::before {
+	display: none;
+}
+
+.docs-main ol li::marker {
+	color: var(--gold);
+	font-family: var(--font-jetbrains-mono), monospace;
+}
+
 .docs-main li {
 	position: relative;
 	padding-left: 24px;
@@ -227,6 +246,23 @@
 .docs-main td strong {
 	display: inline-block;
 	margin-bottom: 4px;
+}
+
+.docs-main .note {
+	max-width: 76ch;
+	margin: 0 0 28px;
+	padding: 18px 22px;
+	border: 1px solid rgba(139, 108, 255, 0.32);
+	border-radius: 18px;
+	background: rgba(139, 108, 255, 0.07);
+	color: #d7d2c5;
+	font-size: 15px;
+	line-height: 1.7;
+}
+
+.docs-main .note strong {
+	color: var(--violet-soft);
+	font-weight: 600;
 }
 
 /* Scrollbar for sidebar */
@@ -394,6 +430,33 @@
 
 	.docs-hero.subhero {
 		padding-top: 120px;
+	}
+
+	/* Tables are wider than a phone: let them scroll instead of cutting columns off. */
+	.docs-main .tw {
+		overflow-x: auto;
+		overflow-y: hidden;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(216, 173, 89, 0.35) transparent;
+	}
+
+	.docs-main .tw::-webkit-scrollbar {
+		height: 4px;
+	}
+
+	.docs-main .tw::-webkit-scrollbar-thumb {
+		background: rgba(216, 173, 89, 0.35);
+		border-radius: 999px;
+	}
+
+	.docs-main table {
+		font-size: 14px;
+	}
+
+	.docs-main th,
+	.docs-main td {
+		padding: 13px 15px;
 	}
 }
 

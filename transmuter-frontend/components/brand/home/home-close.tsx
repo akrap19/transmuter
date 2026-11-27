@@ -3,25 +3,25 @@ import { FaqList } from "@/components/brand/faq-list";
 import { homeFaqs } from "@/lib/marketing/home-faq";
 import { routes } from "@/lib/routes";
 
-const rails = ["Reserves", "Governed escrow", "Contract-owned liquidity", "End of life"];
+const rails = ["Reserves", "Governed escrow", "Pools nobody can pull or drain", "End of life"];
 
 export function HomeEntry() {
   return (
     <section className="integration-section section-shell reveal">
       <div className="integration-copy">
         <p className="eyebrow">TWO WAYS IN</p>
-        <h2>Launch with it. Or integrate it.</h2>
+        <h2>Two ways in.</h2>
       </div>
       <div className="entry-grid">
         <article>
           <small>A · NATIVE</small>
-          <h3>Launch with Transmuter.</h3>
+          <h3>Launching a token?</h3>
           <p>Launch with the full Transmuter stack already configured.</p>
           <Link href={routes.launchpad}>Open the launchpad →</Link>
         </article>
         <article>
           <small>B · INTEGRATED</small>
-          <h3>Bring your own launch stack.</h3>
+          <h3>Running a launchpad?</h3>
           <p>Launch platforms can add Transmuter rails beneath their own product.</p>
           <Link href={routes.integrate}>For launch platforms →</Link>
         </article>
@@ -70,7 +70,10 @@ export function HomeClose() {
       <div className="closing-content reveal">
         <p className="eyebrow">BETA TESTING</p>
         <h2>Launch with the ending already written.</h2>
-        <p>Beta testing is open.</p>
+        <p>
+          The MVP beta is open to everyone. It is not the full product, and its backing ratio display reads lower
+          than the real figure because it does not count the pools&apos; share yet.
+        </p>
         <div className="hero-actions closing-actions">
           <Link className="button button-primary" href={routes.access}>
             Beta testing

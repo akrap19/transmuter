@@ -59,6 +59,33 @@
   max-width: 720px;
 }
 
+.simulator-resnote {
+  max-width: 720px;
+  margin-top: 26px;
+  padding: 18px 22px;
+  border: 1px solid rgba(139, 108, 255, 0.35);
+  border-radius: 18px;
+  background: rgba(139, 108, 255, 0.06);
+  color: #cfc8bb;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.simulator-resnote span {
+  display: block;
+  margin-bottom: 6px;
+  color: #9d85ff;
+  font-family: var(--font-manrope), sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.simulator-resnote strong {
+  color: #f7f4ec;
+}
+
 .simulator-body {
   padding: 0;
 }

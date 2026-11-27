@@ -2,46 +2,69 @@ export function EolSection() {
   return (
     <>
       <section id="what-happens-when-a-project-stops">
-        <h2>What Happens When a Project Stops</h2>
+        <h2>What happens when a project stops</h2>
         <p>This section is for holders.</p>
         <h3 id="what-you-receive">What you receive</h3>
         <p>
-          You do not file a claim. Every holder receives the same share of the reserves per token
-          held, whenever they choose to redeem, and that option stays open forever.
+          You do not file a claim. Every holder receives the same share of the reserves per token held,
+          whenever they choose to redeem, and that option stays open forever.
         </p>
-        <p>What you receive is made of three things:</p>
+        <p>What you receive is made of:</p>
         <ul>
           <li>
-            <strong>Your share of the treasury</strong>, paid in the base asset, such as SOL.
+            <strong>Your share of each reserve asset</strong>, paid in kind, in the assets themselves.
           </li>
           <li>
-            <strong>Your share of the pools&apos; cash side.</strong> When the project ends, both
-            pools unwind, their cash is converted into the treasury, and their tokens burn.
+            <strong>Your share of any USDC not yet converted</strong> into the basket.
           </li>
           <li>
-            <strong>Your share of any unspent escrow</strong>, converted into the reserve asset,
-            joined to the treasury, and redeemed with it.
+            <strong>Your share of the pools&apos; paired side</strong>, meaning the USDC, SOL or DAO
+            tokens your tokens were sitting against. This is not something end of life unlocks. The
+            pool&apos;s own tokens have never been claimants, so a live redemption pays the same thing:
+            the pool tokens paired against your share burn with yours, and you receive the cash side.
+          </li>
+          <li>
+            <strong>Your share of any unspent escrow</strong>, paid separately in USDC, untaxed.
           </li>
         </ul>
-        <h3 id="why-the-figure-is-higher-than-the-treasury-alone">
-          Why the figure is higher than the treasury alone
+        <h3 id="why-the-figure-is-higher-than-the-reserves-alone-suggest">
+          Why the figure is higher than the reserves alone suggest
         </h3>
-        <p>At the end, two things shrink the number of tokens sharing the reserves:</p>
+        <p>
+          The tokens sitting inside the pools never claim anything, live or at the end, so the reserves
+          are always divided between fewer tokens than the supply figure suggests. Backing is quoted on
+          the original supply, so the per-token figure runs ahead of it: around 20% of the listing price
+          per claiming token at the enforced minimums, and around 22% at the 10% treasury a raise is
+          sized to.
+        </p>
+        <p>At the end, two further things happen:</p>
         <ul>
-          <li>
-            <strong>The pools&apos; own tokens burn.</strong> They held a large share of supply, and
-            none of it claims anything.
-          </li>
           <li>
             <strong>Any unvested team allocation burns.</strong> Investor allocations do not.
           </li>
+          <li>
+            <strong>Unspent escrow comes back</strong> and is shared out alongside everything else.
+          </li>
         </ul>
-        <p>
-          So the reserves are divided between fewer tokens than circulated while the project was
-          live.
-        </p>
-        <h3 id="live-and-end-of-life-redemption">Live and end of life redemption</h3>
-        <p>These are two different figures, and the dashboard shows both.</p>
+        <h3 id="what-it-costs-to-redeem">What it costs to redeem</h3>
+        <ul>
+          <li>The redemption fee, at the highest rate the token has had in the past 12 months.</li>
+          <li>The Solana network fee, a fraction of a cent.</li>
+          <li>
+            Around 0.002 SOL per asset paid out that you have never held before, including the
+            pools&apos; SOL, stablecoin or DAO tokens, to open an account for it, refundable if you later
+            close it. The interface shows this, because on a tiny position it can exceed the value of
+            the smaller assets.
+          </li>
+          <li>
+            If the token runs a DAO pool, the DAO token&apos;s own transfer fee on the DAO tokens you
+            receive, since the DAO token carries the same kind of fee.
+          </li>
+        </ul>
+        <h3 id="redeeming-while-it-runs-and-redeeming-at-the-end">
+          Redeeming while it runs, and redeeming at the end
+        </h3>
+        <p>Two different figures, and the dashboard shows both.</p>
         <div className="tw">
           <table>
             <thead>
@@ -56,114 +79,135 @@ export function EolSection() {
                 <td>
                   <strong>What it draws on</strong>
                 </td>
-                <td>The treasury only</td>
-                <td>The treasury, the pools&apos; cash and any unspent escrow</td>
+                <td>
+                  the treasury, any USDC not yet converted <strong>and</strong> the pools
+                </td>
+                <td>the same, plus any unspent escrow</td>
               </tr>
               <tr>
                 <td>
                   <strong>Divided between</strong>
                 </td>
-                <td>Every token in circulation</td>
-                <td>Only the tokens that survive the burn</td>
+                <td>every token not held inside the pools</td>
+                <td>the same, after unvested team tokens burn</td>
               </tr>
               <tr>
                 <td>
                   <strong>Fee</strong>
                 </td>
-                <td>0.50%</td>
-                <td>None</td>
+                <td>the highest rate of the past 12 months, most of it staying in reserves</td>
+                <td>
+                  the highest rate of the 12 months before the vote, with the retained part going to
+                  the DAO
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
         <p>
-          The gap between them is usually large. Most of what a holder is owed sits behind the end
-          of life figure.
+          Live redemption draws on the pools as well as the treasury. When you redeem, your share of the
+          pools is withdrawn alongside your share of the treasury, and the pool&apos;s own tokens paired
+          against it burn with yours. If the pools hold 20% of supply, redeeming 10% of supply burns
+          12.5% of it. Reserves and claiming tokens fall by the same fraction, which is why redeeming
+          leaves every remaining holder&apos;s claim exactly where it was, and leaves the price where it
+          was too.
         </p>
         <h3 id="what-price-you-are-paid-at">What price you are paid at</h3>
         <p>
-          An end of life does not happen at whatever the market price was when the vote passed. Once
-          redemption opens, anyone can buy below it and redeem for a profit, or sell above it. The
-          market price converges on the redemption value, and every holder is paid from there. Where
-          the price sits when the vote passes changes how far it travels, not where it lands.
+          A wind-down does not happen at whatever the market price was when the vote passed. Once
+          redemption opens, anyone can buy below the redemption value and redeem for a profit, or sell
+          above it. The market price converges on the redemption value, and every holder is paid from
+          there. Where the price sits when the vote passes changes how far it travels, not where it
+          lands.
         </p>
         <h3 id="how-long-it-takes">How long it takes</h3>
         <p>
-          About two months from vote to payout. You can see the figure you would receive before any
-          of it begins.
+          A trouble condition has to hold for about a month before a proposal is allowed: on most days of
+          the last 30, the token&apos;s market price has been close to what it redeems for, judged by the
+          median of 30 daily readings so a few pumped days change nothing. Once it is met, a proposal can
+          be made, and the vote itself takes about a month. So roughly one month from the proposal, and
+          up to two months from the first sign of trouble. You can see the figure you would receive
+          before any of it begins, and you can redeem at any point throughout.
         </p>
         <h3 id="what-this-does-not-do">What this does not do</h3>
         <p>
-          End of life returns what the reserves hold at the end. It is not reimbursement of what anyone
-          paid for the token.
+          Recovery returns what the reserves hold at the end. It is not reimbursement of what anyone paid
+          for the token.
         </p>
       </section>
 
       <section id="end-of-life">
-        <h2>End of Life</h2>
+        <h2>End of life</h2>
         <p>When a project is finished, its holders end it on their terms.</p>
         <p>
-          <strong>1. Proposal.</strong> An end of life can be proposed only when at least{" "}
-          <strong>two</strong> parties agree, and at least one of them is{" "}
-          <strong>the token&apos;s creator or the token&apos;s holders</strong>. The creator and the
-          holders together also qualify.
+          <strong>Proposal.</strong> After the trouble condition has held, an end of life can be proposed
+          only when at least <strong>two</strong> parties agree, and at least one of them is{" "}
+          <strong>the token&apos;s creator or the token&apos;s holders</strong>. Any holder with 0.1% of
+          supply or more can act for the holders. The creator and the holders together also qualify.
         </p>
         <p>
-          The other three, Transmuter, the DAO council and the DAO&apos;s holders, act as
-          verification. Any of them can be the second party, but none of them, even all three
-          together, can open an end of life without the creator or the holders.
+          The other three, Transmuter, the DAO council and the DAO&apos;s holders, act as verification.
+          Any of them can be the second party, but none of them, even all three together, can open an end
+          of life without the creator or the holders. Transmuter cannot push a project into ending.
         </p>
         <p>
-          Holders are not required, so a token cannot get stuck just because its holders never act.
-          No single party can open one, and no single party can block one: if the creator refuses,
-          the holders and a verifier can proceed, and the other way round.
+          <strong>The vote</strong> runs 30 days and needs a two-thirds supermajority with a 10% quorum of
+          staked supply, because ending a project cannot be undone. Stakers often walk away from a dead
+          project, so if a vote fails for lack of turnout, the next one needs a 7% quorum, and after that
+          5%. A vote that reaches its quorum but is voted down sets the next one back to 10%. The
+          two-thirds majority stays the same at every step. No other vote steps down like this. A failed
+          vote can be proposed again straight away.
         </p>
         <p>
-          <strong>2. Vote.</strong> A 14-day vote of staked weight decides, needing a{" "}
-          <strong>67% supermajority</strong> with a <strong>10% quorum</strong>, resolved at the end
-          of the window.
+          <strong>Cancel and stop.</strong> The DAO council and the DAO&apos;s holders vote in the same
+          window, and if both reach two-thirds against a passed end of life, each with a 10% quorum, it is
+          cancelled. They can cancel, but they can never end a project its holders voted to keep. A passed
+          vote then waits 48 hours before anything happens. In that time Transmuter can stop it, or can
+          overrule a DAO cancel so the holders&apos; decision stands, in case the DAO token itself is ever
+          taken over. Transmuter cannot start or force an end of life.
         </p>
         <p>
-          <strong>3. DAO circuit breaker.</strong> The DAO votes at the same time, not afterwards.
-          The holder outcome stands unless <strong>both</strong> DAO bodies, each independently at
-          67%, land against it. One body is never enough. This is what answers a hostile takeover:
-          if someone buys enough supply to hold a token hostage, the two bodies together can still
-          end it. Because holders redeem pro rata, even an override pays
-          every holder their fair share and seizes nothing.
+          <strong>If price reads die.</strong> If the token&apos;s own price reads have been down for 10
+          days straight, holders can open the trouble condition themselves, at two-thirds of votes cast
+          with a 7% quorum, in a one-week window. That only allows a proposal, so a token whose prices
+          have gone dark can still reach end of life. Transmuter can also open the trouble condition to
+          clear a deadlock, which likewise only allows a proposal. So does an escrow halt that holders
+          passed, for as long as it stays in force.
         </p>
         <p>
-          Transmuter&apos;s founders hold a <strong>cancel-only</strong> veto, checked at execution.
-          It can stop an end of life, and cannot force one. It also runs against the founders&apos;
-          own interest: Transmuter earns a share of the end of life fee, so using the veto costs
-          them.
+          <strong>Execution, in this order:</strong>
         </p>
+        <ol>
+          <li>Unvested team allocation burns. Investor allocations do not.</li>
+          <li>Unspent escrow comes back.</li>
+          <li>
+            The pools unwind: their tokens burn so the pools stop trading, and their cash, already
+            counted in reserves, is paid out.
+          </li>
+          <li>
+            The end of life fee is taken on total reserves, including unconverted USDC, and never on
+            escrow.
+          </li>
+          <li>
+            Everything left is paid out pro rata, in the assets themselves, with the escrow as its own
+            USDC part.
+          </li>
+        </ol>
         <p>
-          <strong>4. Execution.</strong> Anyone can trigger it. Pending fees settle, any unvested
-          team allocation burns, both pools unwind, their tokens burn and their cash is converted
-          into the treasury, the end of life fee is charged, and minting closes forever.
+          The order matters: the team burn changes the token count, so it has to happen before the fee and
+          the payout are worked out.
         </p>
+        <div className="note">
+          <strong>Redemption does not change shape and does not close.</strong> Holders can redeem before,
+          during and after. Once the vote passes, redemptions use the same rate as the end of life payout,
+          the highest of the 12 months before the vote. The other change is the destination: once the vote
+          passes, the parts that used to stay in reserves go to the DAO token&apos;s reserves instead, and
+          transfers redirect the same way, with Transmuter keeping 0.20% and every other share going to
+          the DAO.
+        </div>
         <p>
-          After that, <strong>redemption stays open forever</strong>, free of fees, at the final
-          redemption ratio.
-        </p>
-        <h3 id="ctoken-end-of-life">cToken end of life</h3>
-        <p>
-          A <strong>pure cToken has no end of life</strong>, because there is nothing to add: its
-          holders can always redeem the base asset.
-        </p>
-        <p>
-          A <strong>cToken with a gold contingency</strong> has one, and it does exactly one thing:
-          if the base asset suffers a verified, sustained collapse, both DAO bodies at a 67%
-          supermajority, with a quorum of 10% of circulating supply, can open the gold. That{" "}
-          <strong>adds</strong> a second way to redeem. Before it, a holder redeems for the base
-          asset. After it, they can choose the base asset or gold. The base asset redemption never
-          closes, nothing is seized, and no balance changes.
-        </p>
-        <p>
-          Triggering it falsely gains an attacker nothing. Their reward would be the right to swap
-          an asset they could already redeem for gold, at a rate deliberately worse for them, while
-          everyone else carries on as before. The gold pays pro rata, so reaching all of it would
-          mean owning every token, which is not an exploit but a purchase.
+          There is no moment at which redemption is suspended pending liquidation, so no holder has a
+          reason to race anyone else to the exit.
         </p>
       </section>
     </>

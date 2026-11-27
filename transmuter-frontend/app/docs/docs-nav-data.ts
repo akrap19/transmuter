@@ -13,16 +13,16 @@ export const docsNavGroups: DocsNavGroup[] = [
     label: "Protocol",
     links: [
       { label: "Overview", href: "#overview" },
-      { label: "Token Types", href: "#token-types" },
-      { label: "Reserve Assets", href: "#reserve-assets" },
-      { label: "Ratios and Verification", href: "#ratios-and-verification" },
+      { label: "Token types", href: "#token-types" },
+      { label: "Reserve assets", href: "#reserve-assets" },
+      { label: "Ratios and verification", href: "#ratios-and-verification" },
     ],
   },
   {
     label: "Launching",
     links: [
-      { label: "Launching a Token", href: "#launching-a-token" },
-      { label: "The Public Sale", href: "#the-public-sale" },
+      { label: "Launching a token", href: "#launching-a-token" },
+      { label: "The public sale", href: "#the-public-sale" },
       { label: "Escrow", href: "#escrow" },
       { label: "Fees", href: "#fees" },
     ],
@@ -31,15 +31,16 @@ export const docsNavGroups: DocsNavGroup[] = [
     label: "Lifecycle",
     links: [
       { label: "Mint to Scale", href: "#mint-to-scale" },
-      { label: "What Happens When a Project Stops", href: "#what-happens-when-a-project-stops" },
-      { label: "End of Life", href: "#end-of-life" },
+      { label: "Staking", href: "#staking" },
+      { label: "What happens when a project stops", href: "#what-happens-when-a-project-stops" },
+      { label: "End of life", href: "#end-of-life" },
     ],
   },
   {
     label: "Infrastructure",
     links: [
-      { label: "For Launch Platforms", href: "#for-launch-platforms" },
       { label: "Governance", href: "#governance" },
+      { label: "For launch platforms", href: "#for-launch-platforms" },
       { label: "Status", href: "#status" },
     ],
   },

@@ -22,10 +22,16 @@ export function HomeHero() {
           <span className="hero-title-line hero-title-second">backed from the first block.</span>
         </h1>
         <p className="hero-lede">
-          Launch with reserves beneath the token, optional escrow for project runway, and end of life rules defined
-          before trading. Backing can grow while the token is active.
+          Launch with a basket the creator picks beneath the token, optional escrow for project runway, and end of
+          life rules defined before trading. Any holder can redeem their share at any time, in the reserves
+          themselves.
         </p>
-        <div className="hero-actions">
+        <p className="hero-cost">
+          Launching is free, and the transfer fee is 0.60% to 2.00%.{" "}
+          <Link className="text-link" href={routes.faq}>
+            Full figures in the FAQ.
+          </Link>
+        </p>        <div className="hero-actions">
           <Link className="button button-primary" href={routes.access}>
             Beta testing
           </Link>

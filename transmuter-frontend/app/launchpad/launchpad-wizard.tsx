@@ -55,8 +55,11 @@ function WizardContent() {
         <p className="eyebrow">LAUNCHPAD</p>
         <h1>Create your EOL token</h1>
         <p>
-          Launch a treasury-backed token. No creator access to the treasury, ever. If you set a runway, it
-          sits in escrow and releases on the schedule you fix at launch. Built-in end of life protection.
+          The creator can&apos;t take the treasury. Runway comes through escrow. If you set an escrow, your runway
+          releases on the schedule you fix at launch. Built-in end of life protection.
+        </p>
+        <p className="launch-hero-note">
+          0.10% of every transfer buys DAO tokens and burns them, and a DAO pool is optional.
         </p>
       </section>
       <section className="launch-body section-shell page-wrapper">
