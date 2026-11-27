@@ -137,7 +137,7 @@ describe("search metadata", () => {
     };
     const termSet = graph["@graph"].find((node) => node["@type"] === "DefinedTermSet");
     expect(termSet?.hasDefinedTerm?.map((term) => term.description)).toEqual(glossaryTerms.map((term) => term.body));
-    expect(termSet?.hasDefinedTerm?.map((term) => term["@id"])).toContain(`${siteUrl}/glossary/#cgold`);
+    expect(termSet?.hasDefinedTerm?.map((term) => term["@id"])).toContain(`${siteUrl}/glossary/#pools`);
   });
 
   it("escapes script-breaking characters in JSON-LD", () => {

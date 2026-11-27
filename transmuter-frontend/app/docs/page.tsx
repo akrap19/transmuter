@@ -12,7 +12,7 @@ import { marketingPageMetadata } from "@/lib/seo/page-metadata";
 const docsHeadline = "How Transmuter works";
 const docsTitle = "How Transmuter works: reserves, escrow, fees and end of life";
 const docsDescription =
-  "How Transmuter works: token types, reserve assets, launches, sales, escrow, fees, Mint to Scale, what happens when a project stops, and governance.";
+  "Set in the contract, not left to promises. How Transmuter works: token types, reserve assets, launches, sales, escrow, fees, Mint to Scale, staking, what happens when a project stops, end of life, and governance.";
 
 export const metadata: Metadata = marketingPageMetadata({
   path: routes.docs,
@@ -36,9 +36,8 @@ export default function DocsPage() {
         <p className="eyebrow">DOCUMENTATION</p>
         <h1>{docsHeadline}</h1>
         <p className="lede">
-          Everything below will be enforced by contract, not promised. Short on words, precise on numbers.
+          Set in the contract, not left to promises. Short on words, precise on numbers.
         </p>
-        <p className="docs-note">All figures describe the current design and may change before launch.</p>
         <p className="docs-updated">{`Last updated: ${contentUpdatedLabel}`}</p>
       </section>
 

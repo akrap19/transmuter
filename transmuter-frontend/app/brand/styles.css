@@ -1555,9 +1555,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .token-stack {
   margin-top: 66px;
   display: grid;
-  grid-template-columns: minmax(0,1fr) 118px minmax(0,1fr) 118px minmax(0,1fr);
-  align-items: center;
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  align-items: start;
+  gap: clamp(28px, 5vw, 80px);
 }
 .token-node {
   min-width: 0;
@@ -1680,7 +1680,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
     0 0 72px rgba(216,173,89,.10);
 }
 .token-coin-gold .token-coin-core b { color: #f0d590; }
-.token-node-copy { max-width: 310px; }
+.token-node-copy { width: 100%; max-width: 310px; }
 .token-node-copy small {
   display: block;
   color: var(--gold);

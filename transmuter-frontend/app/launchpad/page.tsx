@@ -8,7 +8,7 @@ import { LaunchpadWizard } from "./launchpad-wizard";
 
 const launchpadTitle = "Create your EOL token";
 const launchpadDescription =
-  "Create an EOL token on Transmuter. Isolated treasury, contract-owned liquidity, and end of life rules fixed before trading.";
+  "Create an EOL token on Transmuter. Isolated treasury, pools nobody can pull or drain, and end of life rules fixed before trading.";
 
 export const metadata: Metadata = marketingPageMetadata({
   path: routes.launchpad,

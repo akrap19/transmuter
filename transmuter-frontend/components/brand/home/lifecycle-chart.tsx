@@ -1,7 +1,7 @@
 const MARKET_PATH =
 	"M5.3 218.9 C27.9 184.2, 59.5 163.2, 85.8 144.7 C112.1 126.3, 122.6 100, 143.7 81.6 C164.7 65.8, 191.1 63.2, 212.1 57.9 C233.2 52.6, 241.1 31.6, 270 28.4 C296.3 26.3, 322.6 63.2, 354.2 81.6 C370 89.5, 391.1 89.5, 412.1 87.9 C438.4 86.3, 454.2 102.6, 470 115.8 C491.1 122.1, 533.2 127.4, 584.2 127.9";
 const RESERVE_PATH =
-	"M5.3 243.7 C48.9 242.1, 80.5 237.4, 109.5 236.8 C121.6 236.3, 127.9 224.2, 137.4 223.7 C164.7 222.1, 191.1 215.8, 214.7 214.7 C227.9 214.2, 238.4 178.9, 253.2 178.4 C296.3 176.8, 354.2 168.4, 404.2 167.4 C417.4 167.4, 427.9 142.1, 443.7 141.6 C480.5 141.1, 512.1 137.9, 543.7 135.8 C559.5 133.7, 572.6 132.1, 584.2 131.6";
+	"M5.3 243.7 C40 241.8, 72 238.4, 109.5 236.8 C140 235.4, 176 226.2, 214.7 214.7 C235 208.4, 252 199.8, 270 196 C285 192.6, 296 204.2, 310 206.8 C331 210.6, 356 199.4, 380 180 C390 172.2, 396.4 168.2, 404.2 167.4 C430 163.2, 456 155.2, 480 150 C494 147, 500 166.8, 515 165.4 C528 164.2, 535 144.6, 543.7 141 C560 135.2, 572.4 132.2, 584.2 131.6";
 
 export function LifecycleChart() {
 	return (
@@ -14,10 +14,10 @@ export function LifecycleChart() {
 					</span>
 				</div>
 				<svg aria-labelledby="chart-title chart-desc" className="hero-chart hero-chart-v2" role="img" viewBox="0 0 590 280">
-					<title id="chart-title">Market value and recoverable value across a token lifecycle</title>
+					<title id="chart-title">Market value and redemption value across a token lifecycle</title>
 					<desc id="chart-desc">
-						The recoverable amount per token, counted in the base asset, climbs in steps as fees and reserve mints add
-						to it, and never falls.
+						The redemption value per token rises with fees, burns and Mint to Scale, and can fall when people
+						sell above it or when the reserve assets drop in price.
 					</desc>
 					<defs>
 						<linearGradient id="goldFade" x1="0" x2="0" y1="0" y2="1">
@@ -60,7 +60,7 @@ export function LifecycleChart() {
 					<path className="market-line" d={MARKET_PATH} pathLength="1" />
 					<path className="reserve-line" d={RESERVE_PATH} pathLength="1" />
 					<g className="eol-marker eol-dot">
-						<circle cx="543.7" cy="135.8" r="6.2" />
+						<circle cx="543.7" cy="141" r="6.2" />
 					</g>
 					<circle aria-hidden className="chart-tracer market-tracer" r="2.6">
 						<animateMotion dur="7.5s" path={MARKET_PATH} repeatCount="indefinite" />
@@ -77,7 +77,7 @@ export function LifecycleChart() {
 					<g className="chart-label label-reserve">
 						<rect height="32" rx="16" width="162" x="355.3" y="194" />
 						<text textAnchor="middle" x="436.3" y="214.5">
-							RECOVERABLE VALUE
+							REDEMPTION VALUE
 						</text>
 					</g>
 				</svg>
@@ -89,8 +89,8 @@ export function LifecycleChart() {
 				</div>
 			</div>
 			<p className="chart-explainer">
-				The recoverable amount per token, counted in the base asset, climbs in steps as fees and reserve mints add to
-				it, and never falls.
+				Redemption value rises with fees, burns and Mint to Scale, and can fall when people sell above it or the
+				reserve assets drop in price.
 			</p>
 			<div className="hero-scroll chart-scroll">
 				<span>SCROLL THROUGH THE LIFECYCLE</span>

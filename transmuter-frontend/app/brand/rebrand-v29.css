@@ -228,6 +228,14 @@ body::before {
 	font-size: clamp(18px, 1.55vw, 22px);
 	line-height: 1.6;
 }
+.home-hero .hero-cost {
+	max-width: 760px;
+	margin: 16px 0 0;
+	text-align: left;
+	color: #b5b2bb;
+	font-size: clamp(15px, 1.2vw, 17px);
+	line-height: 1.6;
+}
 .home-hero .hero-actions {
 	justify-content: flex-start;
 	margin-top: 36px;

@@ -3,20 +3,17 @@ export function OverviewSection() {
     <section id="overview">
       <h2>Overview</h2>
       <p>
-        Tokens that fail usually leave their holders with nothing. Transmuter writes the reserves, the
-        governed runway and the end of life rules into the contract before launch, so what stands
-        behind a token can be read on-chain at any moment and returned to holders if the project is
-        finished.
+        Most tokens leave holders with nothing when they end. Transmuter writes the reserves, the
+        governed runway and the recovery rules into the contract before launch, so what stands behind a
+        token can be read on-chain at any moment and returned to holders at any time.
       </p>
       <p>
-        Every token launched here carries a funded, non-custodial treasury from the first block and
-        contract-owned liquidity it cannot lose. If the project ends, holders vote, the reserves
-        are unwound, and every holder redeems their share.
+        Every token launched here carries funded, non-custodial reserves from the first block, and
+        pools its holders own that nobody can pull or drain. Holders can redeem whenever they choose,
+        not only at the end. If the project does end, the reserves are unwound and every remaining
+        holder redeems their share.
       </p>
-      <p>
-        Transmuter launches on Solana. An EVM specification already exists for expansion to other
-        chains.
-      </p>
+      <p>Transmuter launches on Solana.</p>
     </section>
   );
 }

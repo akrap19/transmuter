@@ -21,7 +21,7 @@ const roles = [
 	},
 	{
 		title: 'Partners',
-		body: 'Wallets, DAOs, ecosystems, tokenized gold issuers, audit firms. Integrations that put EOL infrastructure into more hands.'
+		body: 'Wallets, DAOs, ecosystems, reserve asset issuers, audit firms. Integrations that put EOL infrastructure into more hands.'
 	},
 	{
 		title: 'Investors',

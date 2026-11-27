@@ -2,7 +2,7 @@
 
 import { computeOverflowFromState } from '@/lib/launchpad/overflow-calc'
 import { formatMcap, formatNum, formatPrice } from '@/lib/launchpad/launch-solver'
-import { formatTransferFee } from '@/lib/launchpad/fee-calculator'
+import { TRANSFER_FEE_RANGE, formatTransferFee } from '@/lib/launchpad/fee-calculator'
 import { activeLegs, assetMeta } from '@/lib/launchpad/backing-basket'
 import { useLaunchpad } from './launchpad-context'
 
@@ -58,7 +58,11 @@ export function PreviewSidebar() {
 					value={state.saleType === 'overflow' && overflow?.mcp ? overflow.mcp : mcap ? `$${formatMcap(mcap)}` : '-'}
 					gold
 				/>
-				<PreviewStat label='Transfer fee' value={formatTransferFee(state.fees.totalFee)} />
+				<PreviewStat
+					label='Transfer fee'
+					value={formatTransferFee(state.fees.totalFee)}
+					hint={`Range ${TRANSFER_FEE_RANGE}`}
+				/>
 				<div className='preview-stat'>
 					<span className='preview-stat-label'>Reserve asset</span>
 					<span className='preview-stat-value green preview-backing-value'>
@@ -82,14 +86,14 @@ export function PreviewSidebar() {
 					<br />
 					✓ Treasury closed to the creator. Runway paid through escrow.
 					<br />
-					✓ Every transfer adds to the treasury
+					✓ Treasury grows with every transfer.
 					<br />
-					✓ Backing per token, counted in the base asset, only grows
+					✓ Holders can redeem their share at any time.
 					<br />
 					✓ Built-in end of life plan
 					<br />
-					✓ Holders vote on end of life
-					<br />✓ Liquidity owned by the contract, not the team
+					✓ Holders vote on the fee, the budget, escrow and end of life.
+					<br />✓ Pools nobody can pull or drain.
 				</div>
 			</div>
 		</div>
@@ -99,12 +103,14 @@ export function PreviewSidebar() {
 function PreviewStat({
 	label,
 	value,
+	hint,
 	cyan,
 	gold,
 	green
 }: {
 	label: string
 	value: string
+	hint?: string
 	cyan?: boolean
 	gold?: boolean
 	green?: boolean
@@ -113,7 +119,10 @@ function PreviewStat({
 	return (
 		<div className='preview-stat'>
 			<span className='preview-stat-label'>{label}</span>
-			<span className={`preview-stat-value${cls ? ` ${cls}` : ''}`}>{value}</span>
+			<span className='preview-stat-stack'>
+				<span className={`preview-stat-value${cls ? ` ${cls}` : ''}`}>{value}</span>
+				{hint ? <span className='preview-stat-hint'>{hint}</span> : null}
+			</span>
 		</div>
 	)
 }

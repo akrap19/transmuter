@@ -1,95 +1,154 @@
 export function GovernanceSection() {
   return (
-    <>
-      <section id="for-launch-platforms">
-        <h2>For Launch Platforms</h2>
-        <p>
-          Transmuter is infrastructure first. The launchpad is one way to use it. Other platforms
-          can run their launches on it and give their tokens the same reserves, escrow and end of
-          life.
-        </p>
-        <p>
-          A platform keeps its own users and its own launches, and can add its own fee on top.
-          Transmuter&apos;s share stays the same everywhere: 0.15% on transfers and redemptions,
-          0.25% on mints and at end of life.
-        </p>
-        <p>
-          Every launch on the infrastructure is built on Transmuter&apos;s cTokens, so every one
-          strengthens the reserve layer beneath all the others.
-        </p>
-      </section>
-
-      <section id="governance">
-        <h2>Governance</h2>
-        <p>The current design is described in the docs and is being revised.</p>
-        <p>
-          Transmuter runs on <strong>Mutually Assured Alignment</strong>. Harming the protocol
-          harms whoever tries it first, so acting in its interest becomes the same as acting in your
-          own.
-        </p>
-        <p>
-          Everything consequential is <strong>opt-in</strong>: nothing meaningful happens to a token
-          unless a vote actively approves it.
-        </p>
-        <p>
-          <strong>Who decides what.</strong>
-        </p>
-        <ul>
-          <li>
-            <strong>Token holders</strong> govern their own token: its settings, its Mint to Scale
-            events and its end of life.
-          </li>
-          <li>
-            <strong>The protocol DAO and its elected council</strong> of 7 to 100 (10 to 50 at
-            genesis) are guardians, not rulers. Their power is deliberately narrow: to stand against
-            a hostile takeover. On a token&apos;s end of life they can only override holders when
-            both bodies act together.
-          </li>
-          <li>
-            <strong>Protocol level changes</strong> need any two of three groups: the DAO community,
-            the council and the founders. No single party can force a change or block one by sitting
-            out.
-          </li>
-        </ul>
-        <p>
-          <strong>What can change after launch, and what cannot.</strong>
-        </p>
-        <ul>
-          <li>The escrow schedule cannot be rewritten by anyone. Holders can halt it and advance one
-            tranche.</li>
-          <li>Fees can move through governance, only within bounds set before launch.</li>
-          <li>The treasury moves only through redemption and end of life.</li>
-        </ul>
-        <p>
-          <strong>Deterrence and incentives.</strong> Anyone who votes for a harmful change is held
-          through a short lock afterwards, so if it damages the token it damages them first. People
-          who steer governance well earn a share of protocol fees, revocable if they act in bad
-          faith. Any two of the three governing groups can freeze a staked position being used to
-          push a harmful vote. A freeze stops it voting and unstaking, never touches a wallet
-          balance, and is fully reversible.
-        </p>
-        <p>
-          <strong>No hidden admin keys.</strong> Two founder powers exist, and we would rather
-          describe them than have you find them in the code.
-        </p>
-        <p>
-          The first is the <strong>cancel-only veto</strong> described above.
-        </p>
-        <p>
-          The second is an <strong>emergency action</strong>, for when an exploit is live and a
-          week-long vote would be too slow. Early on, the founders can authorise it alone; after
-          that it needs the founders plus the council or the holders. It can pause a contract and
-          ship a fix. It can <strong>never move a treasury, mint a token, alter a balance, block a
-          redemption or force an end of life</strong>. You can always redeem, even while a contract
-          is paused. Every use is public, any two of the three groups can reverse it, and the
-          founders&apos; sole authority ends automatically at a deadline fixed before launch, or as
-          soon as the DAO proves it is active.
-        </p>
-        <p>
-          The worst a founder can do with it is halt a contract for a while, in public, and have the
-          DAO undo it.
-        </p>
-      </section>
-    </>
+    <section id="governance">
+      <h2>Governance</h2>
+      <p>
+        Staked tokens carry voting weight. Unstaked tokens do not. Every quorum is measured against the
+        staked supply when a vote opens, and every majority against the votes cast. Votes run 7 days,
+        except Mint to Scale votes (24 to 48 hours), end of life votes (30 days), and a council vote on a
+        freeze, which closes as soon as its result can no longer change. Thresholds are fixed.
+      </p>
+      <div className="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>Power</th>
+              <th>Who proposes</th>
+              <th>What it needs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Halt, resume or advance escrow releases</td>
+              <td>holders</td>
+              <td>
+                halt or resume: 5% quorum, simple majority. Advance: 7% quorum, two-thirds
+              </td>
+            </tr>
+            <tr>
+              <td>Retire a reserve asset</td>
+              <td>creator, Transmuter, or a 0.1% holder</td>
+              <td>5% quorum, two-thirds</td>
+            </tr>
+            <tr>
+              <td>Change the token&apos;s fee rate, within 0.60% to 2.00%</td>
+              <td>creator or holders</td>
+              <td>
+                5% quorum, simple majority. At most three changes in any 12 months. A cut reaches
+                redemptions only after a year
+              </td>
+            </tr>
+            <tr>
+              <td>Change the annual Mint to Scale budget, within 40% to 100%</td>
+              <td>creator or holders</td>
+              <td>5% quorum, simple majority</td>
+            </tr>
+            <tr>
+              <td>Replace a price feed</td>
+              <td>the token&apos;s creator, or Transmuter directly</td>
+              <td>
+                creator: a holder vote at 5% quorum, two-thirds. Transmuter: no vote, but a 48-hour
+                delay. Only Transmuter replaces the shared SOL/USD and DAO feeds
+              </td>
+            </tr>
+            <tr>
+              <td>Brake on an asset whose price feeds have died</td>
+              <td>Transmuter</td>
+              <td>
+                no vote; it can only keep mints stopped. There is no brake on an asset its issuer froze
+              </td>
+            </tr>
+            <tr>
+              <td>A treasury draw into escrow</td>
+              <td>the creator only</td>
+              <td>holders pass at 7% quorum and two-thirds, then the council or Transmuter approves</td>
+            </tr>
+            <tr>
+              <td>Open a Mint to Scale</td>
+              <td>
+                the creator or a 0.1% holder; for the DAO token, Transmuter or the DAO council
+              </td>
+              <td>55% of participating staked weight, 3% quorum, and the gate still applies</td>
+            </tr>
+            <tr>
+              <td>Freeze or unfreeze a staked position</td>
+              <td>Transmuter, the DAO council or the DAO&apos;s holders</td>
+              <td>
+                Transmuter plus the council or the DAO&apos;s holders. A council vote on a freeze closes
+                as soon as its result can no longer change
+              </td>
+            </tr>
+            <tr>
+              <td>End of life</td>
+              <td>see above</td>
+              <td>
+                two parties, one of them the creator or the holders, then two-thirds with a 10% quorum
+                over 30 days, stepping to 7% and then 5% after votes that fail for lack of turnout. A
+                48-hour wait follows
+              </td>
+            </tr>
+            <tr>
+              <td>Stop a passed end of life, or overrule a DAO cancel</td>
+              <td>Transmuter</td>
+              <td>within the 48-hour wait; it can never start one</td>
+            </tr>
+            <tr>
+              <td>Appoint or remove DAO council members</td>
+              <td>Transmuter for now; later the DAO&apos;s holders by election</td>
+              <td>handed over once the DAO is ready</td>
+            </tr>
+            <tr>
+              <td>Move a token&apos;s pools to another venue, if the venue is shutting down</td>
+              <td>Transmuter</td>
+              <td>5% quorum, two-thirds. The new venue must be one the program supports</td>
+            </tr>
+            <tr>
+              <td>Code upgrade</td>
+              <td>Transmuter now; later Transmuter plus the DAO council or the DAO&apos;s holders</td>
+              <td>protocol-wide, since one program serves every token</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Every power Transmuter holds runs through a 3-of-5 multisig</strong>, so no single key can
+        act as Transmuter.
+      </p>
+      <p>
+        <strong>Who can upgrade the code.</strong> The program that holds every token&apos;s reserves can
+        be upgraded, so bugs can be fixed and it can keep working as the pool venues it uses change. For
+        now that takes Transmuter&apos;s own 3-of-5 multisig, with separate signers from its other powers.
+        Later it will take two of three parties, Transmuter, the DAO council and the DAO&apos;s holders,
+        with Transmuter always one of the two.
+      </p>
+      <p>
+        The two rates a vote can move, the fee and the mint budget, can only ever move inside fixed
+        protocol bounds: 0.60% to 2.00% for the fee and 40% to 100% for the budget. A vote can raise
+        either above the figure set at launch, but never past the top of its range.
+      </p>
+      <h3 id="four-powers-that-deliberately-do-not-exist">
+        Four powers that deliberately do not exist
+      </h3>
+      <p>
+        <strong>Nothing can rebalance a basket.</strong> No vote can sell one reserve asset to buy
+        another.
+      </p>
+      <p>
+        <strong>Nothing can write a reserve asset off a holder&apos;s claim.</strong> A reserve asset can
+        stop receiving new money. What is already held stays redeemable, whatever it is worth.
+      </p>
+      <p>
+        <strong>Nothing can pull escrow out</strong> and move it somewhere else.
+      </p>
+      <p>
+        <strong>Nothing can pause, delay or condition redemption.</strong> Not the creator, not holders,
+        not the council, not Transmuter. The only delays are the two staking locks, which apply to staked
+        tokens.
+      </p>
+      <p>
+        No vote can hand the reserves to anyone. Winning every governance layer at once still only
+        reaches end of life, which pays holders pro rata.
+      </p>
+    </section>
   );
 }

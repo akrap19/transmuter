@@ -15,7 +15,7 @@ export const themeColor = "#06060a";
 export const defaultOgImagePath = "/opengraph-image";
 
 export const organizationDescription =
-  "Transmuter is value recovery infrastructure for tokens on Solana. Tokens launch with an isolated treasury, contract-owned liquidity and end of life rules defined before trading.";
+  "Transmuter is value recovery infrastructure for tokens on Solana. Tokens launch with an isolated treasury, pools nobody can pull or drain, and end of life rules defined before trading.";
 
 export function absoluteUrl(path: string): string {
   if (path === "/") return `${siteUrl}/`;
@@ -32,8 +32,8 @@ export const organizationId = `${siteUrl}/#organization`;
 export const websiteId = `${siteUrl}/#website`;
 
 /** Public copy revision. Sitemap `lastmod` and the docs date use this. */
-export const contentUpdatedIso = "2026-11-06";
-export const contentUpdatedLabel = "6 November 2026";
+export const contentUpdatedIso = "2026-11-15";
+export const contentUpdatedLabel = "15 November 2026";
 export const contentLastModified = new Date(`${contentUpdatedIso}T00:00:00.000Z`);
 
 export function organizationNode() {

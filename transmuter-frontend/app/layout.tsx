@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     template: "%s · Transmuter",
   },
   description:
-    "Launch a Solana token with an isolated treasury, contract-owned liquidity and end of life rules fixed before trading, so buyers can check the contract.",
+    "Launch a Solana token with an isolated treasury, pools nobody can pull or drain, and end of life rules fixed before trading, so buyers can check the contract.",
   ...(siteAllowsIndexing() ? {} : { robots: { index: false, follow: false } }),
   icons: {
     icon: [{ url: "/icon", sizes: "32x32", type: "image/png" }, { url: "/favicon.svg", type: "image/svg+xml" }],

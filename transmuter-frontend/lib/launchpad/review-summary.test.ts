@@ -105,7 +105,7 @@ describe("launchReviewSections", () => {
       toggles: { daoAirdrop: false, burnFee: true, creatorFee: false },
       fees: { ...initialLaunchpadState.fees, burnFee: 0.05 },
     });
-    expect(fees["Transfer fee"]).toBe("0.60% (recommended default, minimum 0.5%)");
+    expect(fees["Transfer fee"]).toBe("0.60%");
     expect(fees["→ Reserve"]).toBe("0.10%");
     expect(fees["→ Gold"]).toBeUndefined();
     expect(fees["→ S&P"]).toBeUndefined();
